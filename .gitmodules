@@ -1,0 +1,3 @@
+[submodule "arbor-program"]
+	path = arbor-program
+	url = https://github.com/SwineCoder101/arbor-program.git
