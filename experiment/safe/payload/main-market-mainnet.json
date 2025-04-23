@@ -1,0 +1,749 @@
+{
+    "name": "main",
+    "isPrimary": true,
+    "description": "",
+    "creator": "5pHk2TmnqQzRF9L6egy5FfiyBgS7G9cMZ5RFaJAvghzw",
+    "owner": "5pHk2TmnqQzRF9L6egy5FfiyBgS7G9cMZ5RFaJAvghzw",
+    "address": "4UpD2fh7xH3VP9QQaXtsS1YY3bxzWhtfpks7FatyKvdY",
+    "authorityAddress": "DdZR6zRFiUt4S5mg7AV1uKB2z1f1WzcNYCaTEEWPAuby",
+    "reserves": [
+      {
+        "asset": "FTT",
+        "address": "8bDyV3N7ctLKoaSVqUoEwUzw6msS2F65yyNPgAVUisKm",
+        "collateralMintAddress": "DiMx1n2dJmxqFtENRPhYWsqi8Mhg2p39MpTzsm6phzMP",
+        "collateralSupplyAddress": "EPNB8NiL3vFDYQhSZY5LQAoW6AJYLdwFXezXeyqiPvEM",
+        "liquidityAddress": "ByYuFLvwVW9NSKnGbnKSMToy3Ea9StJ4t7HjAmcTjk7w",
+        "liquidityFeeReceiverAddress": "2C2aefnxUSAMQrfey1hC6yHLh18BpjkwL1zAJCS9YqDG",
+        "userBorrowCap": "150000",
+        "userSupplyCap": "50000"
+      },
+      {
+        "asset": "USDT-USDC",
+        "address": "9mZsd1b9cN7JyqJvkbqhVuTfg8PAuKjuhPxpcsVNjYoC",
+        "collateralMintAddress": "6XrbsKScacEwpEW5DVNko9t5vW3cim9wktAeT9mmiYHS",
+        "collateralSupplyAddress": "fh6Bv7k29VBYTnXBRNJX9Gqk9pZVRxwj1vjcg6M2R3M",
+        "liquidityAddress": "AZkoTbjXJubLng1MSa5beFks93KpArVu3f3efGvNB6CH",
+        "liquidityFeeReceiverAddress": "2Us5qmLmBx6rCXMg7mJGQFwvG1kq1opTvVwPKt5G8oHi",
+        "userBorrowCap": "0",
+        "userSupplyCap": "100000"
+      },
+      {
+        "asset": "CTAN",
+        "address": "BJ9qkhzr1FKUoa2vDQ5yVhwEH4XwyMnt6NJ9KtAGC4bs",
+        "collateralMintAddress": "58LmQM9FL8oTCVVAu2d9F2hjrJZ4oDbXHziHhEEWLE9j",
+        "collateralSupplyAddress": "9ATFQ5Q4RZ1knUbkdx3SEpDk5L1p9n5Gk6GW4sV8Qx12",
+        "liquidityAddress": "FYeimq8Nat9Q8B7KyLcQPWAr6CxPTQNsKBxFjF8y5Vtb",
+        "liquidityFeeReceiverAddress": "GQRZz8Gny7ZmWAaQvN64Lq7aiHoWjenCd3m3JxP4ip1g"
+      },
+      {
+        "asset": "DEGOD",
+        "address": "83W8WZNJhoujm5u4tRwakRBfhFiB6BTBqQkUs7aS9JGQ",
+        "collateralMintAddress": "5QsvPf4p36YY7eBAowTCa6CMQxtTdbQBrBWKxPCEtVCd",
+        "collateralSupplyAddress": "hDdU9NZGTtncAVGcmi4ujPJtYPyonJgp1nCJxoSTyyx",
+        "liquidityAddress": "65fqcJjGJtf18mqbxX4ezrrumU8DVfK7BPZALxTswGFk",
+        "liquidityFeeReceiverAddress": "EBDXeCXzSiGv5SZ14kbXXpdvg12aqrYwp5F1Dkbq5bAS"
+      },
+      {
+        "asset": "SBR",
+        "address": "Hthrt4Lab21Yz1Dx9Q4sFW4WVihdBUTtWRQBjPsYHCor",
+        "collateralMintAddress": "Bpm2aBL57uqVhgxutfRVrbtnjDpZLV8PZrRrytV1LgeT",
+        "collateralSupplyAddress": "9wSy4XV4XN1hzp9nuC8TbCc78zDkWgu8tGNABH4cpBG5",
+        "liquidityAddress": "86hiF77ktrdVFU9xFqxsYChRirgs9KCvQDD9g4jT64bJ",
+        "liquidityFeeReceiverAddress": "7mjo1oAYVcAQmysfS64LTYi2ZkKJFveymmhYVasEc1nh",
+        "userSupplyCap": "20000000"
+      },
+      {
+        "asset": "MAD",
+        "address": "Gi4cANbdscEhwSw5wSfdB2EJ6CGSx89yxVRYCXNoWZDp",
+        "collateralMintAddress": "AbSRMgCU5SBMwNrkWPL8J45TBPgdzH9uKRYbtYgr3Kdy",
+        "collateralSupplyAddress": "Eej2nFjSZfaB51EVBqr9rxxzEPxmGTYXDqRRRBm3mzYh",
+        "liquidityAddress": "DFVxWjKzroVUjmAjqnmmb3ywfK9jcoD3SkeuWVnu9AV7",
+        "liquidityFeeReceiverAddress": "6aBwJ9MZoqK1SptXDBtAvjoh1sZUxjazNo92zkYG8Fc"
+      },
+      {
+        "asset": "WOLF",
+        "address": "2Mi3nAbpro5xqdi52ZbFbQ9cXyCdXrRGsKfVSTZG79zW",
+        "collateralMintAddress": "4MrAsJH9vAVtirntXfo2PyCAe6jNrzcHSXdvDshhPUcU",
+        "collateralSupplyAddress": "E4jHKNdShbz9eeNwQR5bQBsekUWb9C2t2DyMao2R4ohV",
+        "liquidityAddress": "HjrJFt5oPiU6VPENiR7ybn1fiKWX2b7eLQxscUqSbiQ6",
+        "liquidityFeeReceiverAddress": "7jeT8PsYJkWTf93pqRmrsobkgAMxafGrBEMvW66MH6Dw"
+      },
+      {
+        "asset": "GIKO",
+        "address": "GmJ5E5S38dR1MbiWHdaZrFeBtsrNu329WX6Ls119ePnp",
+        "collateralMintAddress": "GX5C8Gim9ATANhE4udBvsVS89M2Yn5s3ycyvcPE7zD11",
+        "collateralSupplyAddress": "GoXFFZuWyDkkV2NaJ53e8RZs6ZMaxariyjECxNHN8dK4",
+        "liquidityAddress": "2UaJN1tQautwLb4sQv2BfsqKkVuK7TbyzggiXZHvR2P9",
+        "liquidityFeeReceiverAddress": "9cxVq1YNnjDiAdwF1NJonPqkycCGfQKukQoFWhxQcVhY"
+      },
+      {
+        "asset": "INF",
+        "address": "DUExYJG5sc1SQdMMdq6LdUYW9ULXbo2fFFTbedywgjNN",
+        "collateralMintAddress": "AFq1sSdevxfqWGcmcz7XpPbfjHevcJY7baZf9RkyrzoR",
+        "collateralSupplyAddress": "7NJCWoLDngquvYcCPzUBLYfpS9F3eox4ibgivEGxXweU",
+        "liquidityAddress": "5Ynq25D3t124WkQZaaWHBXkWkMGJchVg2sCRgfu1PYbs",
+        "liquidityFeeReceiverAddress": "6SytVt3JLkB5VdLPxTBd5zZFGGVDXsMhf6AdcajdZTBV",
+        "userSupplyCap": "200000"
+      },
+      {
+        "asset": "mSOL-SOL",
+        "address": "6ve8XyELbecPdbzSTsyhYKiWr7wg3JpjfxE1cqoN9qhN",
+        "collateralMintAddress": "4icXEpFVMrcqob6fnd3jZ6KjKrc6cqre6do1f8kKAC1u",
+        "collateralSupplyAddress": "3nfgTBPf1N1NPNTTYk2HpJABaL59db3XKnjgJ8JGwtHJ",
+        "liquidityAddress": "ETnpmAETSfzmfevgUxzaHGTdDrTofHGZgCdccCHkA6nM",
+        "liquidityFeeReceiverAddress": "2TWjqvWCjMFBWJSx42AZYbDyihBrQqCo6URDpLhWA8L6",
+        "userBorrowCap": "0",
+        "userSupplyCap": "5000"
+      },
+      {
+        "asset": "WAP",
+        "address": "35zqJiVKtEBec7XD9BG7USrLvAGTbio11Eua2Rfg2YfB",
+        "collateralMintAddress": "8PMpe45o2LQZuVqrVpui7jXbjWHsUPuaUUVcvB9btC6",
+        "collateralSupplyAddress": "8CrvS4bXFb3agdLzZ7zGE7S92UyHMtuTdGF764RsdgmV",
+        "liquidityAddress": "DWjc2gQRD4VB2ts93SutX4hBZdL3knWhwXiu7Tw4FnD",
+        "liquidityFeeReceiverAddress": "9N1tXk47LXaMaHdRRcjvudtfZ2eCrihdkg5z8Vsftijd"
+      },
+      {
+        "asset": "XBG",
+        "address": "A97Jhqn4itgsDaKfuCAbtMFWZ5CVe4SJJsyZLS2nzS8H",
+        "collateralMintAddress": "Ba11HimYr67SrpQmNDFVKnfpf8F6zu5HySpaG8G8jUko",
+        "collateralSupplyAddress": "HmwrPiRowvRyjoWRuQL1aMrxWPyWYGT1SwJczWR688tC",
+        "liquidityAddress": "6YqBzoQ71CxxDL4fpkAhsAGWghA8JT4ZZsKPHDrEg2pt",
+        "liquidityFeeReceiverAddress": "92UfqDVpST5iMTmUyWEeQFDXFdo6peuHe7uVzQzNxSVW"
+      },
+      {
+        "asset": "ORCA",
+        "address": "FKZTsydxPShJ8baThobis6qFxTjALMkVC49EA88wqvm7",
+        "collateralMintAddress": "E9LAZYxBVhJr9Cdfi9Tn4GSiJHDWSZDsew5tfgJja6Cu",
+        "collateralSupplyAddress": "FELidXszawDEujYLV7A5u7XXFCsPCNvTHm1heJbnh36G",
+        "liquidityAddress": "5grnVTzYxhhhbiSdbkznMff721ZPMP3SzYhy2Yzd37jt",
+        "liquidityFeeReceiverAddress": "GHoC6JumDEw5CB35wqMwZK2G6NmrhjynKAdNnVNUP9ie",
+        "userBorrowCap": "250000",
+        "userSupplyCap": "150000"
+      },
+      {
+        "asset": "POX",
+        "address": "FXAZzNMU6PBK3MX2yDhLNmRh74PkDj8iPJtJGKo867N2",
+        "collateralMintAddress": "BbFQ1jZ8CXwjBUuqLfJ45MeSzVtAq8sf9HgfywDstijj",
+        "collateralSupplyAddress": "6YhZhJH8gcRSXH8vKTjAaEu9b3ETarXUYRAjgBNpHzZR",
+        "liquidityAddress": "9e3PTwGpfxvKkpU4wjvp9YV8ZDBgwCGaLZorMfriyfyg",
+        "liquidityFeeReceiverAddress": "DUQw7uGnUwJieaZnPuGL7f9voFrJNNWvpY8tXtwjxzYX"
+      },
+      {
+        "asset": "UST",
+        "address": "Ab48bKsiEzdm481mGaNVmv9m9DmXsWWxcYHM588M59Yd",
+        "collateralMintAddress": "nZtL8HKX3aQtk3VpdvtdwPpXF2uMia522Pnan2meqdf",
+        "collateralSupplyAddress": "4HXDioboWL85gQocYNkWM62AB5ctrf8jVykSVco67Lzx",
+        "liquidityAddress": "5LyHdTXh1MSbRzE7xfTtfpV8W5eaySJnSiTs6FdHhrSo",
+        "liquidityFeeReceiverAddress": "4GctGML68E1kDcvskGTXRPY9ngxmxVnJXjpsJ68YBXPR",
+        "userSupplyCap": "10000000"
+      },
+      {
+        "asset": "GIGA",
+        "address": "4yGuczMxEKz17jtyeH2b7t7Mo9FaCRj2XJ79x3CxgW7G",
+        "collateralMintAddress": "4xA8NwLq7xyzY32guSHuaeqhfJ8ag42zJZspe5V7DCt1",
+        "collateralSupplyAddress": "84wFBK3onyuHxTwVEwvkCwUwmVGH5RXnP5wcKGDaXsbk",
+        "liquidityAddress": "FpQXQn8TkyKJEjTjp9k1DTrnMcXcKWVDMRC1hWcFqkdo",
+        "liquidityFeeReceiverAddress": "9cU1C5KBA9mKYHVUbvketh2Kw6VPfWXSUc4Rd2NMmwMZ"
+      },
+      {
+        "asset": "stSOL",
+        "address": "5sjkv6HD8wycocJ4tC4U36HHbvgcXYqcyiPRUkncnwWs",
+        "collateralMintAddress": "QQ6WK86aUCBvNPkGeYBKikk15sUg6aMUEi5PTL6eB4i",
+        "collateralSupplyAddress": "9MBrzWjgw1sbca6X2M6YoUCQgN6udVeKp9oLFwuzPY2p",
+        "liquidityAddress": "7ma18yBbX37RbFHQXiq1XhP6c561nDnYSmF84mwiY7Wo",
+        "liquidityFeeReceiverAddress": "6N5JTX3hXRwudgbVxbAbMvnrW1GB4QdpFGQgYonaWj4C",
+        "userBorrowCap": "200000",
+        "userSupplyCap": "300000"
+      },
+      {
+        "asset": "soFTT",
+        "address": "2dC4V23zJxuv521iYQj8c471jrxYLNQFaGS6YPwtTHMd",
+        "collateralMintAddress": "A38TjtcYrfutXT6nfRxhqwoGiXyzwJsGPmekoZYYmfgP",
+        "collateralSupplyAddress": "HbMugfk2UDNoCiBUqgXdPu75ksMZHvkJjRZ8YKrcPwz2",
+        "liquidityAddress": "9ZdwVAZsqFWtzNNGZhmQJttYQxTCVPRnaXMgA2KrQpLK",
+        "liquidityFeeReceiverAddress": "J4Zttvtnt2ECLyyEaxQRywAQEN4xcbHsgMF1Fhgdyow9",
+        "userSupplyCap": "50000"
+      },
+      {
+        "asset": "SCF",
+        "address": "HcMZxFXrjc48sCarcH37DYABVDsMPbrPd9bpPA5q7zBt",
+        "collateralMintAddress": "GqpQzbShb7kMPYzsoKWJGukmmfGrmsHiA1zYADDWNE9P",
+        "collateralSupplyAddress": "Dmr4H1zne3QXMo6hExEzg2rYQ5R71Yg7KZgLV7FXHy3T",
+        "liquidityAddress": "5iimZzmioqCbNPcRXr7KtsdH4QBj7RsTDiqkVrvLxqVF",
+        "liquidityFeeReceiverAddress": "Ct93JWn8WRCGRvYT4gqEd8t5qGbWxkCt2xHxaVn25d3y"
+      },
+      {
+        "asset": "Neiro",
+        "address": "564qbQPZZwAc1qU7dFne7f5JhPXbpoHkyv6yJy45FcBu",
+        "collateralMintAddress": "3Rk2JSm1DqJyX8EEjLfpDkuM8quronM1zMVCqrsLvxDr",
+        "collateralSupplyAddress": "2a85HnbLdKKVpHniozX12Gkx1KD1eyLXoBdS4SBf2XYT",
+        "liquidityAddress": "G3Mdk22Pat1HrQ3bfhajkPuU44m81pdWps1nReCw52Ki",
+        "liquidityFeeReceiverAddress": "9PrCfScFcCugdLFSMm27oBedRqvtQTvkJk2xhimDFwMa"
+      },
+      {
+        "asset": "WUF",
+        "address": "GqnTPten6D1w3LTYkcXNUbsyzpZ3kFZNwRLBhBoMeUf8",
+        "collateralMintAddress": "vWoQL2Rc5hkR7foNSJHzwto75TQtykzF63Jw3CUDmGR",
+        "collateralSupplyAddress": "8JNpZz52LfKnNvqy5BJAEUSQTQkYrQxBsRe5JmdWwh7T",
+        "liquidityAddress": "2ovnBezUtDURSBzibRq9URFipiGau2MoqQfcZSVJGXPS",
+        "liquidityFeeReceiverAddress": "4pyp4X6xDgU3KaYeNrMLkEQhNzjGDeiFaqakuSmGsu5B"
+      },
+      {
+        "asset": "tBTC",
+        "address": "3B29sQsgsVuthQurNux82vxN6N3AVKo3zArPQSzoe3jN",
+        "collateralMintAddress": "JDMW7AooL6qVAfXdRQytwW9UvR4n6EvqpjQBpzabDwf8",
+        "collateralSupplyAddress": "4wKgt6WHsR8f8yU1AU74yYyPqvjHHXwga3Ed1pKz9xd4",
+        "liquidityAddress": "23YKkRwW5wvE3zNmQkzQm8eCX6TZkaHroyELtNE371CP",
+        "liquidityFeeReceiverAddress": "DEo2AaopAsCV9Ek3cYo1pFoLUX6Bdy3Cs8F2xuuSMDPY"
+      },
+      {
+        "asset": "MEW",
+        "address": "CFM2QsDjnEgDtMLLbkFTpQnnmhuc6EioTQAMFH2xEC1N",
+        "collateralMintAddress": "6coB1wxmhtePSckEvS5S2g5agak8zqYT3azVHhnh5Lgt",
+        "collateralSupplyAddress": "3x8HKVHK5dvfHehsazxzNjVyT56kvXgH7bBDnCqX6aRw",
+        "liquidityAddress": "3WhyYN16VsEXHoFBDST88Rhx5GXCEG3NMMVzAdVPsg4i",
+        "liquidityFeeReceiverAddress": "FyYME7MdDQV5ou1jUCXpCPqxq71MhSPVFnwCGrkWQqcf"
+      },
+      {
+        "asset": "soETH",
+        "address": "3PArRsZQ6SLkr1WERZWyC6AqsajtALMq4C66ZMYz4dKQ",
+        "collateralMintAddress": "AppJPZka33cu4DyUenFe9Dc1ZmZ3oQju6mBn9k37bNAa",
+        "collateralSupplyAddress": "2Yv6ZgZ9ccV8bCYD7T5t2kcAQYRbukMKha6NiPQ8cFAT",
+        "liquidityAddress": "B7Lg4cJZHPLFaGdqfaAWG35KFFaEtBMmRAGf98kNaogt",
+        "liquidityFeeReceiverAddress": "8RS6VQM1RcuVUrQmfHgF3RAUPCbsbmejgbvTLvr8ZgrV",
+        "userSupplyCap": "5000"
+      },
+      {
+        "asset": "JASON",
+        "address": "BHYzuqNawczsvrDTPNS6JFQtCVPyYJv79XJB9FyNNsr8",
+        "collateralMintAddress": "2hfYTt1rq5G68p7S1rxiLd8LQudW6pVE5mGYTUBG2dLz",
+        "collateralSupplyAddress": "7xVwxiX5Cs6BXv3KKTAacRNKAewrGhR6BGJPMksBVSnh",
+        "liquidityAddress": "6k5A8SAXtN1X5XoC5xSfFTipNfNs1acTztbhFp9vjWoQ",
+        "liquidityFeeReceiverAddress": "Gp8ARkNCcC1Jnmc1Kr6akqbA8rsbEnhgPcQGM8CZJkuJ"
+      },
+      {
+        "asset": "ZEUS",
+        "address": "AypJfTkds5DwzFUHzZgx13ivT86jyFxQDaQgjnMLjRtN",
+        "collateralMintAddress": "7S3xhhSpupzr8C4rjTe7zpU1LgzFjWt1JJhdNqJzX3To",
+        "collateralSupplyAddress": "FmLzPZi9fCuUAFza8Acr4WkEkxz6T4WEj56ZoFdF6ZzM",
+        "liquidityAddress": "DBbv6nrLKmKYe1mWmqEJ6mfisQareNSy6SgqZ3mhSYb1",
+        "liquidityFeeReceiverAddress": "AhTeTXZiQonYm27T2Jp5ma9E5bF4xmfz1YfgsqUpQtrJ"
+      },
+      {
+        "asset": "MER",
+        "address": "5Sb6wDpweg6mtYksPJ2pfGbSyikrhR8Ut8GszcULQ83A",
+        "collateralMintAddress": "BsWLxf6hRJnyytKR52kKBiz7qU7BB3SH77mrBxNnYU1G",
+        "collateralSupplyAddress": "FeWc3QLKQBYS3RbrzEzj4ADsdNtQStomNepajeubY9cW",
+        "liquidityAddress": "CNREdzCSa2X5HQ6xjDZ1jd2XN3nmwTHfQkYj9pWAZuXs",
+        "liquidityFeeReceiverAddress": "8hWXJ8jY6WrnbRM47hJZbstfBz3eX9HtsPTHvv2RJH2D",
+        "userSupplyCap": "8000000"
+      },
+      {
+        "asset": "MOODENG",
+        "address": "EvPrRUmgz74QDiiSunUn7t1PwUv9ambsqwdm9wcJg6Bu",
+        "collateralMintAddress": "C5QtDTniUw1SMiCRCezdiJnX9UV9w59oBk7QjVNf4W1Z",
+        "collateralSupplyAddress": "3JvGJ92v77H84kdh8De2XVfYbYbMgECWk5J3FcMvAfLD",
+        "liquidityAddress": "9EKchxXfwGBRhWGQZcZkWMrWAbi6ezbedroraHHcRhxb",
+        "liquidityFeeReceiverAddress": "EdHywVEsTSyBdBVanojwqDM6o9CrCCDUSnMWkyJrgbX7"
+      },
+      {
+        "asset": "saveSOL",
+        "address": "8i58uNEa9AqGo3L3fb1SWEirknH5Ep4yBfRcytSfD2Ua",
+        "collateralMintAddress": "41L9hnShDiEiQiKyQtcndgGMSk66cuQKc2f4hXtnMw6G",
+        "collateralSupplyAddress": "7zQMYtuYgRj8rL96WcZKf33YCYvRZZUCpisLeACorCzU",
+        "liquidityAddress": "CaY8C65DuSfPdsBcLcs7rfmeLSscNDAA9gRx5Ci86SZc",
+        "liquidityFeeReceiverAddress": "2oNUtHXrnE2CrawAe46rCBaYZ5XAs3FAosPZKXX6wJPN"
+      },
+      {
+        "asset": "MICHI",
+        "address": "C7A8b6267KpbxA89ZhpEbtBPkj6iXXAD5sasqc3NfuoK",
+        "collateralMintAddress": "58cKPUNcARF3oMHTC7kvp6pQSMGa6UwMuqmKP9jLSYdJ",
+        "collateralSupplyAddress": "3qNqtcB1ZzvvkNZfm4GtjnEgPA4nsGEjKHSc8VCvSE4V",
+        "liquidityAddress": "BbEVPKk7UiGvpvqJnffW2n59AQPMdp73dHuu4qms1462",
+        "liquidityFeeReceiverAddress": "ADe5qaCkEu1ei2kHFUPWQP9nd5Uk7uC6TC6CBqTYnh4r"
+      },
+      {
+        "asset": "BTC",
+        "address": "GYzjMCXTDue12eUGKKWAqtF5jcBYNmewr6Db6LaguEaX",
+        "collateralMintAddress": "Gqu3TFmJXfnfSX84kqbZ5u9JjSBVoesaHjfTsaPjRSnZ",
+        "collateralSupplyAddress": "9HrQ9RuRsHjKXuAbZzMHMrYuyq62LjY3B7EBWkM4Uyke",
+        "liquidityAddress": "4jkyJVWQm8NUkiJFJQx6ZJQhfKLGpeZsNrXoT4bAPrRv",
+        "liquidityFeeReceiverAddress": "9CjhBpwiQbP2zYnj7PqHTxPPp2BCR4Y4rP4ZPWkqrCQk",
+        "userBorrowCap": "500",
+        "userSupplyCap": "500"
+      },
+      {
+        "asset": "bonkSOL",
+        "address": "CyW6wS3h9aJp5yE4rPZSW7fDHANb2yPBEeYrwCVe8Ycz",
+        "collateralMintAddress": "889wDvapCMACJzhhZdSo3tXDSurhrz2YKizxiyAJHJPo",
+        "collateralSupplyAddress": "9si7kN8DgLEqjNX4ZFmRMaqNGtnf3mJizWcQE1ESfPUm",
+        "liquidityAddress": "AoqbEgtNsUwKwgfgBgmwxmxCGafHGyFQPXQJpJFCuaoR",
+        "liquidityFeeReceiverAddress": "CHfVYUGKFJHKHLdYHRRDKzuogbuMa2CfqjmoYrwr6ZCf"
+      },
+      {
+        "asset": "JTO",
+        "address": "ASR6ULAZqTEFAfE3EQi5LpEo2iyR5YvC3tfeNqDp1wmn",
+        "collateralMintAddress": "GjwVELMWeXkZ2nb9gXmYf2Ca3XdEHZcN1CigAcw6WESt",
+        "collateralSupplyAddress": "GwgRTfxfZhdMEb8endnuyq4sG3zgrd177wWc4GFe74Fj",
+        "liquidityAddress": "9nbeqZZnL21hqHKQRsqFK4A7hGHLrkNpiuanHK7c7KPD",
+        "liquidityFeeReceiverAddress": "8hXY9a7r8GwqrY3GK3k5Uy7P9qACKQ8geJk5j49AQdbh"
+      },
+      {
+        "asset": "BOME",
+        "address": "8oht6TZ6XB8aWmBtXyXwfCdaHMDqt6E3PAmsBuHcvup7",
+        "collateralMintAddress": "7WuM7ifKAyavLXc1Q9Y38ZDWYVYMjeKM4xh5SAcSmugs",
+        "collateralSupplyAddress": "GUZUiYMK3AUnFZgHHTgBakLMbjb9Q1fGTb87491a3ReV",
+        "liquidityAddress": "BbcPqtTqun7tvQXVvuEQATsaKGDwDi79BCcqysUvTtb5",
+        "liquidityFeeReceiverAddress": "AumYDgAeFreKqy7ECQUWLihDnr9FxUJQdrRbHgjXoZAX"
+      },
+      {
+        "asset": "CHILLGUY",
+        "address": "6VttAuytifopBq9DTozKNEQsHSbq4JNZzzfLShypdm4p",
+        "collateralMintAddress": "2sX9YDMZXruPdevJKiKkXsPTqoHTr6Y82Raqnpu97eVk",
+        "collateralSupplyAddress": "AFtUtcDh8YHJtSkXPTYeKnP5UMXESpkqg8vVu5K5wpz1",
+        "liquidityAddress": "95qGUUBhRoY2mZ7ayAVm6j6TE9S6hKbhNM6gFc3jnp1A",
+        "liquidityFeeReceiverAddress": "5guX1R8paPHCHkSi1BuMayL8efky84t8jx1i5oUs8ZHD"
+      },
+      {
+        "asset": "bbSOL",
+        "address": "2p3cnirfxnFQoHgsdH7a56YXQ8vEYkpXPNcqXvUHXmg6",
+        "collateralMintAddress": "EPsAFJJ6kXf5ddQrfjgihteFv5AgTuWe4rt97bw8hghc",
+        "collateralSupplyAddress": "Bg87n6dCNo1jKqbnAPxZjT64CRFAQrKReQRH4gfGVbZC",
+        "liquidityAddress": "CACLQBTJYf5oTrCRoNuEVNM9HNUwc3KPbVTNAcCmXCZJ",
+        "liquidityFeeReceiverAddress": "E9pGpwF9TTc6NePUihLqTsMexofNjz7RboRJTY8bvnNd"
+      },
+      {
+        "asset": "HAMMY",
+        "address": "7PYtmaMEaTkpRvFT2TnyDfd83pFum95uy7vmKLD5kJRm",
+        "collateralMintAddress": "BcPV7r6c2VcAxjmvFzNybNYSbqcjHCevt3eiBxMbjnbB",
+        "collateralSupplyAddress": "6vvyeT7tQohaBUK8XnhTXV3Z1NgQ8axXFZdryADcWho1",
+        "liquidityAddress": "Fop7JJYbpberxjY9MPtsTNWRuJg1rbgN6KMxFRaQMpaf",
+        "liquidityFeeReceiverAddress": "BS2cdXjbjcxUa1JFCQ3a8JKZMJiAtMqBb3LawMezSBJ"
+      },
+      {
+        "asset": "MNDE",
+        "address": "Fopbwd7wwoRVVEJYZ6io66xhEFp8jcksFVt2X1Ti3qUo",
+        "collateralMintAddress": "DFF91idVR3626KTcYzAPU28vkH4chbPU3Hu81jwPqrhD",
+        "collateralSupplyAddress": "B3kJf9gQkevPwSpChxdujVcia9rM4NHj8KXcbRakhtRJ",
+        "liquidityAddress": "AQEydrKfS1DYMuDHHhYVqoZvqwXtnh8bcxhsC5nnMBs6",
+        "liquidityFeeReceiverAddress": "Ccec62SpDecGKWU3AZKUMZ8WWMvyw2YN7FfBj5XrWrAU"
+      },
+      {
+        "asset": "PNUT",
+        "address": "AU4ZFhkz8rnWMtCgiHVZ6eCrjG6QBH4exV1XjUx8KV6d",
+        "collateralMintAddress": "EHzMfJQW8XtEVa2HNxyiSnKmtHV9k8zAew6epNnW1jNh",
+        "collateralSupplyAddress": "6ZdcDE9BfDFPVBuMjQCSg3KSm6PUPhoMQoD1Gzv1kJJJ",
+        "liquidityAddress": "8Cm4L4vAMxp9vbrCSoixdBfETmSnsNFeNo66Aki9aXqT",
+        "liquidityFeeReceiverAddress": "3RZPMFs5WspY4QnnKqGMR9BMe7zceDi3gA7HtJRy3YgH"
+      },
+      {
+        "asset": "MOTHER",
+        "address": "HwGvPLgDpRcghpbRcUz3bfwvWiHRYdT4Czt8NgB55aRF",
+        "collateralMintAddress": "FPwNqXu88pAcuAEG4eHxvFeH8emci1nbvaZddVQSx4NC",
+        "collateralSupplyAddress": "AnDRrfU6tzusB8G3Upt159M5quHvh55SpKzn3TTTSza1",
+        "liquidityAddress": "EiMLgWiVs945TfPccEEkKue3kHyFigwUcEKqBwyGgCKQ",
+        "liquidityFeeReceiverAddress": "7f4N2mzcsGbqnVPqudXLwoStR9zUs8WYmTvgeaEeU7Ka"
+      },
+      {
+        "asset": "BILLY",
+        "address": "5qrzqv35edbdjRiyRptxwdCbs8xQrrmTscySKdjyfcnQ",
+        "collateralMintAddress": "5r4etceifCt2nNVmU19GMfaw7SRe6jDciJDhwjTdjPWE",
+        "collateralSupplyAddress": "2JJVE7qBfsxEigjthyTLqsMFBq8ZMB3APDCNQSZansTd",
+        "liquidityAddress": "EiUrYU4haav3314hpk5GJepebNimvLUrBus1S72Behu7",
+        "liquidityFeeReceiverAddress": "8DELSfvkMVnXoc6cAGX5Mjp6x337r7XWT9cjWXT2nPH4"
+      },
+      {
+        "asset": "MUMU",
+        "address": "DzmAjVBZXhtk4g2N7UoEbgFQhBsyYzo6Bviqw18ibQ1y",
+        "collateralMintAddress": "FizS7ZGgFaQCcHVfXkF859FBxbm2rrnyqax1i8WdbePj",
+        "collateralSupplyAddress": "EVHXstAWVSkaVvYNxbBgWyDMZxFAoWVrCF65MFjmsaen",
+        "liquidityAddress": "Ako5Z8VWTWemJCWovtQvDdxFAa5i2cqxfEGXhDRjkFZ6",
+        "liquidityFeeReceiverAddress": "H3gJrsE3JwiKFTjoJHa4bBXEgYodPuF3W5pyD3yhU76s"
+      },
+      {
+        "asset": "SPX",
+        "address": "8aRJW9C4vxkVuK7MfsKSnmR4HzcGcpdAnNEaqfiKCwtp",
+        "collateralMintAddress": "51pgvViuaNPtQhqgmnHT6gjExYV6Lh2zYSGc4S5DeWdg",
+        "collateralSupplyAddress": "5YsCy2rtLEW7h8qAxyXczYSb5bDymHWFjPGwVw8rAnWR",
+        "liquidityAddress": "AEhzChpgbL27QpXebu7qmtmdNMM3eNmjTV5iqwQtCKJv",
+        "liquidityFeeReceiverAddress": "AHpY1HGXDFpmgyeeEpHaG5JFEThpa6mR6G8ACyGuEAeY"
+      },
+      {
+        "asset": "BNSOL",
+        "address": "DdJBpSXjV65rzjnKY95zxKyMYVhJUu675G8KbJUA5jpF",
+        "collateralMintAddress": "CTBC3NXJ8f9fHs9WsNzqGr1aZK85LBix8EVJU52xJFaz",
+        "collateralSupplyAddress": "7pRm3EcMLND1bL4dHQMg1qeLr7NyBmm88ENLJDovJd2N",
+        "liquidityAddress": "7qQbdPqcVdnFiVenj4RWhZvVyhZBkzHN3msuUgTGCRtV",
+        "liquidityFeeReceiverAddress": "739CPaNxHW5KDuHv36d8o9CD1U7iVU5vy1HbmXRifsPo"
+      },
+      {
+        "asset": "hubSOL",
+        "address": "9mpAoYdKeLhcMHYASoVGzTiWhefQ7pSYTLQdu9n9Gqjv",
+        "collateralMintAddress": "9j6iyYRPFCyzukfs1LhK9RQWkeW8a7nxzffkY1edwkPc",
+        "collateralSupplyAddress": "8CGispHHu6bL2rwurzadXQhvYqMknncm52cf2i5cJ4Gy",
+        "liquidityAddress": "8kHuetGEXADjAydsH29dRa7keNjysypbHcCenro4cvh6",
+        "liquidityFeeReceiverAddress": "Bmw5AU954QnU4PzY5eJjDfMBqVugZnQqhAHGj4U5a6Dv"
+      },
+      {
+        "asset": "TRUMP",
+        "address": "EnvTk9Spv57WfBoSiU3vq2gCuHGLatA9WbsFVwiC2cjS",
+        "collateralMintAddress": "CKGtktuboLjhJ9nHcVxaTe3ZSyMu5BATCAbpvN1Ecoce",
+        "collateralSupplyAddress": "6F7KUzVGM1mTXXuzv79KHEwjE6ZGnaB361mqvM4wGEaG",
+        "liquidityAddress": "CD7ax1FEu7civZjRZYjRANcGbQXFjoejd2wqgQrqKCrv",
+        "liquidityFeeReceiverAddress": "FJjzT2iR7eynPpMQiShmHzwXY9VuR2mJwNum8CfUBw6b"
+      },
+      {
+        "asset": "FWOG",
+        "address": "Gn5CSJeXoyXhG2pK5P2CUnedcRSejB7beQDWwiihTGG3",
+        "collateralMintAddress": "FwVNB7436xZEpXvQWJUV2YGncUkXgzmRaxmA8cUzn3wS",
+        "collateralSupplyAddress": "tvRPnP1X7Q45h5LjHwWZQdTCDqWHWFR5md5U9iixwEF",
+        "liquidityAddress": "8zsUK1NX8nd9MRgAuA7uMtdNGbpWoj8gyB5Rk6BtyRBh",
+        "liquidityFeeReceiverAddress": "AA5GFgszAJY8pn8LER1UCKAX2FUHq8rmUWNncE5bUT1B"
+      },
+      {
+        "asset": "SAMO",
+        "address": "25PaiqNrpTPDydjN7xehiQiWqN97AJURDg8ej5jkbKWk",
+        "collateralMintAddress": "F21x9myk5ruBcebSeifRxB7UKM7DQUzt2KaiSuXeYD5Y",
+        "collateralSupplyAddress": "UU89Hu5DNdkkWiBXuyVmHnoxaiVcM3RJbSE4oyTa4co",
+        "liquidityAddress": "4qziyQnvCS5bWm19vBHmstP9ME2xmjkKY5Q8D4Qaq6Te",
+        "liquidityFeeReceiverAddress": "Ag3ZHEVDZPUkTQSeCs6BMmh7xweakVvUuef76tT7Syt9"
+      },
+      {
+        "asset": "META",
+        "address": "3Mfk1tnEy2ffK2o4tboh7PqRDyhnhJb173V7rg887R4E",
+        "collateralMintAddress": "AkPnaV1mEX8RDUj9vxQ3BmQzp8rqZwvq4kjm8zXNTgF5",
+        "collateralSupplyAddress": "3k8DeMQcqBzhPB24a4hrXDgrYzbf2JWw4Kn6JVGpVVSo",
+        "liquidityAddress": "Cus2aLFvCAJL5KC9hjgcPxRAvw2X9MbhSNg3L9c7HfvS",
+        "liquidityFeeReceiverAddress": "Cvfb5Vc2Mqw6E5fhdcpdwjxJbm5JKvfN3b92xuniczkD"
+      },
+      {
+        "asset": "SRM",
+        "address": "5suXmvdbKQ98VonxGCXqViuWRu8k4zgZRxndYKsH2fJg",
+        "collateralMintAddress": "4CxGuD2NMr6zM8f18gr6kRhgd748pnmkAhkY1YJtkup1",
+        "collateralSupplyAddress": "D52HyVBEMWy2WBptV5zsPuYS8W8C62gYjYKuVzaK1ruM",
+        "liquidityAddress": "4JHVBtmMPFyRpidxHtM8gVjGuLBXhaXCF4jNFFKBdGpb",
+        "liquidityFeeReceiverAddress": "AkwRd7hZ35BmnYvj9S5PgVpiBQfuzxaapshJe9PCN5hh",
+        "userBorrowCap": "300000",
+        "userSupplyCap": "150000"
+      },
+      {
+        "asset": "saveSOL",
+        "address": "47kDoVo8gxWYe7oP2UT1AUtR2uGxEokGqdpc1qGPP3EX",
+        "collateralMintAddress": "2bBV9hD7qLPPwWgDHXoT9GYYNpkcD4ZEeYTCBmsjQcye",
+        "collateralSupplyAddress": "497NCW6Fvpw1B1PBzhJNZviZ1i8MubsC7bW1dF7D7Z9D",
+        "liquidityAddress": "GxBnxJ16qBaz3oTbUQ5GwhULoUvu9nUEvs4TDjw2zZRc",
+        "liquidityFeeReceiverAddress": "EGLnAeebVkBYFBziuX4jF263h4eFQBjeA2yuTFmfaCe1"
+      },
+      {
+        "asset": "SLERF",
+        "address": "Hq52CTcTUUo69PFJVX7orgENxyKNipxGkHQVBtr3sV3C",
+        "collateralMintAddress": "EHNSFjbxNR2GRUhjsBeVVg1M2SQxz8xP8kVZ7zyWbdpr",
+        "collateralSupplyAddress": "FSgVgVa3d8H6DHbr9okvEYvG3BS3yYQRoCcDFXFEngGv",
+        "liquidityAddress": "8QLHHVDftkqLfW4aAgAoCGwJJM665wF48xXjt3An7Q1f",
+        "liquidityFeeReceiverAddress": "3UEph33eNM9PgiDXdDpE5EtaKLxHGgy4QnbYesvnk2RS"
+      },
+      {
+        "asset": "PYTH",
+        "address": "AfsmTSxAqXtKAje5oU8vCDupiRgPPJutBMX6WHfWopn2",
+        "collateralMintAddress": "GBEAjbghsLhHK9CwWF5YQrjjShacXCnWs9fHXJqMHJxy",
+        "collateralSupplyAddress": "9iQhFzXeixhAi1NzgQs71WupsSjxTPyRq2FRVsUbhwu2",
+        "liquidityAddress": "RwRnfrLihpJqua8sCim884Rkxe2NVyFWnJr3t2oomiZ",
+        "liquidityFeeReceiverAddress": "EsT2dmQZNGc5FjWBGSkcNcehb3ssmxSdCjjQqxy5Vfb5"
+      },
+      {
+        "asset": "haSOL",
+        "address": "H5znFbw5v8z5knynkv1tKi8TgvdhTSt7QyoTXDigCVkW",
+        "collateralMintAddress": "8F9H3keaxVAq8hc3hrJQq1euY7gVcs2aaNVFFjf39vDy",
+        "collateralSupplyAddress": "2Vx2SGz6qTTPzvviLXNR8NYiVfL7u4FnfVe8EKofPs7w",
+        "liquidityAddress": "3jvjftVoiT96gpBBMWrQm5Yt9FUp7TBdQQnem6Ci79me",
+        "liquidityFeeReceiverAddress": "EqSDsekzzuERhb9ZmzRuE6VN1wzXtKPUpDrf2KCXm9N7"
+      },
+      {
+        "asset": "SOL-mSOL MLP",
+        "address": "7ZedNeKC6WU8soC4k3QrWwg4RNjzmuohbrTQuVpZkqnv",
+        "collateralMintAddress": "F1pV8nDvR5xTVKnVCKUZEw2K3hbMjFVZxi6SSy3di39N",
+        "collateralSupplyAddress": "G5UrEZ5S84ZCcQR6Vtt4xFWTGb3jS7oPVGJLaAaFHgyE",
+        "liquidityAddress": "6VAiM9dszzqJnmiPXYwz8LKQR3YfCAHyowQX6QYmBcPG",
+        "liquidityFeeReceiverAddress": "Hskv4p5suzPfk2uNTvqX3VTHDChssq9ejPKV6vznATSG"
+      },
+      {
+        "asset": "zBTC",
+        "address": "HQDViv8g4zZM4tMm7ZTtvT7JKc2BoN3EQd4UiQzsVr38",
+        "collateralMintAddress": "8GEsdDhVTnotJPNG25DZeRPkuUNmS9C1TM5HqLFrKcPV",
+        "collateralSupplyAddress": "2NaavDgq47AMYotAzwCrtCCkUScmC7kMdLkPrBUPzYXr",
+        "liquidityAddress": "9RE9PLrtJwBM2UKHB6JZ6PCpv1M98xRPWyc8gb6ekWnD",
+        "liquidityFeeReceiverAddress": "8WXNK49iaeBAeRqTQUfzn7hVbh5mcnvarVhJusLmAQXq"
+      },
+      {
+        "asset": "hSOL",
+        "address": "9UueaExTBhMQznkFsBE26c47cCF98oKgKk2G2Qhc2Fo7",
+        "collateralMintAddress": "iD74HqqwPpukXqvSenY4jXR9mwUhkyZpVporUU8a8b8",
+        "collateralSupplyAddress": "4sHRxAfxV73sVFkkC1snEWZRv8B4pgUQ2Sm34ScE4Utr",
+        "liquidityAddress": "D1CSHnbSbd9tBhsamiqk5HXUMTvBvUz29zVZhV33odrC",
+        "liquidityFeeReceiverAddress": "FqxEpoCrMXXV3ZynCgWvoSNUUfNcunrQ2N1zeJGvReQi"
+      },
+      {
+        "asset": "RETARDIO",
+        "address": "JMBiQLjvqrKkBApAFKT1WkGY5qphQzqu4NutEkU99KK",
+        "collateralMintAddress": "Bkk8bTjqEHgF6ARezeaz3KYrXzqhuzCk2xb8SECY4Z46",
+        "collateralSupplyAddress": "5fDXm4fV5M883RrtZHk7e1NUyRQWrqGrt1vSnx42Nqjh",
+        "liquidityAddress": "D12E1eXmjz1NkAQ3wvTs7MJwLG3Z6fNWnNBn1LMPYhKQ",
+        "liquidityFeeReceiverAddress": "5K3nXDCgsG2yVL3yDxGhe94yBb1x794atLzieRUFvnJf"
+      },
+      {
+        "asset": "PONKE",
+        "address": "6SVtJkr1GcwPAxuoKQXaNfp9QKPECxXqQEucHJjniMDH",
+        "collateralMintAddress": "2CDp4t43Z7F1LKaJbZJ28TRWzcVq8aAqciqmBneNM7ic",
+        "collateralSupplyAddress": "2r4WmhMzr8dGBp2cksARhjnBvQPniExF4BGeCry8A1dg",
+        "liquidityAddress": "H5FHWfWu2pt3dRXLZ7196VkCtkWXsZX7kUwtuEGWVZL7",
+        "liquidityFeeReceiverAddress": "8nDbkkhaBCkxAC49DqCN75Bgfh3DuMv7e2zTRuDFfCo2"
+      },
+      {
+        "asset": "WEN",
+        "address": "9jC8My4C9WCNWHmBnnAGqpCbbNU1FVEs2B7PNbQPb1U6",
+        "collateralMintAddress": "B3akPwBteZA8MTSesRZbhxjxF1uuyDKsgfW9iCtkh3GW",
+        "collateralSupplyAddress": "6ZRYiP59kGMFRYeSbMpcfaiWvSVJgLpDjKHMQ6kXeTqY",
+        "liquidityAddress": "9EZcsjerzUDBiqhsyxznrdnJKMtbPGsVL5LmucLywekQ",
+        "liquidityFeeReceiverAddress": "6WxN8bGrNZzmgpzapCKiGo7ZvEEVJbtvc7y8yjmb9LQm"
+      },
+      {
+        "asset": "BONK",
+        "address": "5Pf253eBRevFYCoXfekcR2PEcHeq4Du6Ke83U3paE1cz",
+        "collateralMintAddress": "Yu9jsghrGbrovYGpYqy25nmWW8jXphCkA8wv2d9YB1s",
+        "collateralSupplyAddress": "2JhhLgRsfA6ZbREvPXfb1dqVAN4CyR4U3mr2aCRH7MCK",
+        "liquidityAddress": "5dNAJAxSjv9bYXHzZWuVm7MbobcygSk2Zo76S7mu8GcQ",
+        "liquidityFeeReceiverAddress": "CHAFVixXKBgvXi8mMSfjLvDFdXqtp3zEeJbukCwcwnVx"
+      },
+      {
+        "asset": "SLND",
+        "address": "CviGNzD2C9ZCMmjDt5DKCce5cLV4Emrcm3NFvwudBFKA",
+        "collateralMintAddress": "D3Cu5urZJhkKyNZQQq2ne6xSfzbXLU4RrywVErMA2vf8",
+        "collateralSupplyAddress": "Cc8DRe9wagmkVBeeeLsjgkAk7fkpyZt7XF8Ts3ddyYXd",
+        "liquidityAddress": "5pHGhh9pjzHP6fWQF4wQ3CKWpZM3YaerRJYN6RLTtZ5m",
+        "liquidityFeeReceiverAddress": "FtsXfVZWLgMWJH1owUmLhtET5KW1Ck8oykYXyPMkxFcE",
+        "userBorrowCap": "250000",
+        "userSupplyCap": "500000"
+      },
+      {
+        "asset": "PENGU",
+        "address": "7ZpPKWQdiaQQkwLyKq2MQQeNKXLtBkQ59Xdbr5GpUnMZ",
+        "collateralMintAddress": "8eMSM5ajEoVAcJAwsJcbDuNyouSncsTm6YSQ8ftm5fN2",
+        "collateralSupplyAddress": "Fg1G8d7K1wYdrCntJPJBR2zxuzvMsEx5WRBzraXJXHAR",
+        "liquidityAddress": "CsJmKcpgnkAib5fdUDfZWLakqQ9RxxQ9ZcTnQWRLXfUb",
+        "liquidityFeeReceiverAddress": "H37TJyxyvwkY8rjZN4EfuUYHYeC1MuwmXMKwL2rYWjYT"
+      },
+      {
+        "asset": "BOBAOPPA",
+        "address": "9MNU28Kog3j5oNkQDeMHbVQqaGSxh6T6VBHvWKXoB8zj",
+        "collateralMintAddress": "6Z5WS8v7NLfFTCxEV4Jdi8f8YyfMTjVai2huVjo9eEE9",
+        "collateralSupplyAddress": "2ehxUnmj1SUJbMyGjw7vPsxYeN3pfVuKd8FckEU2QLa1",
+        "liquidityAddress": "AxzqeNgBPdvqXRVsLVoTHtdzQCzkv13HjgG8VVaAS7AC",
+        "liquidityFeeReceiverAddress": "9rbzpTiVKSEqGQurBXia8yw6r2MbfnwfDrmbANgHwPmm"
+      },
+      {
+        "asset": "RAY",
+        "address": "9n2exoMQwMTzfw6NFoFFujxYPndWVLtKREJePssrKb36",
+        "collateralMintAddress": "2d95ZC8L5XP6xCnaKx8D5U5eX6rKbboBBAwuBLxaFmmJ",
+        "collateralSupplyAddress": "6uEjo58ecepRyYnKRLdAMRn8ic3oJJxnwMBH96ufMSXN",
+        "liquidityAddress": "5JT6EK5wLEYGpAXMY2BXvhoeuQCp93eo4os2EtXwnPG1",
+        "liquidityFeeReceiverAddress": "2E15BsCyBeAu9TwhWKQ9yWj9a4TKoPkv7B1JjNxFF7v7",
+        "userBorrowCap": "500000",
+        "userSupplyCap": "250000"
+      },
+      {
+        "asset": "SOL-bSOL MLP",
+        "address": "6TyNRszAjzPh52mDEnmXcqq1u3p9S2z1iNmMdKN76wq2",
+        "collateralMintAddress": "AmxDR33CjjRoxexcX5uYx3jZ7iDa8Xy9UtrjG9CqNt25",
+        "collateralSupplyAddress": "HQC9PUhFBZX9k8XieQ71H7Nuoy7rHRrZzf97T16LzwBY",
+        "liquidityAddress": "6bgDNCmJZXPuVuaLAypYYit2waysyRkrNw2xgpP6BWVo",
+        "liquidityFeeReceiverAddress": "Cjf25QWfd5jE7qD6XKMszJCnDAcM1XMR6FDZ3RbR9s5D"
+      },
+      {
+        "asset": "DADDY",
+        "address": "8YC6boJoPR6mT8GheRbTqydYjpoCqYwYvWtYbdcUwz59",
+        "collateralMintAddress": "43Gq19K8Xo9aE2YEdM8A9hYKVT6xcC6rvu7VJ3EE1Ffc",
+        "collateralSupplyAddress": "FLcP7xuTmVdYKZiGyDs77BgwSkXpfhyHsSbpETYdBPi3",
+        "liquidityAddress": "GwuwaztvKU7aGg2mCqXamiK54m42rHCeJBGXJTrAQ5Mu",
+        "liquidityFeeReceiverAddress": "DgNimtErgjmQ9QwUGDn8Z5Aj7K3cH32ACFhxKHV655Bk"
+      },
+      {
+        "asset": "POPCAT",
+        "address": "BTzJ9wLyHAZFAqGoWRAwZetRiGRgkpBuL85wXKXZF8Hx",
+        "collateralMintAddress": "3qjt9bmkjyGrtZfWc5wGdFk34SYHnMMVEA3ijiK6nmvh",
+        "collateralSupplyAddress": "GBz8ir5n3CyC45Ag5N1Dy9aqELDKptdBML6YY9ShgeJN",
+        "liquidityAddress": "3JwBHnX3sd9bd25xf6Aa3ZViTf4arkxVEvhrTGcRnRnC",
+        "liquidityFeeReceiverAddress": "ERQqeYMXPPcfWfzs3TYqYpghKmx7mkcBdsZB7FuJaa7T"
+      },
+      {
+        "asset": "BLZE",
+        "address": "G7seqaHu2vNiZcxHewynUjeaUcrf38j6yQTbACF4sWqL",
+        "collateralMintAddress": "AEPYPxbmF7vkQkyN2ew9o7TCxBUCjSFLGRK3cCf5FD5d",
+        "collateralSupplyAddress": "GoH22mhnQYTsik1z6NTxouYbGm7YAp3KUNJuBAa8a42Y",
+        "liquidityAddress": "EFKeUUu744dJsGXX6mpdkbsmfHNk8XM7RyZkccekquY1",
+        "liquidityFeeReceiverAddress": "DWk9xdUSS4kkb7Jo53sW8WXmpW9Ja8k4G5K47YmFaCch"
+      },
+      {
+        "asset": "bSOL",
+        "address": "3DjAsrew4ZmBwcLjp2wUmjqvSKs4vpJ43ZKxaCjjEdur",
+        "collateralMintAddress": "FZ8KVvJ1QiytR29ykNz6kkhV6tvsB7XdiKW2s14DftFt",
+        "collateralSupplyAddress": "3ZT6KCf7xyYMjtCFmfnaBJb3fgedkXZ7QGMF9o87CtKz",
+        "liquidityAddress": "8STS7KeeoKsA8oBD2TwEEeNrYHQJh9dyKSLFhVUhGk4z",
+        "liquidityFeeReceiverAddress": "AiTxuQoUyy4Rk9edTfrhezMkix4bTmCNvM8uBXEjcaoo"
+      },
+      {
+        "asset": "GOAT",
+        "address": "BJXPu3yB7D35jC1kg3KdAZvam5bnb8hL1iY1h9kNJwik",
+        "collateralMintAddress": "7i3PBGvmMmQUkWfEHfNMWj7youHDxVGdnNU1Bo1J6DVF",
+        "collateralSupplyAddress": "HUUCNqEik5gZd4EinRRipGpbC1DaV7BH52uBZ6dz3woz",
+        "liquidityAddress": "J131QqnFLFwxLgkwgPL1yekS7qfJg7egVGNPiNY9Kauh",
+        "liquidityFeeReceiverAddress": "8GcsUg3VHpfogKMLCPxJMbrx54D8cxJkVLPati6YkcvA"
+      },
+      {
+        "asset": "PYUSD",
+        "address": "GhNvGen79cntgdZjUjLkj1LWSdZBiH8YFmDXhkdREX3q",
+        "collateralMintAddress": "Gv6kP9Zb5SbyVrR68oeDjXtYvoidyJPeRQSf4pgutKDt",
+        "collateralSupplyAddress": "HTBBfsZGRZ8yKS7uZD1CNSoocouS5kEuzPuiknmRbmdR",
+        "liquidityAddress": "DcHZ6SSWDAJ5LMgbGdhy4daUfUBDRCSP64sQLEu33a4Y",
+        "liquidityFeeReceiverAddress": "4QPuUfbDLszLNvbeQ74QxmS3cx3zrJJtxiD5qYwgt9VV"
+      },
+      {
+        "asset": "sSOL",
+        "address": "7ED1Yofz9n2E3kGHfineuqxUDrN38EKbpSfiRJ5HPJh2",
+        "collateralMintAddress": "3Mr1NdFREcqzhmNC6S5VquZoHkaUjAnyCaFtAs76xEVC",
+        "collateralSupplyAddress": "DToAb5r3Mv3iW9KSkX8VQdpmCRL35FPREnkmLK5GmYzw",
+        "liquidityAddress": "DPyxMaBvMwSx5efZq2g3C2RLnAaKJddbj4ivAcU58bmc",
+        "liquidityFeeReceiverAddress": "Fj7g9PYt8xiKDoEQg9RjhCvkc6zSw8wy7sxj2Yr7kRBT"
+      },
+      {
+        "asset": "ETH",
+        "address": "CPDiKagfozERtJ33p7HHhEfJERjvfk1VAjMXAFLrvrKP",
+        "collateralMintAddress": "FbKvdbx5h6F86h1pZuEqv7FxwmsVhJ88cDuSqHvLm6Xf",
+        "collateralSupplyAddress": "BtGoQiwEWUZQfNaxSxzBgRikfT1rx3hSkzjQEWvktEMe",
+        "liquidityAddress": "8HAaZSiCbVqrLDQHxg3yey8JWuGbeyC2tNTEmzgmt4C4",
+        "liquidityFeeReceiverAddress": "86FvZEpX1y6pK5E6JPLbhoBvp6P2n1givZiikFGgi6Lj",
+        "userBorrowCap": "1500",
+        "userSupplyCap": "5000"
+      },
+      {
+        "asset": "W",
+        "address": "Bvdjsmab3mm8e9nY5aUYibrfbuSyUqTrzR2Zn5oHr6VY",
+        "collateralMintAddress": "3wtk8ecgbd6f2LknYpqQ1y1wyf45jzP8gZkz8Yswd7DQ",
+        "collateralSupplyAddress": "D2oecRyxST1RLz18LSvCzPrU9PvbdwpRifZTD6V3hFj8",
+        "liquidityAddress": "GyoGoWFRKdaV2RXZmKaFRgt8T92MUyUQaFXEx5SsEuBs",
+        "liquidityFeeReceiverAddress": "GszSVnHyhNkinCB4wKt7mqA86Zqq1w7RyemJLKjH8PgF"
+      },
+      {
+        "asset": "mSOL",
+        "address": "CCpirWrgNuBVLdkP2haxLTbD6XqEgaYuVXixbbpxUB6",
+        "collateralMintAddress": "3JFC4cB56Er45nWVe29Bhnn5GnwQzSmHVf6eUq9ac91h",
+        "collateralSupplyAddress": "FG7yuhS6udX8v2LQYxqwpcsdC2J1pUREoGrRYsQjr1uh",
+        "liquidityAddress": "3R5SVe3qABRUYozgeMNVkSotVoa4HhTFFgWgx2G2QMov",
+        "liquidityFeeReceiverAddress": "83r2poRUiqaghyymPtfhhRtHdReFAKbgGGCQajkczW5w",
+        "userBorrowCap": "500000",
+        "userSupplyCap": "1500000"
+      },
+      {
+        "asset": "wstETH",
+        "address": "4d5aycKFt3R3YN2SDghfEPr6DwMNv197xT6sND5LnrEF",
+        "collateralMintAddress": "HUitrgPKt5sgJwZhSmh4zxmL3hLHVNskc6C5Hv4JA8cb",
+        "collateralSupplyAddress": "88EUHQZFCTczH2Z6aFENHgPzEpuqH2V7VXaywKseZgN8",
+        "liquidityAddress": "BFS6R5UVTGzjMftHtBoa7iahvFFRFzcNT9eKQkBj1Can",
+        "liquidityFeeReceiverAddress": "3GeNAyEXYusf4AZENxJoGf3mHqX9cNtp5gAUaFUAxxMd"
+      },
+      {
+        "asset": "WIF",
+        "address": "4rS8X6uwnsZ94b4A7pqVx8By9zgJQWGeAgrYHXu4x8Av",
+        "collateralMintAddress": "HWSLLu7FTMVzsY1LinSCmHkqeR3NUjFpUYgh2VxbFAbw",
+        "collateralSupplyAddress": "55suQukBrMFVaeFNkCWg8yjqt5DzBYvxN7xU4vDLnKzN",
+        "liquidityAddress": "E3tFW3MefHabzRqvyUbrS5FirSuLFSWKAETaYsAipHTJ",
+        "liquidityFeeReceiverAddress": "DsJncuTgvqzzKJoKN1i47L6zXTmdasAKyk4c63U96cPP"
+      },
+      {
+        "asset": "JSOL",
+        "address": "2MwiTp5oBwbmUVu7NwnoKE1QLaqtFggQ86xpkvhCFBq7",
+        "collateralMintAddress": "EaxVjZ4qFxCeg3mAus5epMSpfsh3pmMuqVUzmUgHuE5p",
+        "collateralSupplyAddress": "Hss63mHNNKpHbarDVnpHiErrFqkshDQj6nr9U4xkUcmv",
+        "liquidityAddress": "67cMu9ny7QAkFZ7pFzukTakeJtstDGy883nLhUWN4wH",
+        "liquidityFeeReceiverAddress": "41N4eSMsyvqCxGfsU4u8qoMqoyWdVoHGqhDvwbxnwEmu"
+      },
+      {
+        "asset": "cbBTC",
+        "address": "Ag7UiqS5kqcsjNFWQfeUAiEXo27auFvdwLVJQwzYCBkZ",
+        "collateralMintAddress": "5unMtvRrfgu8ofLancHyYKWQrqsd7vZqVu8RquGceM6X",
+        "collateralSupplyAddress": "GBCwpu8ZaYZ7tuweED5GCNEbokr5xNhJt1Gk1gSkwJcy",
+        "liquidityAddress": "GMzFQtWWUL7z4e2HGBx3Y5LbnH69WuENfH9mqnm6mG5h",
+        "liquidityFeeReceiverAddress": "8PpJTx7YbcC8YYvv6n1qdxgSRcQgQD5SrWmDdjhPBFp1"
+      },
+      {
+        "asset": "JitoSOL",
+        "address": "BRsz1xVQMuVLbc4YjLP1FXhEx1LxSYig2nLqRgJEzR9r",
+        "collateralMintAddress": "6mFgUsvXQTEYrYgowc9pVzYi49XEJA5uHA9gVDURc2pM",
+        "collateralSupplyAddress": "3GynM9cRtZsZ2s1SyoAuSgTDjx8ANcVZJXZayuWZbMpd",
+        "liquidityAddress": "2Khz77qDAL4yY1wG6mTLhLnKiN7sDjQCtrFDEEUFPpiB",
+        "liquidityFeeReceiverAddress": "HQWqKfdgJXGXGggdUcM1Xp3S39kwsd83boBvfrnqauzA"
+      },
+      {
+        "asset": "USDS",
+        "address": "HUL7GeHECRMbBFwde6pBmCPwDZjoLQDX7Xis4d64jAya",
+        "collateralMintAddress": "2vtVnToA4N1FaxzYiwYVyRHY8jJAiaHrtdSycKNLDPRg",
+        "collateralSupplyAddress": "5AFVxfJ4zD7vSwgVcoE9U7Um12F8R9iMoRCuWjLxZq8B",
+        "liquidityAddress": "9uC55GXWnvc4XppM42CiLpyQ3KvVN3KtnLctvcH2HZCg",
+        "liquidityFeeReceiverAddress": "GqxVmWjEmbPmhXyawVYFWEn7y3uFy8kBdLE77Pbf5nfR"
+      },
+      {
+        "asset": "SOL",
+        "address": "8PbodeaosQP19SjYFx855UMqWxH2HynZLdBXmsrbac36",
+        "collateralMintAddress": "5h6ssFpeDeRbzsEHDbTQNH7nVGgsKrZydxdSTnLm6QdV",
+        "collateralSupplyAddress": "B1ATuYXNkacjjJS78MAmqu8Lu8PvEPt51u4oBasH1m1g",
+        "liquidityAddress": "8UviNr47S8eL6J3WfDxMRa3hvLta1VDJwNWqsDgtN3Cv",
+        "liquidityFeeReceiverAddress": "5wo1tFpi4HaVKnemqaXeQnBEpezrJXcXvuztYaPhvgC7",
+        "userBorrowCap": "2000000",
+        "userSupplyCap": "1000000"
+      },
+      {
+        "asset": "USDT",
+        "address": "8K9WC8xoh2rtQNY7iEGXtPvfbDCi563SdWhCAhuMP2xE",
+        "collateralMintAddress": "BTsbZDV7aCMRJ3VNy9ygV4Q2UeEo9GpR8D6VvmMZzNr8",
+        "collateralSupplyAddress": "CXDxj6cepVv9nWh4QYqWS2MpeoVKBLKJkMfo3c6Y1Lud",
+        "liquidityAddress": "3CdpSW5dxM7RTxBgxeyt8nnnjqoDbZe48tsBs9QUrmuN",
+        "liquidityFeeReceiverAddress": "Cpyk5WRGmdK2yFGTJCrmgyABPiNEF5eCyCMMZLxpdkXu",
+        "userBorrowCap": "10000000",
+        "userSupplyCap": "5000000"
+      },
+      {
+        "asset": "JupSOL",
+        "address": "Aj3MjwEeAcT5Phan6unxbpKYR8Jx1bNZUoWxA59yg1cF",
+        "collateralMintAddress": "Mkfee8Xp3njW8AJMXrdDgbJbtAZRCSPvEyKJhrQ9Kpn",
+        "collateralSupplyAddress": "9F3T49yVWogKZxBM7X2DsUPiJYMQtiABNwSueztLhUZ9",
+        "liquidityAddress": "9AhGbhV7L98mzkMurV8Zcz5WJvvJeRDSQhvH3Wem73QM",
+        "liquidityFeeReceiverAddress": "3aVQHgp5fFBxvTTmi5Zt2qKVEggJL5oANXBYjtBRZsb9"
+      },
+      {
+        "asset": "USDC",
+        "address": "BgxfHJDzm44T7XG68MYKx7YisTjZu73tVovyZSjJMpmw",
+        "collateralMintAddress": "993dVFL2uXWYeoXuEBFXR4BijeXdTv4s6BzsCjJZuwqk",
+        "collateralSupplyAddress": "UtRy8gcEu9fCkDuUrU8EmC7Uc6FZy5NCwttzG7i6nkw",
+        "liquidityAddress": "8SheGtsopRUDzdiD6v6BR9a6bqZ9QwywYQY99Fp5meNf",
+        "liquidityFeeReceiverAddress": "5Gdxn4yquneifE6uk9tK8X4CqHfWKjW2BvYU25hAykwP",
+        "userBorrowCap": "50000000",
+        "userSupplyCap": "30000000"
+      },
+      {
+        "asset": "JUP",
+        "address": "HPDFoSZskyUGzo14oTuqMmoGNzavsLtU2WnPkzxAk6Sb",
+        "collateralMintAddress": "A9h7EaytnsvcNNrwdkc71eBoYQ8VUiir3iNAkaP4rnvV",
+        "collateralSupplyAddress": "CvG6hmwZA6gUF7CKFpuhaXZsX558NjQN1kSGLdRrrVGX",
+        "liquidityAddress": "3m5UiPrmtqzZsTxHdJ6DNfagXZVVqC3Eq6xugJN4wDWJ",
+        "liquidityFeeReceiverAddress": "7KK7MTYa1dXTXXPtPEp2RDxzdVksdVvD3gPyYsyPY4Ht"
+      },
+      {
+        "asset": "LAYER",
+        "address": "5f1MuRu5ANsN8m94vbZwptN7aX9xKGq7S9YWeAFzhNgd",
+        "collateralMintAddress": "Bk8BLxF4xBh7PTqxmFuAQrHmhFd1MKY8U4mDShEEs9Wg",
+        "collateralSupplyAddress": "9UZVuizwtKUxPu6SUMuZhniwg2VaFXCiLuqcWG6y4K5s",
+        "liquidityAddress": "GmHtoFrANDEcrRAEqBEKRSyPH3MTnBtAirxaTy4K4Jpb",
+        "liquidityFeeReceiverAddress": "5PC5qkgnX66nsbiSQbvhtM5TaQ3Bnr1iERqxpt8BjGVj"
+      }
+    ]
+  }
