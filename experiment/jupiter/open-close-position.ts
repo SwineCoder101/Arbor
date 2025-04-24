@@ -55,7 +55,7 @@ const POOL_ID  = new PublicKey("5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq");
 const SOL_CUSTODY = new PublicKey("7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz");
 
 // Import the IDL JSON (put it next to this file)
-import IDL_JSON from "../idl/jupiter-perpetuals-idl.json";
+import IDL_JSON from "../idl/jupiter-perpetuals-idl-json.json";
 type Perpetuals = typeof IDL_JSON;
 
 const PROGRAM = new Program<Perpetuals>(IDL_JSON as any, PERPS_ID, PROVIDER);
