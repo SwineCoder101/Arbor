@@ -9,10 +9,12 @@
     "@solana/web3.js": "^1.98.0",
     "@solendprotocol/solend-sdk": "0.14.16",
     "@types/node": "^22.14.1",
+    "bs58": "^6.0.0",
     "prompt-sync": "^4.2.0",
     "typescript": "^5.8.3"
   },
   "devDependencies": {
+    "@types/prompt-sync": "^4.2.3",
     "axios": "^1.8.4",
     "dotenv": "^16.5.0",
     "ts-node": "^10.9.2"
