@@ -1,13 +1,21 @@
-import 'dotenv/config';
-import fs from 'fs';
-import { BN } from 'bn.js';
-import { Connection, Keypair, PublicKey, Commitment } from '@solana/web3.js';
+import * as dotenv from 'dotenv';
+dotenv.config();
+import * as fs from 'fs';
+import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { Transaction, Connection, Keypair, PublicKey, Commitment, } from '@solana/web3.js';
 import { Wallet } from '@project-serum/anchor';
 import {
   DriftClient,
+  SpotMarkets,
+  TokenFaucet,
   OrderType,
   PositionDirection,
+  BN
 } from '@drift-labs/sdk';
+
+
+const DRIFT_PROGRAM_ID = new PublicKey( 'dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH');
+const TOKEN_FAUCET_PROGRAM_ID = new PublicKey( 'V4v1mQiAdLz4qwckEb45WqHYceYizoib39cDBHSWfaB');
 
 // ---------- helper to load the keypair ----------
 function loadKeypair(path: string): Keypair {
@@ -15,49 +23,122 @@ function loadKeypair(path: string): Keypair {
   return Keypair.fromSecretKey(new Uint8Array(secret));
 }
 
+const checkUserExistsInitialiseIfNot = async (driftClient: DriftClient) => {
+  try {
+    const user = driftClient.getUser();
+    console.log('User account already exists: ');
+  } catch (e) {
+    console.log('Initializing user account...');
+    const userAccountPublicKey = await driftClient.initializeUserAccount();
+    console.log(`User account initialized: ${userAccountPublicKey.toString()}`);
+    
+    // Need to subscribe again to load the newly created user account
+    await driftClient.subscribe();
+    console.log('Resubscribed to load the new user account');
+  }
+}
+
+const mintToUser = async (driftClient: DriftClient, wallet: Wallet, marketIndex: number, amount: BN, opts: any) => {
+  try {
+    const mint = SpotMarkets["devnet"][marketIndex].mint;
+    const tokenFaucet = new TokenFaucet(driftClient.connection, wallet, TOKEN_FAUCET_PROGRAM_ID, mint, opts);
+    const ata = await getTokenAddress(mint.toBase58(), wallet.publicKey.toBase58());
+
+    const tokenAccountInfo = await driftClient.connection.getAccountInfo(ata);
+    if (!tokenAccountInfo) {
+      const createAtaIx = createAssociatedTokenAccountInstruction(
+        wallet.publicKey, // payer
+        ata, // ata address
+        wallet.publicKey, // owner
+        mint // mint
+      );
+      const tx = new Transaction().add(createAtaIx);
+      const signature = await driftClient.provider.sendAndConfirm(tx);
+      console.log("Token account created:", signature);
+    }
+
+    let mint_res = await tokenFaucet.mintToUser(ata, amount);
+    console.log("usdc faucet mintToUser Response", mint_res);
+  } catch(e) {
+    console.log(e)
+  }
+}
+
+
+const getTokenAddress = ( mintAddress: string, userPubKey: string): Promise<PublicKey> => {
+  return getAssociatedTokenAddress(
+    new PublicKey(mintAddress),
+    new PublicKey(userPubKey)
+  );
+};
+
 async function main() {
-  /*** 1. basic setup ***/
   const commitment: Commitment = 'confirmed';
   const connection = new Connection(process.env.RPC_ENDPOINT!, commitment);
   const keypair     = loadKeypair(process.env.KEYPAIR!);
   const wallet      = new Wallet(keypair);
 
-  /*** 2. spin‑up the Drift client ***/
-  const driftProgramId = new PublicKey(
-    'dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH'
-  );
+
 
   const driftClient = new DriftClient({
     connection,
     wallet,
-    programID: driftProgramId,
+    programID: DRIFT_PROGRAM_ID,
     env: process.env.CLUSTER as 'devnet' | 'mainnet-beta',
     accountSubscription: { type: 'websocket' },
   });
 
-  await driftClient.subscribe();          // loads markets, user account, etc.
+  try {
+    await driftClient.subscribe();          // loads markets, user account, etc.
 
-  /*** 3. OPEN position – market order via `placeAndTakePerpOrder` ***/
-  const SOL_PERP_INDEX = 0;               // SOL‑PERP is index 0 on Drift
-  const baseAmount     = new BN(0.1 * 1e9);   // 0.1 SOL in base precision
+    // Check if user account exists, if not initialize it
+    await checkUserExistsInitialiseIfNot(driftClient);
 
-  const openSig = await driftClient.placeAndTakePerpOrder({
-    marketIndex: SOL_PERP_INDEX,
-    direction:   PositionDirection.LONG,
-    baseAssetAmount: baseAmount,
-    orderType: OrderType.MARKET,
-    reduceOnly: false,
-  });
-  console.log(`Opened 0.1 SOL‑PERP long → tx ${openSig}`);
+    const SOL_PERP_INDEX = 0;               // SOL‑PERP is index 0 on Drift
+    const baseAmount     = new BN(10 * 1e9);   // 0.01 SOL in base precision
+    const usdcMarketIndex = 0;
 
-  /*** 4. wait a few blocks (simple demo‑delay) ***/
-  await new Promise((r) => setTimeout(r, 6000));
+    if (process.env.CLUSTER == "devnet") {
+      const opts = { skipPreflight: false, preflightCommitment: commitment }
 
-  /*** 5. CLOSE position – convenient helper (market order in opposite dir.) ***/
-  const closeSig = await driftClient.closePosition(SOL_PERP_INDEX);
-  console.log(`Closed position          → tx ${closeSig}`);
+      await mintToUser(driftClient, wallet, usdcMarketIndex, baseAmount, opts) // mint usdc to user
+    }
+    
+    
+    const mint = SpotMarkets["devnet"][usdcMarketIndex].mint;
+    const ata = await getTokenAddress(mint.toBase58(), wallet.publicKey.toBase58());
+    let res = await driftClient.deposit(baseAmount, SOL_PERP_INDEX, ata)
+    console.log("deposit response: ", res)
+
+
+    const openSig = await driftClient.placeAndTakePerpOrder({
+      marketIndex: SOL_PERP_INDEX,
+      direction:   PositionDirection.SHORT,
+      baseAssetAmount: baseAmount,
+      orderType: OrderType.MARKET,
+      reduceOnly: false,
+    });
+    console.log(`Opened 0.01 SOL‑PERP long → tx ${openSig}`);
+
+    await new Promise((r) => setTimeout(r, 6000));
+
+    const closeSig = await driftClient.placeAndTakePerpOrder({
+      marketIndex: SOL_PERP_INDEX,
+      direction: PositionDirection.LONG,   // Opposite of your SHORT position
+      baseAssetAmount: baseAmount,
+      orderType: OrderType.MARKET,
+      reduceOnly: true,                    // Set to true to close position
+    });
+    console.log(`Closed SOL-PERP position → tx ${closeSig}`);
+
+    // const closeSig = await driftClient.closePosition(SOL_PERP_INDEX);
+    // console.log(`Closed position          → tx ${closeSig}`);
+  } catch (e) {
+    console.log(e)
+  }
 
   await driftClient.unsubscribe();
+
 }
 
 main().catch((e) => {
