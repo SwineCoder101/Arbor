@@ -23,18 +23,21 @@ function loadKeypair(path: string): Keypair {
   return Keypair.fromSecretKey(new Uint8Array(secret));
 }
 
-const checkUserExistsInitialiseIfNot = async (driftClient: DriftClient) => {
+const checkUserExistsInitialiseIfNot = async (driftClient: DriftClient): Promise<PublicKey> => {
   try {
     const user = driftClient.getUser();
-    console.log('User account already exists: ');
+    const userPK = user.getUserAccountPublicKey()
+    console.log('User account already exists: ', userPK);
+    return userPK;
+
   } catch (e) {
     console.log('Initializing user account...');
     const userAccountPublicKey = await driftClient.initializeUserAccount();
     console.log(`User account initialized: ${userAccountPublicKey.toString()}`);
-    
     // Need to subscribe again to load the newly created user account
     await driftClient.subscribe();
     console.log('Resubscribed to load the new user account');
+    return userAccountPublicKey[1];
   }
 }
 
@@ -78,8 +81,6 @@ async function main() {
   const keypair     = loadKeypair(process.env.KEYPAIR!);
   const wallet      = new Wallet(keypair);
 
-
-
   const driftClient = new DriftClient({
     connection,
     wallet,
@@ -92,7 +93,7 @@ async function main() {
     await driftClient.subscribe();          // loads markets, user account, etc.
 
     // Check if user account exists, if not initialize it
-    await checkUserExistsInitialiseIfNot(driftClient);
+    const userPK = await checkUserExistsInitialiseIfNot(driftClient);
 
     const SOL_PERP_INDEX = 0;               // SOL‑PERP is index 0 on Drift
     const baseAmount     = new BN(10 * 1e9);   // 0.01 SOL in base precision
@@ -110,7 +111,6 @@ async function main() {
     let res = await driftClient.deposit(baseAmount, SOL_PERP_INDEX, ata)
     console.log("deposit response: ", res)
 
-
     const openSig = await driftClient.placeAndTakePerpOrder({
       marketIndex: SOL_PERP_INDEX,
       direction:   PositionDirection.SHORT,
@@ -119,6 +119,23 @@ async function main() {
       reduceOnly: false,
     });
     console.log(`Opened 0.01 SOL‑PERP long → tx ${openSig}`);
+
+
+    const userAccount = driftClient.getUserAccount();
+
+    // const settledPnL = userAccount.settledPerpPnl;
+    // console.log("Settled PnL", settledPnL)
+
+    // const orders = userAccount.orders;
+    // console.log("Users Orders: ", orders);
+
+    // Find the SOL-PERP position
+    const userPositions = userAccount.perpPositions;
+    const solPosition = userPositions.find(p => p.marketIndex === SOL_PERP_INDEX);
+    if (solPosition) {
+      console.log("Position details:");
+      console.log(solPosition);
+    }
 
     await new Promise((r) => setTimeout(r, 6000));
 
@@ -129,6 +146,7 @@ async function main() {
       orderType: OrderType.MARKET,
       reduceOnly: true,                    // Set to true to close position
     });
+
     console.log(`Closed SOL-PERP position → tx ${closeSig}`);
 
     // const closeSig = await driftClient.closePosition(SOL_PERP_INDEX);
