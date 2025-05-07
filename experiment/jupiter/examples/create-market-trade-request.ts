@@ -9,7 +9,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { CustodyAccount, Position } from "../types";
-import { Perpetuals } from "../idl/jupiter-perpetuals-idl";
+import { Perpetuals } from "../../idl/jupiter-perpetuals-idl";
 import { generatePositionRequestPda } from "./generate-position-and-position-request-pda";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
