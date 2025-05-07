@@ -1,74 +1,158 @@
 # Backend Services
 
 This backend provides services for both:
-1. Express Redis Storage API
+1. Market Data Storage and Retrieval with MongoDB
 2. Drift Protocol Perpetual Markets Data Service
+3. Historical Data API
 
-## Express Redis Storage API
-
-A simple Express API that connects to Redis for storing and retrieving JSON data.
-
-### Requirements
-
-- Node.js 
-- Redis server running locally
-
-### Setup
+## Setup
 
 1. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Make sure Redis is running:
+2. Create a `.env` file based on `.env.example`:
 ```bash
-# Check Redis status or start it if it's not running
-redis-cli ping
+cp .env.example .env
 ```
 
-3. Start the development server:
+3. Edit the `.env` file with your configuration:
+```
+# Server settings
+PORT=3000
+
+# Data collection settings
+COLLECT_DATA_ON_START=false
+DATA_COLLECTION_INTERVAL_MINUTES=30
+
+# MongoDB settings
+MONGO_URL=mongodb://mongo:password@hostname:port
+MONGO_DB=mainnet
+
+# Solana settings
+RPC_ENDPOINT=https://api.mainnet-beta.solana.com
+KEYPAIR=/path/to/your/keypair.json
+CLUSTER=mainnet-beta
+```
+
+4. Start the development server:
 ```bash
 npm run dev
 ```
 
-### API Endpoints
+## API Endpoints and Example Requests
 
-#### Store Data
-- **POST** `/data`
-- **Body**:
-  ```json
-  {
-    "key": "your-key",
-    "data": {
-      "any": "json data",
-      "can": "go here"
-    }
-  }
-  ```
-- **Response**: 
-  - Success (201):
-    ```json
-    {
-      "message": "Data stored successfully"
-    }
-    ```
-  - Error (400): Missing key or data
-  - Error (500): Server error
+### Market Data API
 
-#### Retrieve Data
-- **GET** `/data/:key`
-- **Response**:
-  - Success (200):
-    ```json
-    {
-      "data": {
-        "any": "json data",
-        "can": "go here"
-      }
-    }
-    ```
-  - Error (404): Data not found
-  - Error (500): Server error
+The Market Data API provides access to perpetual market data stored in MongoDB.
+
+#### Get All Markets
+Retrieve latest data for all markets:
+```bash
+curl http://localhost:3000/api/markets
+```
+
+Filter by a specific DEX:
+```bash
+curl "http://localhost:3000/api/markets?dex=drift"
+```
+
+#### Get a Specific Market
+Retrieve data for a specific market by ticker:
+```bash
+curl http://localhost:3000/api/markets/SOL-PERP
+```
+
+#### Get Market History
+Retrieve historical data for a specific market:
+```bash
+curl http://localhost:3000/api/markets/SOL-PERP/history
+```
+
+Limit the number of records:
+```bash
+curl "http://localhost:3000/api/markets/SOL-PERP/history?limit=10"
+```
+
+#### Get Funding Rate History
+Retrieve funding rate history for a specific market:
+```bash
+curl http://localhost:3000/api/markets/SOL-PERP/funding
+```
+
+#### Get TWAP Price History
+Retrieve TWAP price history for a specific market:
+```bash
+curl http://localhost:3000/api/markets/SOL-PERP/twap
+```
+
+### Historical Data API
+
+The Historical Data API provides access to historical data from Drift Protocol.
+
+#### Market Funding Rates
+Retrieve funding rates for a specific market on a specific date (YYYYMMDD):
+```bash
+curl "http://localhost:3000/api/historical/market/SOL-PERP/funding-rates/20240319"
+```
+
+#### Market Trades
+Retrieve trades for a specific market on a specific date:
+```bash
+curl "http://localhost:3000/api/historical/market/SOL-PERP/trades/20240319"
+```
+
+#### Insurance Fund
+Retrieve insurance fund data for a specific market:
+```bash
+curl "http://localhost:3000/api/historical/market/SOL-PERP/insurance-fund/20240319"
+```
+
+#### User Trades
+Retrieve trades for a specific user:
+```bash
+curl "http://localhost:3000/api/historical/user/USER_ACCOUNT_KEY/trades/20240319"
+```
+
+#### User Funding Payments
+Retrieve funding payments for a specific user:
+```bash
+curl "http://localhost:3000/api/historical/user/USER_ACCOUNT_KEY/funding-payments/20240319"
+```
+
+### Data Management API
+
+#### Manual Data Collection
+Trigger manual data collection and update:
+```bash
+curl -X POST http://localhost:3000/api/markets/collect
+```
+
+Store as historical snapshot without updating existing records:
+```bash
+curl -X POST "http://localhost:3000/api/markets/collect?historical=true"
+```
+
+### Diagnostic API Endpoints
+
+#### Check BN Conversion
+Test BigNumber conversion from MongoDB storage:
+```bash
+curl http://localhost:3000/api/markets/test/bn-conversion
+```
+
+#### Get Raw MongoDB Data
+Examine raw data stored in MongoDB:
+```bash
+curl http://localhost:3000/api/markets/test/raw
+```
+
+#### List Available Fields
+See all available fields in the market data:
+```bash
+curl http://localhost:3000/api/markets/test/fields
+```
 
 ## Drift Perpetual Markets Data Service
 
@@ -78,21 +162,8 @@ This service provides functionality to interact with Drift Protocol's perpetual 
 
 - Wallet management abstraction
 - Drift client initialization
-- Perpetual markets data retrieval
-
-### Setup
-
-1. Create a `.env` file based on `.env.example`:
-```bash
-cp .env.example .env
-```
-
-2. Edit the `.env` file with your Solana RPC endpoint and keypair path:
-```
-RPC_ENDPOINT=https://api.devnet.solana.com  # or mainnet RPC
-KEYPAIR=/path/to/your/keypair.json
-CLUSTER=devnet  # or mainnet-beta
-```
+- Perpetual markets data retrieval and storage in MongoDB
+- BigNumber handling for precision arithmetic
 
 ### Testing
 
@@ -101,40 +172,11 @@ Run the test suite:
 npm test
 ```
 
-### Usage
-
-The services provide a clean abstraction for wallet management and Drift client initialization:
-
-```typescript
-// Example initialization
-import { DriftClientFactory } from './services/driftClientFactory.js';
-import { DriftPerpsDataService } from './services/driftPerpsData.js';
-
-// Initialize Drift client using environment variables
-const driftClient = DriftClientFactory.initializeFromEnv(
-  process.env.RPC_ENDPOINT!,
-  process.env.KEYPAIR!,
-  process.env.CLUSTER as 'devnet' | 'mainnet-beta'
-);
-
-// Create perps data service
-const driftPerpsService = new DriftPerpsDataService(driftClient);
-
-// Get all perp markets with details
-const perpMarketsDetails = await driftPerpsService.getPerpMarketsDetails();
-```
-
-### Running the Example
-
-With a properly configured `.env` file:
-```bash
-npx tsx src/examples/driftPerpsExample.ts
-```
-
 ### Documentation
 
 For detailed documentation on the Drift services and methods, see:
 - [Drift Perps Services Documentation](./src/docs/drift-perps-services.md)
+- [Historical Data API Documentation](./src/docs/historical-data-api.md)
 
 ## Building for Production
 ```bash

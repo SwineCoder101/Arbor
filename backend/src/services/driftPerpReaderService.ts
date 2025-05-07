@@ -1,12 +1,14 @@
 import { Collection } from 'mongodb';
 import { MongoService } from './mongoService.js';
 import { BN } from '@drift-labs/sdk';
+import { BNConverter } from '../utils/bnConverter.js';
 
 /**
  * Service for reading and processing stored Drift perpetual market data
  */
 export class DriftPerpReaderService {
   private collection: Collection;
+  private readonly DEFAULT_DEX = 'drift';
   
   /**
    * Initialize the Drift Perp Reader Service
@@ -20,7 +22,7 @@ export class DriftPerpReaderService {
    * @param dex - Optional DEX name to filter by (default: 'drift')
    * @returns Array of market data with properly restored number types
    */
-  async getLatestMarketData(dex = 'drift'): Promise<any[]> {
+  async getLatestMarketData(dex = this.DEFAULT_DEX): Promise<any[]> {
     // Get the latest record for each ticker by sorting by timestamp in descending order
     const pipeline = [
       { $match: { dex } },
@@ -39,7 +41,7 @@ export class DriftPerpReaderService {
    * @param dex - Optional DEX name to filter by (default: 'drift')
    * @returns Latest market data for the specified ticker with properly restored number types
    */
-  async getLatestMarketDataByTicker(ticker: string, dex = 'drift'): Promise<any | null> {
+  async getLatestMarketDataByTicker(ticker: string, dex = this.DEFAULT_DEX): Promise<any | null> {
     const result = await this.collection.findOne(
       { ticker, dex },
       { sort: { timestamp: -1 } }
@@ -59,7 +61,7 @@ export class DriftPerpReaderService {
    * @param dex - Optional DEX name to filter by (default: 'drift')
    * @returns Array of historical market data with properly restored number types
    */
-  async getHistoricalMarketData(ticker: string, limit = 100, dex = 'drift'): Promise<any[]> {
+  async getHistoricalMarketData(ticker: string, limit = 100, dex = this.DEFAULT_DEX): Promise<any[]> {
     const results = await this.collection.find(
       { ticker, dex }
     ).sort({ timestamp: -1 }).limit(limit).toArray();
@@ -110,62 +112,8 @@ export class DriftPerpReaderService {
    * @returns Processed market data with restored number types
    */
   private processResult(result: any): any {
-    const processed = { ...result };
-    
-    // Convert string number representations back to BN objects
-    // Handle fundingRate
-    if (typeof processed.fundingRate === 'string') {
-      processed.fundingRate = new BN(processed.fundingRate);
-    }
-    
-    // Handle twapPrice
-    if (typeof processed.twapPrice === 'string') {
-      processed.twapPrice = new BN(processed.twapPrice);
-    }
-    
-    // Handle AMM fields - these might be nested objects with number strings
-    if (processed.amm) {
-      // Convert baseAssetReserve
-      if (typeof processed.amm.baseAssetReserve === 'string') {
-        processed.amm.baseAssetReserve = new BN(processed.amm.baseAssetReserve);
-      }
-      
-      // Convert quoteAssetReserve
-      if (typeof processed.amm.quoteAssetReserve === 'string') {
-        processed.amm.quoteAssetReserve = new BN(processed.amm.quoteAssetReserve);
-      }
-      
-      // Convert lastFundingRate
-      if (typeof processed.amm.lastFundingRate === 'string') {
-        processed.amm.lastFundingRate = new BN(processed.amm.lastFundingRate);
-      }
-      
-      // Convert historical oracle data fields
-      if (processed.amm.historicalOracleData) {
-        if (typeof processed.amm.historicalOracleData.lastOraclePriceTwap5Min === 'string') {
-          processed.amm.historicalOracleData.lastOraclePriceTwap5Min = 
-            new BN(processed.amm.historicalOracleData.lastOraclePriceTwap5Min);
-        }
-        
-        if (typeof processed.amm.historicalOracleData.lastOraclePriceTwap1Min === 'string') {
-          processed.amm.historicalOracleData.lastOraclePriceTwap1Min = 
-            new BN(processed.amm.historicalOracleData.lastOraclePriceTwap1Min);
-        }
-      }
-    }
-    
-    // Handle oracleData if present
-    if (processed.oracleData) {
-      if (typeof processed.oracleData.price === 'string') {
-        processed.oracleData.price = new BN(processed.oracleData.price);
-      }
-      
-      if (typeof processed.oracleData.twap === 'string') {
-        processed.oracleData.twap = new BN(processed.oracleData.twap);
-      }
-    }
-    
-    return processed;
+    // Use our utility to convert MongoDB format back to normal objects with BN instances
+    return BNConverter.fromMongoFormat(result);
   }
   
   /**
@@ -175,16 +123,20 @@ export class DriftPerpReaderService {
    * @param dex - Optional DEX name to filter by (default: 'drift')
    * @returns Array of funding rate data points with timestamps
    */
-  async getFundingRateHistory(ticker: string, limit = 100, dex = 'drift'): Promise<any[]> {
+  async getFundingRateHistory(ticker: string, limit = 100, dex = this.DEFAULT_DEX): Promise<any[]> {
     const results = await this.collection.find(
       { ticker, dex }
     ).sort({ timestamp: -1 }).limit(limit).toArray();
     
-    return results.map(result => ({
+    // Process the results to handle BN objects
+    const processedResults = this.processResults(results);
+    
+    // Extract only the fields we need
+    return processedResults.map(result => ({
       ticker: result.ticker,
       dex: result.dex,
       timestamp: result.timestamp,
-      fundingRate: new BN(result.fundingRate || "0"),
+      fundingRate: result.fundingRate || new BN(0),
       lastFundingRateTs: result.lastFundingRateTs
     }));
   }
@@ -196,16 +148,20 @@ export class DriftPerpReaderService {
    * @param dex - Optional DEX name to filter by (default: 'drift')
    * @returns Array of TWAP price data points with timestamps
    */
-  async getTwapPriceHistory(ticker: string, limit = 100, dex = 'drift'): Promise<any[]> {
+  async getTwapPriceHistory(ticker: string, limit = 100, dex = this.DEFAULT_DEX): Promise<any[]> {
     const results = await this.collection.find(
       { ticker, dex }
     ).sort({ timestamp: -1 }).limit(limit).toArray();
     
-    return results.map(result => ({
+    // Process the results to handle BN objects
+    const processedResults = this.processResults(results);
+    
+    // Extract only the fields we need
+    return processedResults.map(result => ({
       ticker: result.ticker,
       dex: result.dex,
       timestamp: result.timestamp,
-      twapPrice: new BN(result.twapPrice || "0")
+      twapPrice: result.twapPrice || new BN(0)
     }));
   }
 }

@@ -48,35 +48,84 @@ export class DriftPerpsDataService {
    * @returns Array of detailed market information
    */
   async getPerpMarketsDetails(): Promise<any[]> {
+    // Get all perp markets
     const perpMarkets = await this.getAllPerpMarkets();
     
     return perpMarkets.map(perpMarket => {
-      const ticker = String.fromCharCode(...perpMarket.name).trim();
-      const marketIndex = perpMarket.marketIndex;
-      const pubKey = perpMarket.pubkey;
-      const amm = perpMarket.amm;
-      const nextFundingRateRecordId = perpMarket.nextFundingRateRecordId;
-      
-      // Get oracle data for this market
-      const oracleData = this.driftClient.getOracleDataForPerpMarket(marketIndex);
-      
-      // Extract funding rate data
-      const fundingRate = perpMarket.amm.lastFundingRate;
-      const lastFundingRateTs = perpMarket.amm.lastFundingRateTs;
-      const twapPrice = perpMarket.amm.historicalOracleData.lastOraclePriceTwap5Min;
-      
-      return {
-        ticker,
-        marketIndex,
-        pubKey,
-        status: perpMarket.status,
-        oracleData,
-        fundingRate,
-        lastFundingRateTs,
-        twapPrice,
-        nextFundingRateRecordId,
-        amm
-      };
+      try {
+        // Create a detailed representation of the market data
+        const detailedMarket: any = {};
+        
+        // Extract core fields directly (to maintain top-level access)
+        detailedMarket.marketIndex = perpMarket.marketIndex;
+        detailedMarket.status = perpMarket.status;
+        detailedMarket.name = perpMarket.name;
+        detailedMarket.nextFundingRateRecordId = perpMarket.nextFundingRateRecordId;
+        detailedMarket.pnlPoolValue = perpMarket.pnlPoolValue;
+        detailedMarket.maxSpread = perpMarket.maxSpread;
+        detailedMarket.maxInitialLeverage = perpMarket.maxInitialLeverage;
+        detailedMarket.maxSlippage = perpMarket.maxSlippage;
+        
+        // Add human-readable ticker derived from bytes
+        detailedMarket.ticker = String.fromCharCode(...perpMarket.name).trim();
+        
+        // Get oracle data for this market
+        detailedMarket.oracleData = this.driftClient.getOracleDataForPerpMarket(perpMarket.marketIndex);
+        
+        // Add public key
+        detailedMarket.pubKey = perpMarket.pubkey;
+        
+        // Include the entire AMM data
+        detailedMarket.amm = perpMarket.amm;
+        
+        // Extract commonly accessed AMM fields for easier access
+        detailedMarket.fundingRate = perpMarket.amm.lastFundingRate;
+        detailedMarket.lastFundingRateTs = perpMarket.amm.lastFundingRateTs;
+        detailedMarket.twapPrice = perpMarket.amm.historicalOracleData.lastOraclePriceTwap5Min;
+        detailedMarket.markPrice = perpMarket.amm.historicalOracleData.lastOraclePrice;
+        detailedMarket.baseAssetReserve = perpMarket.amm.baseAssetReserve;
+        detailedMarket.quoteAssetReserve = perpMarket.amm.quoteAssetReserve;
+        
+        // Add market statistics
+        detailedMarket.volumeStats = {
+          volume24h: perpMarket.amm.volume24H,
+          longVolume24h: perpMarket.amm.longVolume24H,
+          shortVolume24h: perpMarket.amm.shortVolume24H,
+          totalVolume: perpMarket.amm.totalVolume,
+          totalFees: perpMarket.amm.totalFees
+        };
+        
+        // Include market metadata if available
+        // Note: The function getPerpMarketMetadata doesn't exist in current SDK version
+        // We can add custom metadata lookup here if needed in the future
+        
+        // Include each trade day
+        const tradeStatsDays = perpMarket.amm.tradeStatsDays;
+        if (tradeStatsDays) {
+          detailedMarket.tradeStatsDays = tradeStatsDays;
+        }
+        
+        // Include the current funding rate streak
+        detailedMarket.fundingRateStreak = perpMarket.amm.fundingRateStreak;
+        
+        // Include any remaining fields directly from perpMarket
+        for (const [key, value] of Object.entries(perpMarket)) {
+          if (!(key in detailedMarket) && key !== 'amm' && key !== 'pubkey') {
+            detailedMarket[key] = value;
+          }
+        }
+        
+        return detailedMarket;
+      } catch (error) {
+        // If there's an error processing a market, still include it with basic info
+        console.error(`Error processing market ${perpMarket.marketIndex}:`, error);
+        return {
+          error: `Failed to process market data: ${error.message}`,
+          marketIndex: perpMarket.marketIndex,
+          ticker: perpMarket.name ? String.fromCharCode(...perpMarket.name).trim() : 'Unknown',
+          pubKey: perpMarket.pubkey ? perpMarket.pubkey.toString() : null
+        };
+      }
     });
   }
 

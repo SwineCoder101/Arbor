@@ -1,6 +1,8 @@
 import express, { Request, Response, Router } from 'express';
 import { DriftPerpReaderService } from '../services/driftPerpReaderService.js';
 import { DataCollectorService } from '../services/dataCollectorService.js';
+import { MongoService } from '../services/mongoService.js';
+import { BN } from '@drift-labs/sdk';
 
 /**
  * Router for market data related endpoints
@@ -139,6 +141,146 @@ export class MarketDataRoutes {
       } catch (error) {
         console.error('Error fetching TWAP price history:', error);
         res.status(500).json({ error: 'Failed to fetch TWAP price history' });
+      }
+    });
+    
+    // Raw MongoDB data check (before BN conversion)
+    this.router.get('/test/raw', async (req: Request, res: Response) => {
+      try {
+        // Get the collection directly
+        const collection = MongoService.getCollection('market_data');
+        
+        // Get a raw record for SOL-PERP
+        const rawData = await collection.findOne(
+          { ticker: 'SOL-PERP', dex: 'drift' },
+          { sort: { timestamp: -1 } }
+        );
+        
+        if (!rawData) {
+          return res.status(404).json({ error: 'No SOL-PERP market data found' });
+        }
+        
+        // Find fields that have the BN format
+        const bnFields = [];
+        
+        // Function to search for BN formatted fields
+        const findBNFields = (obj, path = '') => {
+          if (!obj || typeof obj !== 'object') return;
+          
+          for (const key in obj) {
+            const currentPath = path ? `${path}.${key}` : key;
+            const value = obj[key];
+            
+            if (value && typeof value === 'object') {
+              if (value.type === 'BN' && value.value !== undefined) {
+                bnFields.push({
+                  path: currentPath,
+                  value: value.value
+                });
+              } else {
+                findBNFields(value, currentPath);
+              }
+            }
+          }
+        };
+        
+        findBNFields(rawData);
+        
+        res.json({
+          id: rawData._id,
+          ticker: rawData.ticker,
+          timestamp: rawData.timestamp,
+          totalBNFields: bnFields.length,
+          bnFieldSamples: bnFields.slice(0, 10), // Show first 10 BN fields
+          rawDataKeys: Object.keys(rawData)
+        });
+      } catch (error) {
+        console.error('Error fetching raw data:', error);
+        res.status(500).json({ error: 'Failed to fetch raw data' });
+      }
+    });
+    
+    // Get list of all available fields in a market record
+    this.router.get('/test/fields', async (req: Request, res: Response) => {
+      try {
+        // Get a market to analyze
+        const sampleMarket = await this.driftPerpReaderService.getLatestMarketDataByTicker('SOL-PERP', 'drift');
+        
+        if (!sampleMarket) {
+          return res.status(404).json({ error: 'No market data found to test' });
+        }
+        
+        // Count top-level fields
+        const topLevelFields = Object.keys(sampleMarket);
+        
+        // Count AMM fields if available
+        const ammFields = sampleMarket.amm ? Object.keys(sampleMarket.amm) : [];
+        
+        // Return field information
+        res.json({
+          totalTopLevelFields: topLevelFields.length,
+          topLevelFields,
+          totalAmmFields: ammFields.length,
+          ammFields,
+          hasOracleData: !!sampleMarket.oracleData,
+          oracleDataFields: sampleMarket.oracleData ? Object.keys(sampleMarket.oracleData) : []
+        });
+      } catch (error) {
+        console.error('Error analyzing fields:', error);
+        res.status(500).json({ error: 'Error analyzing fields' });
+      }
+    });
+    
+    // Test endpoint for BN conversion
+    this.router.get('/test/bn-conversion', async (req: Request, res: Response) => {
+      try {
+        // Get a market that should have BN values
+        const sampleMarket = await this.driftPerpReaderService.getLatestMarketDataByTicker('SOL-PERP', 'drift');
+        
+        if (!sampleMarket) {
+          return res.status(404).json({ error: 'No market data found to test' });
+        }
+        
+        // Collect information about BN conversion status
+        const bnFields = ['fundingRate', 'twapPrice', 'markPrice', 'baseAssetReserve', 'quoteAssetReserve'];
+        const bnStatus = {};
+        
+        for (const field of bnFields) {
+          if (sampleMarket[field]) {
+            bnStatus[field] = {
+              value: sampleMarket[field].toString(),
+              isBN: sampleMarket[field] instanceof BN,
+              type: typeof sampleMarket[field]
+            };
+          }
+        }
+        
+        // Check nested AMM values if they exist
+        if (sampleMarket.amm) {
+          bnStatus['amm.lastFundingRate'] = {
+            value: sampleMarket.amm.lastFundingRate?.toString() || 'N/A',
+            isBN: sampleMarket.amm.lastFundingRate instanceof BN,
+            type: typeof sampleMarket.amm.lastFundingRate
+          };
+          
+          if (sampleMarket.amm.historicalOracleData) {
+            bnStatus['amm.historicalOracleData.lastOraclePriceTwap5Min'] = {
+              value: sampleMarket.amm.historicalOracleData.lastOraclePriceTwap5Min?.toString() || 'N/A',
+              isBN: sampleMarket.amm.historicalOracleData.lastOraclePriceTwap5Min instanceof BN,
+              type: typeof sampleMarket.amm.historicalOracleData.lastOraclePriceTwap5Min
+            };
+          }
+        }
+        
+        res.json({
+          ticker: sampleMarket.ticker,
+          dex: sampleMarket.dex,
+          timestamp: sampleMarket.timestamp,
+          bnConversionStatus: bnStatus
+        });
+      } catch (error) {
+        console.error('Error testing BN conversion:', error);
+        res.status(500).json({ error: 'Error testing BN conversion' });
       }
     });
   }
