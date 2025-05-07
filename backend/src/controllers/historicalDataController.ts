@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { HistoricalDataService } from '../services/historicalDataService.js';
+import { HistoricalDataService } from '../services/driftHistoricalDataService.js';
 
 /**
  * Controller for historical data endpoints

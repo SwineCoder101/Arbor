@@ -27,7 +27,8 @@
     "@solana/web3.js": "^1.98.2",
     "axios": "^1.9.0",
     "dotenv": "^16.5.0",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "mongodb": "^6.16.0"
   },
   "devDependencies": {
     "@tsconfig/node23": "^23.0.1",
