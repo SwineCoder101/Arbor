@@ -1,5 +1,5 @@
 import type { IdlAccounts, ProgramAccount, IdlTypes } from "@coral-xyz/anchor";
-import { Perpetuals } from "./idl/jupiter-perpetuals-idl";
+import { Perpetuals } from "../idl/jupiter-perpetuals-idl";
 
 export type Position = IdlAccounts<Perpetuals>["position"];
 export type PositionAccount = ProgramAccount<Position>;
