@@ -15,16 +15,20 @@
     "lint:fix": "eslint --fix .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "fetch-drift-funding": "tsx src/jobs/fetch-drift-funding.ts",
+    "store-drift-funding": "tsx src/jobs/store-drift-funding-rates.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@blockworks-foundation/mango-v4": "^0.33.9",
     "@drift-labs/sdk": "^2.121.0-beta.8",
     "@solana/spl-token": "^0.4.13",
     "@solana/web3.js": "^1.98.2",
+    "@zetamarkets/sdk": "^1.61.0",
     "axios": "^1.9.0",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
@@ -34,6 +38,7 @@
     "@tsconfig/node23": "^23.0.1",
     "@types/express": "^4.17.21",
     "@types/node": "^22.15.12",
+    "@types/node-fetch": "^2.6.12",
     "prettier": "^3.5.3",
     "typescript": "^5.8.3",
     "vitest": "^3.1.3"

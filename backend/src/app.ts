@@ -6,9 +6,12 @@ import { DriftPerpsDataService } from './services/driftPerpsData.js';
 import { DriftPerpStorageService } from './services/driftPerpStorageService.js';
 import { DriftPerpReaderService } from './services/driftPerpReaderService.js';
 import { DataCollectorService } from './services/dataCollectorService.js';
+import {DriftFundingDataService} from "./services/driftFundingDataService.js"
 import { DriftEnv } from '@drift-labs/sdk';
-import historicalDataRoutes from './routes/historicalDataRoutes.js';
-import createMarketDataRoutes, { createMarketDataRoutesWithCollector } from './routes/marketDataRoutes.js';
+
+import historicalDataRoutes from './routes/driftHistoricalDataRoutes.js';
+import createMarketDataRoutes  from './routes/marketDataRoutes.js';
+import createDriftFundingRoutes from './routes/driftFundingRoutes.js';
 
 /**
  * Application class for managing the Express server and services
@@ -60,6 +63,8 @@ export class Application {
       const env = process.env.RPC_ENDPOINT === "https://api.devnet.solana.com"
         ? 'devnet'
         : 'mainnet-beta' as DriftEnv;
+
+      const driftFundingService = new DriftFundingDataService();
       
       const driftClient = DriftClientFactory.createDriftClient(connection, wallet, env);
       this.driftPerpsService = new DriftPerpsDataService(driftClient);
@@ -101,9 +106,8 @@ export class Application {
     // Market data routes with access to data collector for manual triggering
     if (this.dataCollectorService) {
       // If we have a data collector service, use the version with collector
-      this.app.use('/api/markets', createMarketDataRoutesWithCollector(
-        driftPerpReaderService, 
-        this.dataCollectorService
+      this.app.use('/api/markets', createMarketDataRoutes(
+        driftPerpReaderService 
       ));
     } else {
       // Otherwise, use the simple version
@@ -112,6 +116,12 @@ export class Application {
     
     // Historical data routes
     this.app.use('/api/historical', historicalDataRoutes);
+    
+    // Drift funding data routes
+    const fundingDb = MongoService.getDb();
+    console.log(fundingDb?.databaseName)
+    this.app.use('/api/drift-funding', createDriftFundingRoutes(fundingDb));
+    
   }
   
   /**

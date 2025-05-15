@@ -1,4 +1,4 @@
-import { MongoClient, Collection, Db } from 'mongodb';
+import { MongoClient, Collection, Db, Document } from 'mongodb';
 
 /**
  * Service for managing MongoDB connections and operations
@@ -53,12 +53,20 @@ export class MongoService {
    * @param collectionName - Name of the collection
    * @returns MongoDB collection
    */
-  static getCollection<T = any>(collectionName: string): Collection<T> {
+  static getCollection<T extends Document = Document>(collectionName: string): Collection<T> {
     if (!this.db) {
       throw new Error('Database connection not established. Call connect() first.');
     }
     
     return this.db.collection<T>(collectionName);
+  }
+  
+  /**
+   * Get the database instance
+   * @returns MongoDB database instance
+   */
+  static getDb(): Db | null {
+    return this.db;
   }
   
   /**
