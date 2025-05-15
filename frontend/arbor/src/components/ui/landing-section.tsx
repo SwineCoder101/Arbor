@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Leaf } from "lucide-react";
 
 const landingSectionVariants = cva("py-16 md:py-24", {
   variants: {
@@ -126,12 +127,12 @@ export function Feature({
     >
       {icon && (
         <div className="mb-4 flex justify-center">
-          <div className="h-12 w-12 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+          <div className="h-12 w-12 text-primary flex items-center justify-center relative">
             {icon}
           </div>
         </div>
       )}
-      <h3 className="text-xl font-medium mb-3">{title}</h3>
+      <h3 className="text-xl font-medium mb-3 text-primary">{title}</h3>
       <p className="text-muted-foreground">{description}</p>
     </div>
   );
