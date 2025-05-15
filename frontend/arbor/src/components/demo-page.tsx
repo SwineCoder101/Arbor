@@ -54,7 +54,7 @@ export function DemoPage() {
       </AppHero>
 
       <LandingSection
-        title={<h2 className="text-3xl md:text-4xl font-semibold mb-3 text-primary">Core Features</h2>}
+        title={<h2 style={{marginTop: "-70px"}} className="text-3xl md:text-4xl font-semibold mb-3 text-primary">Core Features</h2>}
         subtitle="Arbor streamlines complex arbitrage strategies with powerful tools for both retail and institutional traders."
         background="default"
         align="center"
@@ -133,10 +133,6 @@ export function DemoPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <ArborPanel className="h-full">
-                <CardHeader>
-                  <CardTitle>Markets Overview</CardTitle>
-                  <CardDescription>Real-time market data across protocols</CardDescription>
-                </CardHeader>
                 <CardContent>
                   <MarketsProvider>
                     <MarketsOverview />
@@ -277,9 +273,6 @@ export function DemoPage() {
           </div>
           
           <div className="mt-12">
-            <Heading size="h3">Funding Rate Explorer</Heading>
-            <Subheading>View and compare funding rates across markets</Subheading>
-            
             <div className="mt-6">
               <MarketsProvider>
                 <FundingRateAggregator />

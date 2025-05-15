@@ -11,7 +11,7 @@ const arborPanelVariants = cva(
         solid: "bg-card border-border",
         muted: "bg-muted/70 backdrop-blur-sm border-border",
         gradient:
-          "bg-gradient-to-br from-primary/5 via-background to-secondary/5 border-border backdrop-blur-sm",
+          "bg-gradient-to-br from-primary/4 via-background to-secondary/5 border-border backdrop-blur-sm",
         treePattern: "bg-card border-border arbor-tree-pattern",
       },
       border: {
