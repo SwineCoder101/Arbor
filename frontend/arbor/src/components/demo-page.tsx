@@ -54,7 +54,7 @@ export function DemoPage() {
       </AppHero>
 
       <LandingSection
-        title={<h2 style={{marginTop: "-70px"}} className="text-3xl md:text-4xl font-semibold mb-3 text-primary">Core Features</h2>}
+        title={<h2 style={{marginTop: "-70px"}} className="text-3xl md:text-4xl font-semibold mb-3 text-primary"></h2>}
         subtitle="Arbor streamlines complex arbitrage strategies with powerful tools for both retail and institutional traders."
         background="default"
         align="center"

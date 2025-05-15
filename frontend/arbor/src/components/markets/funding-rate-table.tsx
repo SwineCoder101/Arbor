@@ -13,6 +13,7 @@ import {
 import { ArborPanel, ArborPanelHeader, ArborPanelTitle, ArborPanelContent } from '@/components/ui/arbor-panel'
 import { Heading, Subheading } from '@/components/ui/headings'
 import { Search, FilterIcon, ArrowDownUp, ArrowUpRight } from 'lucide-react'
+import { StrategyDetailModal } from './strategy-detail-modal'
 
 interface DexInfo {
   name: string
@@ -403,7 +404,7 @@ export function FundingRateTable() {
                             <div>
                               <div className="font-medium">{getStrategyName(strategy)}</div>
                               <div className="text-[10px] text-muted-foreground">
-                                {strategy.strategyType}
+                                Funding Rate Arbitrage
                               </div>
                             </div>
                             <div className="mt-1.5 text-[9px]">
@@ -551,9 +552,14 @@ export function FundingRateTable() {
                           <Button variant="primary" size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs py-1.5">
                             Place Order
                           </Button>
-                          <Button variant="ghost" size="sm" className="w-full text-muted-foreground text-xs py-1.5">
-                            View Details <ArrowUpRight className="h-3 w-3 ml-1" />
-                          </Button>
+                          <StrategyDetailModal 
+                            strategy={strategy} 
+                            trigger={
+                              <Button variant="ghost" size="sm" className="w-full text-muted-foreground text-xs py-1.5">
+                                View Details <ArrowUpRight className="h-3 w-3 ml-1" />
+                              </Button>
+                            }
+                          />
                           <div className="text-[10px] text-muted-foreground text-center">
                             Size: ${getPositionSizeInUSDC(strategy)} USDC
                           </div>
