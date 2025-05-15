@@ -1,0 +1,630 @@
+{
+  "deltaNeutralOfferings": [
+    {
+      "asset": "BTC-PERP",
+      "longDex": {
+        "name": "drift",
+        "fundingRate": -234182250,
+        "price": 1020708.47005
+      },
+      "shortDex": {
+        "name": "zeta",
+        "fundingRate": -233724150,
+        "price": 1020708.47005
+      },
+      "arbitrageRateAnnualized": "0.4013",
+      "arbitrageRateDaily": "0.0011",
+      "recommendedSize": "7.98",
+      "estimatedDailyProfit": "8955.22",
+      "estimatedAnnualProfit": "3268654.43",
+      "riskAssessment": "High",
+      "strategyType": "Premium Arbitrage",
+      "identifiedAt": "2025-05-13T23:04:51.165Z",
+      "activeOrders": [
+        {
+          "id": "order-97moh2yi",
+          "side": "long",
+          "dex": "drift",
+          "size": "2.810",
+          "entryPrice": "1022617.40",
+          "status": "filled",
+          "createdAt": "2025-05-15T03:29:53.448Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "35.92"
+        },
+        {
+          "id": "order-eb3suqjw",
+          "side": "short",
+          "dex": "zeta",
+          "size": "1.407",
+          "entryPrice": "1015377.96",
+          "status": "filled",
+          "createdAt": "2025-05-14T14:59:18.331Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "59.76"
+        },
+        {
+          "id": "order-43h1japm",
+          "side": "long",
+          "dex": "drift",
+          "size": "3.863",
+          "entryPrice": "1011655.70",
+          "status": "filled",
+          "createdAt": "2025-05-14T15:47:54.573Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "29.64"
+        }
+      ]
+    },
+    {
+      "asset": "SOL-PERP",
+      "longDex": {
+        "name": "drift",
+        "fundingRate": 233875,
+        "price": 1718.49484
+      },
+      "shortDex": {
+        "name": "zeta",
+        "fundingRate": 235421,
+        "price": 1718.49484
+      },
+      "arbitrageRateAnnualized": "0.0135",
+      "arbitrageRateDaily": "0.000037",
+      "recommendedSize": "8.75",
+      "estimatedDailyProfit": "55.79",
+      "estimatedAnnualProfit": "20364.32",
+      "riskAssessment": "High",
+      "strategyType": "Funding Rate Arbitrage",
+      "identifiedAt": "2025-05-11T20:05:25.173Z",
+      "activeOrders": [
+        {
+          "id": "order-vzehpzr1",
+          "side": "long",
+          "dex": "drift",
+          "size": "4.947",
+          "entryPrice": "1708.68",
+          "status": "partially_filled",
+          "createdAt": "2025-05-14T16:57:54.100Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "37.11"
+        }
+      ]
+    },
+    {
+      "asset": "ETH-PERP",
+      "longDex": {
+        "name": "drift",
+        "fundingRate": 12852375,
+        "price": 25532.2756
+      },
+      "shortDex": {
+        "name": "zeta",
+        "fundingRate": 12796274,
+        "price": 25532.2756
+      },
+      "arbitrageRateAnnualized": "0.0491",
+      "arbitrageRateDaily": "0.000134",
+      "recommendedSize": "5.21",
+      "estimatedDailyProfit": "178.83",
+      "estimatedAnnualProfit": "65271.13",
+      "riskAssessment": "Medium",
+      "strategyType": "Funding Rate Arbitrage",
+      "identifiedAt": "2025-05-09T10:14:32.473Z",
+      "activeOrders": [
+        {
+          "id": "order-l3ks82ja",
+          "side": "long",
+          "dex": "drift",
+          "size": "2.463",
+          "entryPrice": "25787.59",
+          "status": "open",
+          "createdAt": "2025-05-14T22:37:43.228Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "-45.18"
+        },
+        {
+          "id": "order-mn5q9sre",
+          "side": "short",
+          "dex": "zeta",
+          "size": "1.879",
+          "entryPrice": "25277.95",
+          "status": "partially_filled",
+          "createdAt": "2025-05-15T01:24:18.692Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "28.53"
+        }
+      ]
+    },
+    {
+      "asset": "TAO-PERP",
+      "longDex": {
+        "name": "zeta",
+        "fundingRate": 5272145,
+        "price": 4280.10473
+      },
+      "shortDex": {
+        "name": "drift",
+        "fundingRate": 5256333,
+        "price": 4280.10473
+      },
+      "arbitrageRateAnnualized": "0.0138",
+      "arbitrageRateDaily": "0.000038",
+      "recommendedSize": "9.32",
+      "estimatedDailyProfit": "151.79",
+      "estimatedAnnualProfit": "55402.88",
+      "riskAssessment": "Medium",
+      "strategyType": "Premium Arbitrage",
+      "identifiedAt": "2025-05-12T16:48:21.982Z",
+      "activeOrders": [
+        {
+          "id": "order-2v9jpq83",
+          "side": "long",
+          "dex": "zeta",
+          "size": "3.745",
+          "entryPrice": "4237.30",
+          "status": "filled",
+          "createdAt": "2025-05-14T19:37:24.562Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "76.42"
+        }
+      ]
+    },
+    {
+      "asset": "BNB-PERP",
+      "longDex": {
+        "name": "zeta",
+        "fundingRate": 4086215,
+        "price": 6511.65735
+      },
+      "shortDex": {
+        "name": "drift",
+        "fundingRate": 4106791,
+        "price": 6511.65735
+      },
+      "arbitrageRateAnnualized": "0.0180",
+      "arbitrageRateDaily": "0.000049",
+      "recommendedSize": "3.45",
+      "estimatedDailyProfit": "110.80",
+      "estimatedAnnualProfit": "40443.52",
+      "riskAssessment": "Low",
+      "strategyType": "Liquidity Mining",
+      "identifiedAt": "2025-05-10T08:32:12.784Z",
+      "activeOrders": [
+        {
+          "id": "order-5r7fvpql",
+          "side": "long",
+          "dex": "zeta",
+          "size": "1.328",
+          "entryPrice": "6576.77",
+          "status": "open",
+          "createdAt": "2025-05-15T06:18:32.921Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "-12.38"
+        }
+      ]
+    },
+    {
+      "asset": "AVAX-PERP",
+      "longDex": {
+        "name": "drift",
+        "fundingRate": 397666,
+        "price": 240.43465
+      },
+      "shortDex": {
+        "name": "zeta",
+        "fundingRate": 400124,
+        "price": 240.43465
+      },
+      "arbitrageRateAnnualized": "0.0215",
+      "arbitrageRateDaily": "0.000059",
+      "recommendedSize": "25.78",
+      "estimatedDailyProfit": "365.90",
+      "estimatedAnnualProfit": "133553.71",
+      "riskAssessment": "Low",
+      "strategyType": "Funding Rate Arbitrage",
+      "identifiedAt": "2025-05-08T21:53:48.621Z",
+      "activeOrders": [
+        {
+          "id": "order-xz94hkp2",
+          "side": "long",
+          "dex": "drift",
+          "size": "10.362",
+          "entryPrice": "242.83",
+          "status": "filled",
+          "createdAt": "2025-05-14T22:42:16.389Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "-24.85"
+        },
+        {
+          "id": "order-qe72lsj4",
+          "side": "short",
+          "dex": "zeta",
+          "size": "8.957",
+          "entryPrice": "238.03",
+          "status": "partially_filled",
+          "createdAt": "2025-05-14T14:26:31.743Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "-21.50"
+        }
+      ]
+    },
+    {
+      "asset": "LINK-PERP",
+      "longDex": {
+        "name": "zeta",
+        "fundingRate": 180723,
+        "price": 164.16588
+      },
+      "shortDex": {
+        "name": "drift",
+        "fundingRate": 181958,
+        "price": 164.16588
+      },
+      "arbitrageRateAnnualized": "0.0108",
+      "arbitrageRateDaily": "0.000030",
+      "recommendedSize": "32.46",
+      "estimatedDailyProfit": "158.89",
+      "estimatedAnnualProfit": "57996.49",
+      "riskAssessment": "Medium",
+      "strategyType": "Premium Arbitrage",
+      "identifiedAt": "2025-05-11T04:18:35.290Z",
+      "activeOrders": [
+        {
+          "id": "order-ub63kfpm",
+          "side": "long",
+          "dex": "zeta",
+          "size": "18.472",
+          "entryPrice": "163.34",
+          "status": "filled",
+          "createdAt": "2025-05-14T18:37:42.510Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "15.24"
+        }
+      ]
+    },
+    {
+      "asset": "INJ-PERP",
+      "longDex": {
+        "name": "drift",
+        "fundingRate": -120583,
+        "price": 125.69533
+      },
+      "shortDex": {
+        "name": "zeta",
+        "fundingRate": -122017,
+        "price": 125.69533
+      },
+      "arbitrageRateAnnualized": "0.0126",
+      "arbitrageRateDaily": "0.000034",
+      "recommendedSize": "42.75",
+      "estimatedDailyProfit": "183.51",
+      "estimatedAnnualProfit": "66982.25",
+      "riskAssessment": "Low",
+      "strategyType": "Liquidity Mining",
+      "identifiedAt": "2025-05-09T13:42:19.513Z",
+      "activeOrders": []
+    },
+    {
+      "asset": "HNT-PERP",
+      "longDex": {
+        "name": "zeta",
+        "fundingRate": 130046,
+        "price": 39.65239
+      },
+      "shortDex": {
+        "name": "drift",
+        "fundingRate": 131291,
+        "price": 39.65239
+      },
+      "arbitrageRateAnnualized": "0.0109",
+      "arbitrageRateDaily": "0.000030",
+      "recommendedSize": "128.34",
+      "estimatedDailyProfit": "151.86",
+      "estimatedAnnualProfit": "55430.03",
+      "riskAssessment": "High",
+      "strategyType": "Funding Rate Arbitrage",
+      "identifiedAt": "2025-05-12T05:27:38.845Z",
+      "activeOrders": []
+    },
+    {
+      "asset": "TON-PERP",
+      "longDex": {
+        "name": "drift",
+        "fundingRate": 45666,
+        "price": 31.41864
+      },
+      "shortDex": {
+        "name": "zeta",
+        "fundingRate": 46219,
+        "price": 31.41864
+      },
+      "arbitrageRateAnnualized": "0.0121",
+      "arbitrageRateDaily": "0.000033",
+      "recommendedSize": "177.89",
+      "estimatedDailyProfit": "185.60",
+      "estimatedAnnualProfit": "67742.98",
+      "riskAssessment": "Medium",
+      "strategyType": "Premium Arbitrage",
+      "identifiedAt": "2025-05-10T17:36:54.723Z",
+      "activeOrders": [
+        {
+          "id": "order-jk72mspx",
+          "side": "long",
+          "dex": "drift",
+          "size": "84.621",
+          "entryPrice": "31.73",
+          "status": "open",
+          "createdAt": "2025-05-15T09:24:18.375Z",
+          "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+          "pnl": "-26.23"
+        }
+      ]
+    }
+  ],
+  "topArbitrageOpportunities": [
+    {
+      "asset": "BTC-PERP",
+      "longDex": {
+        "name": "drift",
+        "fundingRate": -234182250,
+        "price": 1020708.47005
+      },
+      "shortDex": {
+        "name": "zeta",
+        "fundingRate": -233724150,
+        "price": 1020708.47005
+      },
+      "arbitrageRateAnnualized": "0.4013",
+      "arbitrageRateDaily": "0.0011",
+      "recommendedSize": "7.98",
+      "estimatedDailyProfit": "8955.22",
+      "estimatedAnnualProfit": "3268654.43",
+      "riskAssessment": "High",
+      "strategyType": "Premium Arbitrage",
+      "identifiedAt": "2025-05-13T23:04:51.165Z"
+    },
+    {
+      "asset": "AVAX-PERP",
+      "longDex": {
+        "name": "drift",
+        "fundingRate": 397666,
+        "price": 240.43465
+      },
+      "shortDex": {
+        "name": "zeta",
+        "fundingRate": 400124,
+        "price": 240.43465
+      },
+      "arbitrageRateAnnualized": "0.0215",
+      "arbitrageRateDaily": "0.000059",
+      "recommendedSize": "25.78",
+      "estimatedDailyProfit": "365.90",
+      "estimatedAnnualProfit": "133553.71",
+      "riskAssessment": "Low",
+      "strategyType": "Funding Rate Arbitrage",
+      "identifiedAt": "2025-05-08T21:53:48.621Z"
+    },
+    {
+      "asset": "BNB-PERP",
+      "longDex": {
+        "name": "zeta",
+        "fundingRate": 4086215,
+        "price": 6511.65735
+      },
+      "shortDex": {
+        "name": "drift",
+        "fundingRate": 4106791,
+        "price": 6511.65735
+      },
+      "arbitrageRateAnnualized": "0.0180",
+      "arbitrageRateDaily": "0.000049",
+      "recommendedSize": "3.45",
+      "estimatedDailyProfit": "110.80",
+      "estimatedAnnualProfit": "40443.52",
+      "riskAssessment": "Low",
+      "strategyType": "Liquidity Mining",
+      "identifiedAt": "2025-05-10T08:32:12.784Z"
+    },
+    {
+      "asset": "TON-PERP",
+      "longDex": {
+        "name": "drift",
+        "fundingRate": 45666,
+        "price": 31.41864
+      },
+      "shortDex": {
+        "name": "zeta",
+        "fundingRate": 46219,
+        "price": 31.41864
+      },
+      "arbitrageRateAnnualized": "0.0121",
+      "arbitrageRateDaily": "0.000033",
+      "recommendedSize": "177.89",
+      "estimatedDailyProfit": "185.60",
+      "estimatedAnnualProfit": "67742.98",
+      "riskAssessment": "Medium",
+      "strategyType": "Premium Arbitrage",
+      "identifiedAt": "2025-05-10T17:36:54.723Z"
+    },
+    {
+      "asset": "ETH-PERP",
+      "longDex": {
+        "name": "drift",
+        "fundingRate": 12852375,
+        "price": 25532.2756
+      },
+      "shortDex": {
+        "name": "zeta",
+        "fundingRate": 12796274,
+        "price": 25532.2756
+      },
+      "arbitrageRateAnnualized": "0.0491",
+      "arbitrageRateDaily": "0.000134",
+      "recommendedSize": "5.21",
+      "estimatedDailyProfit": "178.83",
+      "estimatedAnnualProfit": "65271.13",
+      "riskAssessment": "Medium",
+      "strategyType": "Funding Rate Arbitrage",
+      "identifiedAt": "2025-05-09T10:14:32.473Z"
+    }
+  ],
+  "portfolio": {
+    "summary": {
+      "totalActiveOrders": 12,
+      "totalInvested": "3865482.74",
+      "estimatedDailyProfit": "10248.40",
+      "estimatedAnnualProfit": "3738477.75",
+      "riskExposure": {
+        "low": 3,
+        "medium": 4,
+        "high": 3
+      }
+    },
+    "allOrders": [
+      {
+        "id": "order-97moh2yi",
+        "asset": "BTC-PERP",
+        "side": "long",
+        "dex": "drift",
+        "size": "2.810",
+        "entryPrice": "1022617.40",
+        "status": "filled",
+        "createdAt": "2025-05-15T03:29:53.448Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "35.92"
+      },
+      {
+        "id": "order-eb3suqjw",
+        "asset": "BTC-PERP",
+        "side": "short",
+        "dex": "zeta",
+        "size": "1.407",
+        "entryPrice": "1015377.96",
+        "status": "filled",
+        "createdAt": "2025-05-14T14:59:18.331Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "59.76"
+      },
+      {
+        "id": "order-43h1japm",
+        "asset": "BTC-PERP",
+        "side": "long",
+        "dex": "drift",
+        "size": "3.863",
+        "entryPrice": "1011655.70",
+        "status": "filled",
+        "createdAt": "2025-05-14T15:47:54.573Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "29.64"
+      },
+      {
+        "id": "order-vzehpzr1",
+        "asset": "SOL-PERP",
+        "side": "long",
+        "dex": "drift",
+        "size": "4.947",
+        "entryPrice": "1708.68",
+        "status": "partially_filled",
+        "createdAt": "2025-05-14T16:57:54.100Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "37.11"
+      },
+      {
+        "id": "order-l3ks82ja",
+        "asset": "ETH-PERP",
+        "side": "long",
+        "dex": "drift",
+        "size": "2.463",
+        "entryPrice": "25787.59",
+        "status": "open",
+        "createdAt": "2025-05-14T22:37:43.228Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "-45.18"
+      },
+      {
+        "id": "order-mn5q9sre",
+        "asset": "ETH-PERP",
+        "side": "short",
+        "dex": "zeta",
+        "size": "1.879",
+        "entryPrice": "25277.95",
+        "status": "partially_filled",
+        "createdAt": "2025-05-15T01:24:18.692Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "28.53"
+      },
+      {
+        "id": "order-2v9jpq83",
+        "asset": "TAO-PERP",
+        "side": "long",
+        "dex": "zeta",
+        "size": "3.745",
+        "entryPrice": "4237.30",
+        "status": "filled",
+        "createdAt": "2025-05-14T19:37:24.562Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "76.42"
+      },
+      {
+        "id": "order-5r7fvpql",
+        "asset": "BNB-PERP",
+        "side": "long",
+        "dex": "zeta",
+        "size": "1.328",
+        "entryPrice": "6576.77",
+        "status": "open",
+        "createdAt": "2025-05-15T06:18:32.921Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "-12.38"
+      },
+      {
+        "id": "order-xz94hkp2",
+        "asset": "AVAX-PERP",
+        "side": "long",
+        "dex": "drift",
+        "size": "10.362",
+        "entryPrice": "242.83",
+        "status": "filled",
+        "createdAt": "2025-05-14T22:42:16.389Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "-24.85"
+      },
+      {
+        "id": "order-qe72lsj4",
+        "asset": "AVAX-PERP",
+        "side": "short",
+        "dex": "zeta",
+        "size": "8.957",
+        "entryPrice": "238.03",
+        "status": "partially_filled",
+        "createdAt": "2025-05-14T14:26:31.743Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "-21.50"
+      },
+      {
+        "id": "order-ub63kfpm",
+        "asset": "LINK-PERP",
+        "side": "long",
+        "dex": "zeta",
+        "size": "18.472",
+        "entryPrice": "163.34",
+        "status": "filled",
+        "createdAt": "2025-05-14T18:37:42.510Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "15.24"
+      },
+      {
+        "id": "order-jk72mspx",
+        "asset": "TON-PERP",
+        "side": "long",
+        "dex": "drift",
+        "size": "84.621",
+        "entryPrice": "31.73",
+        "status": "open",
+        "createdAt": "2025-05-15T09:24:18.375Z",
+        "wallet": "8j7vLJxZsWMSJ9wFQbgDTgPNRsWNN8eZCkwQgNN1Ncwa",
+        "pnl": "-26.23"
+      }
+    ]
+  }
+}

@@ -1,0 +1,236 @@
+[
+  {
+    "name": "SOL-PERP",
+    "marketIndex": 0,
+    "publicKey": "8UJgxaiQx5nTrdDgph5FiahMmzduuLTLf5WmsPegYA6W",
+    "fundingRate": 233875,
+    "lastFundingRateTimestamp": 1747299603,
+    "twapPrice": 171849484,
+    "dex": "drift"
+  },
+  {
+    "name": "BTC-PERP",
+    "marketIndex": 1,
+    "publicKey": "2UZMvVTBQR9yWxrEdzEQzXWE61bUjqQ5VpJAGqVb3B19",
+    "fundingRate": -234182250,
+    "lastFundingRateTimestamp": 1747299600,
+    "twapPrice": 102070847005,
+    "dex": "drift"
+  },
+  {
+    "name": "ETH-PERP",
+    "marketIndex": 2,
+    "publicKey": "25Eax9W8SA3wpCQFhJEGyHhQ2NDHEshZEDzyMNtthR8D",
+    "fundingRate": 12852375,
+    "lastFundingRateTimestamp": 1747299601,
+    "twapPrice": 2553227560,
+    "dex": "drift"
+  },
+  {
+    "name": "APT-PERP",
+    "marketIndex": 3,
+    "publicKey": "7QAtMC3AaAc91W4XuwYXM1Mtffq9h9Z8dTxcJrKRHu1z",
+    "fundingRate": -49791,
+    "lastFundingRateTimestamp": 1747299698,
+    "twapPrice": 5564725,
+    "dex": "drift"
+  },
+  {
+    "name": "ARB-PERP",
+    "marketIndex": 6,
+    "publicKey": "53xRgYi7591y8TKSqRbC2AMzXJF7ZLLTms6t2XKuigUp",
+    "fundingRate": 11875,
+    "lastFundingRateTimestamp": 1747299603,
+    "twapPrice": 414850,
+    "dex": "drift"
+  },
+  {
+    "name": "DOGE-PERP",
+    "marketIndex": 7,
+    "publicKey": "48R9ic9xgigVRqNPbABN8gTGoRV9wn6UUmcKYz3csbhR",
+    "fundingRate": 2083,
+    "lastFundingRateTimestamp": 1747299605,
+    "twapPrice": 227312,
+    "dex": "drift"
+  },
+  {
+    "name": "BNB-PERP",
+    "marketIndex": 8,
+    "publicKey": "J6MErLoamPSkr6RzoYo8Da2WLCRmmmMQpanDSaenVCvq",
+    "fundingRate": 4106791,
+    "lastFundingRateTimestamp": 1747299607,
+    "twapPrice": 651165735,
+    "dex": "drift"
+  },
+  {
+    "name": "SUI-PERP",
+    "marketIndex": 9,
+    "publicKey": "91NsaUmTNNdLGbYtwmoiYSn9SgWHCsZiChfMYMYZ2nQx",
+    "fundingRate": 3083,
+    "lastFundingRateTimestamp": 1747299605,
+    "twapPrice": 3761061,
+    "dex": "drift"
+  },
+  {
+    "name": "OP-PERP",
+    "marketIndex": 11,
+    "publicKey": "Aw9bzBKbryKnoLtYRLuhbhEYZHcoZyxZ5XszdepwHRKJ",
+    "fundingRate": 4333,
+    "lastFundingRateTimestamp": 1747299613,
+    "twapPrice": 783837,
+    "dex": "drift"
+  },
+  {
+    "name": "XRP-PERP",
+    "marketIndex": 13,
+    "publicKey": "2fqYPht3DVWKHuEzPJy4eaCzd5onZhw7fwSxpGohexNm",
+    "fundingRate": 59500,
+    "lastFundingRateTimestamp": 1747299616,
+    "twapPrice": 2483310,
+    "dex": "drift"
+  },
+  {
+    "name": "HNT-PERP",
+    "marketIndex": 14,
+    "publicKey": "7jyQomwaLZYpwrcZWAa7yoDeLPTsXsCDEzhvtxeee5hY",
+    "fundingRate": 131291,
+    "lastFundingRateTimestamp": 1747299617,
+    "twapPrice": 3965239,
+    "dex": "drift"
+  },
+  {
+    "name": "INJ-PERP",
+    "marketIndex": 15,
+    "publicKey": "2uBzNiiGJvJhK2iuZZKJcCZH9ih1kFroq3ZPqo9UYDUU",
+    "fundingRate": -120583,
+    "lastFundingRateTimestamp": 1747299618,
+    "twapPrice": 12569533,
+    "dex": "drift"
+  },
+  {
+    "name": "LINK-PERP",
+    "marketIndex": 16,
+    "publicKey": "3a7HAEqxzwvJEAViYKhDtHk85mrFf1dU2HCsffgXxUj8",
+    "fundingRate": 181958,
+    "lastFundingRateTimestamp": 1747299622,
+    "twapPrice": 16416588,
+    "dex": "drift"
+  },
+  {
+    "name": "PYTH-PERP",
+    "marketIndex": 18,
+    "publicKey": "75Mk3ySkJG5rCAsiQd4KZfFws35dSj2JVa6jxrqyTM52",
+    "fundingRate": -166,
+    "lastFundingRateTimestamp": 1747299627,
+    "twapPrice": 167484,
+    "dex": "drift"
+  },
+  {
+    "name": "TIA-PERP",
+    "marketIndex": 19,
+    "publicKey": "H9AGF2BJe35YYgwjF8oZZogQxwBmBEy3soZWZpkVZq9e",
+    "fundingRate": 93791,
+    "lastFundingRateTimestamp": 1747299629,
+    "twapPrice": 2863463,
+    "dex": "drift"
+  },
+  {
+    "name": "JTO-PERP",
+    "marketIndex": 20,
+    "publicKey": "FH6CkSYthofVKdfuNagWn48fou1Dq5REkxhtZsk22Gpi",
+    "fundingRate": 23333,
+    "lastFundingRateTimestamp": 1747299631,
+    "twapPrice": 1967035,
+    "dex": "drift"
+  },
+  {
+    "name": "SEI-PERP",
+    "marketIndex": 21,
+    "publicKey": "EBsU7BPiCDw7Q7GqQBzNcFGdFDU9bEmE4TjuW76fA62r",
+    "fundingRate": 4208,
+    "lastFundingRateTimestamp": 1747299632,
+    "twapPrice": 240737,
+    "dex": "drift"
+  },
+  {
+    "name": "AVAX-PERP",
+    "marketIndex": 22,
+    "publicKey": "CGVDM9FjRQR7e1oV8cAitnYJNZdKo7szzSSLcxhLgJEx",
+    "fundingRate": 397666,
+    "lastFundingRateTimestamp": 1747299633,
+    "twapPrice": 24043465,
+    "dex": "drift"
+  },
+  {
+    "name": "JUP-PERP",
+    "marketIndex": 24,
+    "publicKey": "8DdB5hHSZtPT3oqbsiHUytCrrodApNC31k3MuZhxJH61",
+    "fundingRate": 5000,
+    "lastFundingRateTimestamp": 1747299637,
+    "twapPrice": 505236,
+    "dex": "drift"
+  },
+  {
+    "name": "DYM-PERP",
+    "marketIndex": 25,
+    "publicKey": "76k9apcvniHwHdEtWnk398ePaz8AaQfwRTH69rqxyTyc",
+    "fundingRate": -11500,
+    "lastFundingRateTimestamp": 1747299639,
+    "twapPrice": 403905,
+    "dex": "drift"
+  },
+  {
+    "name": "TAO-PERP",
+    "marketIndex": 26,
+    "publicKey": "7rUSt1PXXn2Pp4ZNDcZqZGEgKSGpxqbRyb2W6rG1Dtt6",
+    "fundingRate": 5256333,
+    "lastFundingRateTimestamp": 1747299641,
+    "twapPrice": 428010473,
+    "dex": "drift"
+  },
+  {
+    "name": "DRIFT-PERP",
+    "marketIndex": 30,
+    "publicKey": "2dCbfkVE9sa9eweSrx7ZymvfgxPEJSdHGv79mr66Kgqn",
+    "fundingRate": 4875,
+    "lastFundingRateTimestamp": 1747299648,
+    "twapPrice": 627911,
+    "dex": "drift"
+  },
+  {
+    "name": "TON-PERP",
+    "marketIndex": 42,
+    "publicKey": "J5RWv9z5ore5pDXtyKho8fmm35N13Mststp8JRUaE93P",
+    "fundingRate": 45666,
+    "lastFundingRateTimestamp": 1747299657,
+    "twapPrice": 3141864,
+    "dex": "drift"
+  },
+  {
+    "name": "LTC-PERP",
+    "marketIndex": 60,
+    "publicKey": "EhvnjLW6ovSa2JoPMH6GSYeJQydRYidMz2rnY6FxhmrW",
+    "fundingRate": 1162583,
+    "lastFundingRateTimestamp": 1747299677,
+    "twapPrice": 97523031,
+    "dex": "drift"
+  },
+  {
+    "name": "ADA-PERP",
+    "marketIndex": 72,
+    "publicKey": "AYaxeH7yWi5Bk5xcWmusQkBPoh7VS2adzybTNtHDUy6B",
+    "fundingRate": 40125,
+    "lastFundingRateTimestamp": 1747299694,
+    "twapPrice": 777471,
+    "dex": "drift"
+  },
+  {
+    "name": "PAXG-PERP",
+    "marketIndex": 73,
+    "publicKey": "3E2gScjJtS4SAGGCWe7qmqvuJKyaFNSsQcTfub2hjfWd",
+    "fundingRate": 11129083,
+    "lastFundingRateTimestamp": 1747299695,
+    "twapPrice": 3181335803,
+    "dex": "drift"
+  }
+]
