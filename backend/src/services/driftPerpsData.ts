@@ -61,10 +61,6 @@ export class DriftPerpsDataService {
         detailedMarket.status = perpMarket.status;
         detailedMarket.name = perpMarket.name;
         detailedMarket.nextFundingRateRecordId = perpMarket.nextFundingRateRecordId;
-        detailedMarket.pnlPoolValue = perpMarket.pnlPoolValue;
-        detailedMarket.maxSpread = perpMarket.maxSpread;
-        detailedMarket.maxInitialLeverage = perpMarket.maxInitialLeverage;
-        detailedMarket.maxSlippage = perpMarket.maxSlippage;
         
         // Add human-readable ticker derived from bytes
         detailedMarket.ticker = String.fromCharCode(...perpMarket.name).trim();
@@ -89,24 +85,7 @@ export class DriftPerpsDataService {
         // Add market statistics
         detailedMarket.volumeStats = {
           volume24h: perpMarket.amm.volume24H,
-          longVolume24h: perpMarket.amm.longVolume24H,
-          shortVolume24h: perpMarket.amm.shortVolume24H,
-          totalVolume: perpMarket.amm.totalVolume,
-          totalFees: perpMarket.amm.totalFees
         };
-        
-        // Include market metadata if available
-        // Note: The function getPerpMarketMetadata doesn't exist in current SDK version
-        // We can add custom metadata lookup here if needed in the future
-        
-        // Include each trade day
-        const tradeStatsDays = perpMarket.amm.tradeStatsDays;
-        if (tradeStatsDays) {
-          detailedMarket.tradeStatsDays = tradeStatsDays;
-        }
-        
-        // Include the current funding rate streak
-        detailedMarket.fundingRateStreak = perpMarket.amm.fundingRateStreak;
         
         // Include any remaining fields directly from perpMarket
         for (const [key, value] of Object.entries(perpMarket)) {
@@ -120,7 +99,7 @@ export class DriftPerpsDataService {
         // If there's an error processing a market, still include it with basic info
         console.error(`Error processing market ${perpMarket.marketIndex}:`, error);
         return {
-          error: `Failed to process market data: ${error.message}`,
+          error: `Failed to process market data`,
           marketIndex: perpMarket.marketIndex,
           ticker: perpMarket.name ? String.fromCharCode(...perpMarket.name).trim() : 'Unknown',
           pubKey: perpMarket.pubkey ? perpMarket.pubkey.toString() : null

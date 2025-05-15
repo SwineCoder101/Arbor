@@ -161,10 +161,10 @@ export class MarketDataRoutes {
         }
         
         // Find fields that have the BN format
-        const bnFields = [];
+        const bnFields: any = [];
         
         // Function to search for BN formatted fields
-        const findBNFields = (obj, path = '') => {
+        const findBNFields = (obj: Record<string, any>, path = '') => {
           if (!obj || typeof obj !== 'object') return;
           
           for (const key in obj) {
@@ -243,10 +243,10 @@ export class MarketDataRoutes {
         
         // Collect information about BN conversion status
         const bnFields = ['fundingRate', 'twapPrice', 'markPrice', 'baseAssetReserve', 'quoteAssetReserve'];
-        const bnStatus = {};
+        const bnStatus: Record<string, any> = {};
         
         for (const field of bnFields) {
-          if (sampleMarket[field]) {
+          if (sampleMarket && field in sampleMarket && sampleMarket[field]) {
             bnStatus[field] = {
               value: sampleMarket[field].toString(),
               isBN: sampleMarket[field] instanceof BN,
@@ -257,17 +257,20 @@ export class MarketDataRoutes {
         
         // Check nested AMM values if they exist
         if (sampleMarket.amm) {
-          bnStatus['amm.lastFundingRate'] = {
-            value: sampleMarket.amm.lastFundingRate?.toString() || 'N/A',
-            isBN: sampleMarket.amm.lastFundingRate instanceof BN,
-            type: typeof sampleMarket.amm.lastFundingRate
+          // Use a safer approach for nested properties
+          const lastFundingRate = sampleMarket.amm.lastFundingRate;
+          bnStatus['ammFundingRate'] = {
+            value: lastFundingRate?.toString() || 'N/A',
+            isBN: lastFundingRate instanceof BN,
+            type: typeof lastFundingRate
           };
           
           if (sampleMarket.amm.historicalOracleData) {
-            bnStatus['amm.historicalOracleData.lastOraclePriceTwap5Min'] = {
-              value: sampleMarket.amm.historicalOracleData.lastOraclePriceTwap5Min?.toString() || 'N/A',
-              isBN: sampleMarket.amm.historicalOracleData.lastOraclePriceTwap5Min instanceof BN,
-              type: typeof sampleMarket.amm.historicalOracleData.lastOraclePriceTwap5Min
+            const twap = sampleMarket.amm.historicalOracleData.lastOraclePriceTwap5Min;
+            bnStatus['ammOracleTwap'] = {
+              value: twap?.toString() || 'N/A',
+              isBN: twap instanceof BN,
+              type: typeof twap
             };
           }
         }

@@ -61,7 +61,7 @@ export class BNConverter {
             result[key] = process(propVal);
           } catch (e) {
             // If processing a property fails, store it as a string
-            result[key] = `[Error processing: ${e.message}]`;
+            result[key] = `[Error processing: ${e instanceof Error ? e.message : String(e)}]`;
           }
         }
         

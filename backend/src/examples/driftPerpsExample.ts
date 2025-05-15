@@ -6,6 +6,11 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 async function main() {
+  console.log("ENV VARS: ", )
+  console.log("RPCS_ENDPOINT: ", process.env.RPC_ENDPOINT)
+  console.log("KEYPAIR: ", process.env.KEYPAIR)
+  console.log("CLUSTER: ", process.env.CLUSTER)
+
   // Validate environment variables
   if (!process.env.RPC_ENDPOINT || !process.env.KEYPAIR || !process.env.CLUSTER) {
     console.error('Missing required environment variables: RPC_ENDPOINT, KEYPAIR, and CLUSTER must be set');
@@ -57,11 +62,7 @@ async function main() {
       console.log('=================================================');
       console.log('User Perpetual Positions:');
       userPositions.forEach((position, index) => {
-        console.log(`Position ${index + 1}: ${position.ticker}`);
-        console.log(`Market Index: ${position.marketIndex}`);
-        console.log(`Base Asset Amount: ${position.baseAssetAmount.toString()}`);
-        console.log(`Quote Asset Amount: ${position.quoteAssetAmount.toString()}`);
-        console.log(`Unsettled PnL: ${position.unsettledPnl.toString()}`);
+        console.log(`Position ${index + 1}: ${JSON.stringify(position)}`);
         console.log('-------------------------------------------------');
       });
     } else {
