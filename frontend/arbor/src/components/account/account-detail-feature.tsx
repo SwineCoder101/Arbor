@@ -25,11 +25,6 @@ export default function AccountDetailFeature() {
     <div>
       <AppHero
         title={<AccountBalance address={address} />}
-        subtitle={
-          <div className="my-4">
-            <ExplorerLink address={address.toString()} label={ellipsify(address.toString())} />
-          </div>
-        }
       >
         <div className="my-4">
           <AccountButtons address={address} />
