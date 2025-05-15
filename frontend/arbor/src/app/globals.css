@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -42,72 +43,78 @@
 }
 
 :root {
+  /* Arbor Natural Theme - Light Mode */
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: #f5f0e6; /* earthy background */
+  --foreground: #2e2e2e; /* text color */
+  --card: #ffffff;
+  --card-foreground: #2e2e2e;
+  --popover: #ffffff;
+  --popover-foreground: #2e2e2e;
+  --primary: #7d5f54; /* darker earthy brown */
+  --primary-foreground: #ffffff;
+  --secondary: #9a8478; /* warm taupe */
+  --secondary-foreground: #ffffff;
+  --muted: #e8e0d5;
+  --muted-foreground: #6c6860;
+  --accent: #c5b6a3; /* subtle beige */
+  --accent-foreground: #2e2e2e;
+  --success: #7c9473; /* earthy green */
+  --success-foreground: #ffffff;
+  --warning: #d4a373; /* earthy amber */
+  --warning-foreground: #ffffff;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --border: #d7cec2;
+  --input: #e8e0d5;
+  --ring: #9a8478;
+  --chart-1: #7d5f54;
+  --chart-2: #9a8478;
+  --chart-3: #c5b6a3;
+  --chart-4: #d7cec2;
+  --chart-5: #e8e0d5;
+  --sidebar: #f0e9dc;
+  --sidebar-foreground: #2e2e2e;
+  --sidebar-primary: #7d5f54;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #c5b6a3;
+  --sidebar-accent-foreground: #2e2e2e;
+  --sidebar-border: #d7cec2;
+  --sidebar-ring: #9a8478;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* Arbor Natural Theme - Dark Mode */
+  --background: #2a2520;
+  --foreground: #f5f0e6;
+  --card: #3b342e;
+  --card-foreground: #f5f0e6;
+  --popover: #3b342e;
+  --popover-foreground: #f5f0e6;
+  --primary: #a1887f;
+  --primary-foreground: #ffffff;
+  --secondary: #8d6e63;
+  --secondary-foreground: #ffffff;
+  --muted: #4a413a;
+  --muted-foreground: #c5bbad;
+  --accent: #c8b6a6;
+  --accent-foreground: #2e2e2e;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: rgba(245, 240, 230, 0.15);
+  --input: rgba(245, 240, 230, 0.15);
+  --ring: #a1887f;
+  --chart-1: #a1887f;
+  --chart-2: #8d6e63;
+  --chart-3: #c8b6a6;
+  --chart-4: #d7cec2;
+  --chart-5: #e8e0d5;
+  --sidebar: #3b342e;
+  --sidebar-foreground: #f5f0e6;
+  --sidebar-primary: #a1887f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #c8b6a6;
+  --sidebar-accent-foreground: #2e2e2e;
+  --sidebar-border: rgba(245, 240, 230, 0.15);
+  --sidebar-ring: #a1887f;
 }
 
 @layer base {
@@ -116,12 +123,95 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-inter;
   }
 }
 
+/* Custom styling for the Wallet UI */
 .wallet-adapter-button-trigger {
   height: auto !important;
   @apply !border !bg-background !shadow-xs hover:!bg-accent !text-accent-foreground hover:!text-accent-foreground dark:!bg-input/30 !border-input/10 dark:!border-input dark:hover:!bg-input/50;
   @apply !px-2 !py-[6px] !rounded-md !text-sm !font-semibold !shadow-sm !transition-all;
+}
+
+/* Custom Arbor-specific classes */
+.arbor-card {
+  @apply bg-card rounded-lg border border-border shadow-sm transition-all hover:shadow-md p-4;
+}
+
+.arbor-panel {
+  @apply bg-card/80 backdrop-blur-sm rounded-lg border border-border shadow-sm transition-all;
+}
+
+.arbor-gradient-text {
+  @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+}
+
+/* Grid pattern for backgrounds */
+.arbor-grid-pattern {
+  background-image: 
+    linear-gradient(rgba(201, 187, 171, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201, 187, 171, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.arbor-green-burst {
+  position: relative;
+}
+
+.arbor-green-burst::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 70% 30%, rgba(124, 148, 115, 0.15) 0%, rgba(124, 148, 115, 0.05) 25%, rgba(124, 148, 115, 0) 50%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.arbor-brown-accent {
+  position: relative;
+}
+
+.arbor-brown-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 70%, rgba(125, 95, 84, 0.08) 0%, rgba(125, 95, 84, 0.03) 25%, rgba(125, 95, 84, 0) 50%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Tree-branch inspired decorative element */
+.arbor-branch-divider {
+  position: relative;
+  height: 1px;
+  background: var(--border);
+}
+
+.arbor-branch-divider::before,
+.arbor-branch-divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 20%;
+  height: 1px;
+  background: var(--border);
+}
+
+.arbor-branch-divider::before {
+  right: 0;
+  transform: rotate(30deg);
+  transform-origin: right;
+}
+
+.arbor-branch-divider::after {
+  right: 20%;
+  transform: rotate(-15deg);
+  transform-origin: right;
 }
