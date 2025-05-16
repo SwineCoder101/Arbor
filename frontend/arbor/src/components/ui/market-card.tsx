@@ -146,62 +146,55 @@ export function MarketLogo({
     lg: "w-10 h-10",
   };
   
-  // SVG paths for each market logo (simplified)
-  const logoContent = () => {
+  // Map market names to their logo files
+  const getLogoSrc = () => {
     switch (market) {
       case "drift":
-        return (
-          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-            <path d="M16 4L4 16L16 28L28 16L16 4Z" fill="#FF9F0A" />
-          </svg>
-        );
+        return "/perp-logos/drift-logo.png";
       case "mango":
-        return (
-          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-            <path d="M7 7H25V25H7V7Z" fill="#E54033" />
-          </svg>
-        );
+        return "/perp-logos/mango-markets-logo.png";
       case "zeta":
-        return (
-          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-            <path d="M6 10H26V13H6V10ZM6 19H26V22H6V19ZM11 6V26H9V6H11ZM23 6V26H21V6H23Z" fill="#5551FF" />
-          </svg>
-        );
+        return "/perp-logos/zeta-logo.png";
       case "jupiter":
-        return (
-          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-            <circle cx="16" cy="16" r="10" fill="#FF6978" />
-          </svg>
-        );
+        return "/perp-logos/jupiter-logo.png";
       case "orderly":
-        return (
-          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-            <rect x="6" y="6" width="20" height="5" rx="2" fill="#4169E1" />
-            <rect x="6" y="13.5" width="20" height="5" rx="2" fill="#4169E1" />
-            <rect x="6" y="21" width="20" height="5" rx="2" fill="#4169E1" />
-          </svg>
-        );
+        return "/perp-logos/orderly-logo.png";
       case "solana":
-        return (
-          <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-            <path d="M26 9.5L6 21.5M6 10.5L26 22.5M6 16L26 16" stroke="#9945FF" strokeWidth="3" strokeLinecap="round" />
-          </svg>
-        );
+        // Fallback to SVG for Solana since we don't have an image
+        return null;
       default:
         return null;
     }
   };
+  
+  const logoSrc = getLogoSrc();
+  
+  // Fallback to SVG for Solana
+  const SolanaSVG = () => (
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
+      <path d="M26 9.5L6 21.5M6 10.5L26 22.5M6 16L26 16" stroke="#9945FF" strokeWidth="3" strokeLinecap="round" />
+    </svg>
+  );
 
   return (
     <div 
       className={cn(
-        "rounded-full flex items-center justify-center bg-white",
+        "rounded-full flex items-center justify-center overflow-hidden",
+        market === "solana" ? "bg-white" : "", // Only add white background for Solana SVG
         sizeClasses[size],
         className
       )}
       {...props}
     >
-      {logoContent()}
+      {logoSrc ? (
+        <img 
+          src={logoSrc} 
+          alt={`${market} logo`} 
+          className="w-full h-full object-contain"
+        />
+      ) : (
+        <SolanaSVG />
+      )}
     </div>
   );
 }
