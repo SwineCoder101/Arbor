@@ -1,12 +1,169 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowUpDownIcon, BarChart3Icon, CircleDollarSignIcon, ExternalLinkIcon, TrendingUpIcon } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Heading, Subheading } from '@/components/ui/headings'
 import { ArborPanel, ArborPanelContent, ArborPanelHeader, ArborPanelTitle } from '@/components/ui/arbor-panel'
 import { RadixTabs, RadixTabsContent, RadixTabsList, RadixTabsTrigger } from '@/components/ui/radix-tabs'
+
+// Performance Chart Component
+interface PerformanceChartProps {
+  asset: string;
+}
+
+interface ChartDataPoint {
+  date: string;
+  value: number;
+}
+
+interface AssetPerformanceData {
+  title: string;
+  description: string;
+  timeframe: string;
+  initialDeposit: number;
+  profitabilityThreshold: number;
+  longShortSpread: ChartDataPoint[];
+  cumulativeReturns: ChartDataPoint[];
+}
+
+interface PerformanceData {
+  performanceData: {
+    [key: string]: AssetPerformanceData;
+  };
+}
+
+function PerformanceChart({ asset }: PerformanceChartProps) {
+  const [chartData, setChartData] = useState<AssetPerformanceData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchChartData() {
+      try {
+        setLoading(true);
+        const response = await fetch('/strategy-performance-chart.json');
+        if (!response.ok) {
+          throw new Error('Failed to fetch chart data');
+        }
+        
+        const data: PerformanceData = await response.json();
+        const assetData = data.performanceData[asset];
+        
+        if (!assetData) {
+          setError(`No data available for ${asset}`);
+          return;
+        }
+        
+        setChartData(assetData);
+      } catch (err) {
+        setError('Error loading chart data');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchChartData();
+  }, [asset]);
+
+  if (loading) {
+    return (
+      <div className="h-[350px] w-full flex items-center justify-center bg-muted/20 rounded-lg">
+        <div className="animate-pulse text-muted-foreground">Loading chart data...</div>
+      </div>
+    );
+  }
+
+  if (error || !chartData) {
+    return (
+      <div className="h-[350px] w-full flex items-center justify-center bg-muted/20 rounded-lg">
+        <div className="text-muted-foreground">
+          {error || `No performance data available for ${asset}`}
+        </div>
+      </div>
+    );
+  }
+
+  // In a real implementation, we would render a dynamic chart using a charting library
+  // For now, we'll display our placeholder with some extracted data
+  const currentValue = chartData.cumulativeReturns[chartData.cumulativeReturns.length - 1].value;
+  const initialValue = chartData.initialDeposit;
+  const percentageGain = ((currentValue - initialValue) / initialValue * 100).toFixed(2);
+  
+  return (
+    <div className="space-y-4">
+      <div className="h-[350px] w-full rounded-lg relative overflow-hidden" id="performanceChart">
+        <div className="absolute inset-0 p-4">
+          <div className="flex justify-between items-center mb-2">
+            <h4 className="text-sm font-medium">{chartData.title}</h4>
+            <div className="text-xs text-muted-foreground">{chartData.timeframe}</div>
+          </div>
+          
+          <div className="h-[280px] w-full relative">
+            <img src="/performance-chart-placeholder.svg" alt="Performance Chart" className="w-full h-full object-cover" />
+            
+            {/* Overlay some stats from our actual JSON data */}
+            <div className="absolute top-4 right-4 bg-background/80 p-2 rounded-md backdrop-blur-sm">
+              <div className="text-sm font-medium">Initial: ${initialValue.toLocaleString()}</div>
+              <div className="text-sm font-medium text-emerald-500">
+                Current: ${currentValue.toLocaleString()}
+              </div>
+              <div className="text-xs text-emerald-500">+{percentageGain}%</div>
+            </div>
+            
+            <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-muted-foreground">
+              <span>{chartData.cumulativeReturns[0].date}</span>
+              <span>{chartData.cumulativeReturns[chartData.cumulativeReturns.length - 1].date}</span>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap justify-between mt-3 text-xs">
+            <div className="flex items-center gap-1 mr-4 mb-1">
+              <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+              <span>Account Value</span>
+            </div>
+            <div className="flex items-center gap-1 mr-4 mb-1">
+              <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span>Funding Rate Spread</span>
+            </div>
+            <div className="flex items-center gap-1 mb-1">
+              <div className="w-4 h-1 bg-rose-400/60"></div>
+              <span>Threshold ({chartData.profitabilityThreshold*100}%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="text-sm">
+        <p className="text-muted-foreground mb-2">{chartData.description}</p>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="bg-muted/30 rounded p-2">
+            <div className="text-muted-foreground">Highest Spread</div>
+            <div className="font-medium">{Math.max(...chartData.longShortSpread.map(d => d.value))*100}%</div>
+          </div>
+          <div className="bg-muted/30 rounded p-2">
+            <div className="text-muted-foreground">Lowest Spread</div>
+            <div className="font-medium">{Math.min(...chartData.longShortSpread.map(d => d.value))*100}%</div>
+          </div>
+          <div className="bg-muted/30 rounded p-2">
+            <div className="text-muted-foreground">Profitable Days</div>
+            <div className="font-medium">
+              {chartData.longShortSpread.filter(d => d.value > chartData.profitabilityThreshold).length} days
+            </div>
+          </div>
+          <div className="bg-muted/30 rounded p-2">
+            <div className="text-muted-foreground">Unprofitable Days</div>
+            <div className="font-medium">
+              {chartData.longShortSpread.filter(d => d.value <= chartData.profitabilityThreshold).length} days
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Types imported from funding-rate-table.tsx
 interface DexInfo {
@@ -275,15 +432,9 @@ export function StrategyDetailModal({ strategy, trigger }: StrategyDetailModalPr
                 <ArborPanelTitle>📊 Performance Visualization</ArborPanelTitle>
               </ArborPanelHeader>
               <ArborPanelContent>
-                <div className="h-[300px] w-full flex items-center justify-center bg-muted/30 rounded-lg">
-                  <div className="text-center">
-                    <div className="text-sm text-muted-foreground mb-2">Performance chart showing hypothetical deposit growth</div>
-                    <div className="font-medium">Chart visualization would display here</div>
-                    <div className="text-xs text-muted-foreground mt-2">
-                      Showing spread between long and short positions, with shaded areas for profitable vs unprofitable regions
-                    </div>
-                  </div>
-                </div>
+                <PerformanceChart asset={strategy.asset} />
+                
+                
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                   <div className="space-y-3">
