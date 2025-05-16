@@ -556,7 +556,7 @@ export function FundingRateTable() {
                             strategy={strategy} 
                             trigger={
                               <Button variant="ghost" size="sm" className="w-full text-muted-foreground text-xs py-1.5">
-                                View Details <ArrowUpRight className="h-3 w-3 ml-1" />
+                                <ArrowUpRight className="h-3 w-3 ml-1" />
                               </Button>
                             }
                           />

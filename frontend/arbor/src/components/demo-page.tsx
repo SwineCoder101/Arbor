@@ -147,8 +147,8 @@ export function DemoPage() {
             <div>
               <Card className="h-full">
                 <CardHeader>
-                  <CardTitle>Your Strategies</CardTitle>
-                  <CardDescription>Active delta-neutral positions</CardDescription>
+                  <CardTitle>Example Strategies</CardTitle>
+                  <CardDescription>Example delta-neutral positions</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
