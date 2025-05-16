@@ -112,7 +112,7 @@ export function DemoPage() {
             />
             <StatCard
               label="24h Trading Volume"
-              value="$183.2M"
+              value="$1.2M"
               change={8.3}
               trend="up"
               icon={<BarChart3 className="h-5 w-5" />}
@@ -183,7 +183,7 @@ export function DemoPage() {
           
           <div className="mt-12">
             <Heading size="h3">Strategy Composer</Heading>
-            <Subheading>Create complex multi-market strategies</Subheading>
+            <Subheading>Create complex multi-market delta-neutral trading strategies</Subheading>
             
             <div className="mt-6 p-6 border rounded-lg bg-card">
               <div className="flex justify-center">
@@ -214,7 +214,7 @@ export function DemoPage() {
                           <span>2x</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Funding:</span>
+                          <span className="text-muted-foreground">Latest Funding:</span>
                           <span className="text-green-500">+0.02%</span>
                         </div>
                       </div>
@@ -237,7 +237,7 @@ export function DemoPage() {
                           <span>2x</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Funding:</span>
+                          <span className="text-muted-foreground">Latest Funding:</span>
                           <span className="text-red-500">-0.01%</span>
                         </div>
                       </div>
@@ -272,14 +272,6 @@ export function DemoPage() {
                   </TreeNode>
                 </div>
               </div>
-            </div>
-          </div>
-          
-          <div className="mt-12">
-            <div className="mt-6">
-              <MarketsProvider>
-                <FundingRateAggregator />
-              </MarketsProvider>
             </div>
           </div>
         </div>

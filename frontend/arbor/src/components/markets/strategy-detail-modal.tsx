@@ -362,67 +362,10 @@ export function StrategyDetailModal({ strategy, trigger }: StrategyDetailModalPr
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <Button variant="outline" size="sm" className="w-full gap-1.5">
-                      View Strategy Address <ExternalLinkIcon className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
                 </ArborPanelContent>
               </ArborPanel>
             </div>
 
-            {/* Active Orders */}
-            {strategy.activeOrders.length > 0 && (
-              <ArborPanel>
-                <ArborPanelHeader>
-                  <ArborPanelTitle>Active Orders</ArborPanelTitle>
-                </ArborPanelHeader>
-                <ArborPanelContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {strategy.activeOrders.map((order) => (
-                      <div key={order.id} className="border border-border rounded-md p-3">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <div className="font-medium">{order.id}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {new Date(order.createdAt).toLocaleDateString()}
-                            </div>
-                          </div>
-                          <div className={`px-2 py-1 text-xs rounded-full ${
-                            order.side === 'long' 
-                              ? 'bg-emerald-100 text-emerald-800' 
-                              : 'bg-rose-100 text-rose-800'
-                          }`}>
-                            {order.side.toUpperCase()}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">DEX:</span> <span className="font-medium uppercase">{order.dex}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Status:</span> <span className="font-medium capitalize">{order.status.replace('_', ' ')}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Size:</span> <span className="font-medium">{order.size}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Entry:</span> <span className="font-medium">${order.entryPrice}</span>
-                          </div>
-                          <div className="col-span-2">
-                            <span className="text-muted-foreground">PnL:</span> <span className={`font-medium ${
-                              parseFloat(order.pnl) >= 0 ? 'text-emerald-500' : 'text-rose-400'
-                            }`}>
-                              {parseFloat(order.pnl) >= 0 ? '+' : ''}{order.pnl} USDC
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ArborPanelContent>
-              </ArborPanel>
-            )}
           </RadixTabsContent>
 
           {/* Performance Tab */}
@@ -490,9 +433,6 @@ export function StrategyDetailModal({ strategy, trigger }: StrategyDetailModalPr
           {/* Funding Analysis Tab */}
           <RadixTabsContent value="funding" className="space-y-4">
             <ArborPanel>
-              <ArborPanelHeader>
-                <ArborPanelTitle>Funding Rate Analysis</ArborPanelTitle>
-              </ArborPanelHeader>
               <ArborPanelContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -550,8 +490,8 @@ export function StrategyDetailModal({ strategy, trigger }: StrategyDetailModalPr
               <Button variant="outline">
                 Download Historical Data
               </Button>
-              <Button variant="primary" className="bg-emerald-500 hover:bg-emerald-600">
-                Initialize Position
+              <Button variant="default" className="bg-emerald-500 hover:bg-emerald-600">
+                Place Order
               </Button>
             </div>
           </RadixTabsContent>
