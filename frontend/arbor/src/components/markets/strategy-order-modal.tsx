@@ -46,15 +46,41 @@ interface Strategy {
 interface StrategyOrderModalProps {
   strategy: Strategy
   trigger?: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function StrategyOrderModal({ strategy, trigger }: StrategyOrderModalProps) {
-  const [open, setOpen] = useState(false)
+export function StrategyOrderModal({ strategy, trigger, open: externalOpen, onOpenChange }: StrategyOrderModalProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  
+  // Determine whether to use external or internal state
+  const isControlled = externalOpen !== undefined
+  const open = isControlled ? externalOpen : internalOpen
+  
+  // Handle dialog open state change
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!isControlled) {
+      setInternalOpen(newOpen)
+    }
+    onOpenChange?.(newOpen)
+  }
   const [collateralAmount, setCollateralAmount] = useState(1000)
   const [leverageMultiplier, setLeverageMultiplier] = useState(2)
   const [riskLevel, setRiskLevel] = useState("medium")
   const [allocationRatio, setAllocationRatio] = useState(50) // 50% to each side
   const { toast } = useToast()
+  
+  // Initialize with recommended amounts from strategy
+  useEffect(() => {
+    if (strategy && strategy.recommendedSize && strategy.longDex.price) {
+      // Convert recommended asset size to USDC value
+      const recommendedUsdcValue = parseFloat(strategy.recommendedSize) * (strategy.longDex.price || 0);
+      if (!isNaN(recommendedUsdcValue) && recommendedUsdcValue > 0) {
+        // Use half the recommended value as default collateral amount
+        setCollateralAmount(Math.round(recommendedUsdcValue / 2));
+      }
+    }
+  }, [strategy])
 
   // Calculate recommended strategy size in asset units based on current price
   const getAssetUnit = (): string => {
@@ -161,11 +187,11 @@ export function StrategyOrderModal({ strategy, trigger }: StrategyOrderModalProp
       ),
     });
     
-    setOpen(false);
+    handleOpenChange(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {trigger || (
           <Button size="sm" variant="arbor" className="text-xs bg-emerald-500 hover:bg-emerald-600 text-white">
@@ -179,7 +205,7 @@ export function StrategyOrderModal({ strategy, trigger }: StrategyOrderModalProp
             <div className="p-1.5 rounded-md bg-muted/20 flex items-center justify-center min-w-[36px]">
               <span className="text-xs font-bold uppercase">{getAssetUnit()}</span>
             </div>
-            Place {strategy.strategyType} Order
+            Place Funding Rate Arbitrage Order
           </DialogTitle>
           <DialogDescription>
             Configure your delta-neutral strategy parameters and place your order
@@ -587,7 +613,7 @@ export function StrategyOrderModal({ strategy, trigger }: StrategyOrderModalProp
         </ArborPanel>
 
         <div className="flex justify-end gap-4 mt-6">
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={() => handleOpenChange(false)}>
             Cancel
           </Button>
           <Button 
