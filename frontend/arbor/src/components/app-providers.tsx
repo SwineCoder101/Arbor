@@ -9,7 +9,9 @@ export function AppProviders({ children }: Readonly<{ children: React.ReactNode 
   return (
     <ReactQueryProvider>
       <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" disableTransitionOnChange>
-        <SolanaProvider>{children}</SolanaProvider>
+        <SolanaProvider>
+          {children}
+        </SolanaProvider>
       </ThemeProvider>
     </ReactQueryProvider>
   )
