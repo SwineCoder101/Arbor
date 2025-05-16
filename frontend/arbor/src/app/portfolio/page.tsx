@@ -321,11 +321,128 @@ export default function PortfolioPage() {
           <ArborPanelTitle>Portfolio Performance</ArborPanelTitle>
         </ArborPanelHeader>
         <ArborPanelContent>
-          <div className="flex items-center justify-center h-[300px] bg-muted/5 rounded-md mb-4 border border-dashed border-border">
-            <div className="text-center">
-              <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">Performance chart would be displayed here</p>
-              <p className="text-sm text-muted-foreground mt-1">Showing historical PnL, funding rates, and position value over time</p>
+          <div className="h-[300px] bg-muted/5 rounded-md mb-4 border border-border p-4">
+            <div className="flex justify-between items-center mb-2">
+              <h4 className="text-sm font-medium">Portfolio Performance Overview</h4>
+              <div className="text-xs text-muted-foreground">Last 90 days</div>
+            </div>
+            
+            <div className="h-[220px] relative">
+              {/* Chart visualization */}
+              <div className="absolute inset-0">
+                <div className="w-full h-full flex">
+                  {/* Left axis labels */}
+                  <div className="w-12 h-full flex flex-col justify-between pr-2 text-xs text-muted-foreground">
+                    <span>$110k</span>
+                    <span>$105k</span>
+                    <span>$100k</span>
+                  </div>
+                  
+                  {/* Chart area */}
+                  <div className="flex-1 h-full relative">
+                    {/* Grid lines */}
+                    <div className="absolute inset-0 flex flex-col justify-between">
+                      <div className="border-t border-dashed border-muted-foreground/20 h-0"></div>
+                      <div className="border-t border-dashed border-muted-foreground/20 h-0"></div>
+                      <div className="border-t border-dashed border-muted-foreground/20 h-0"></div>
+                    </div>
+                    
+                    {/* PnL Line */}
+                    <div className="absolute inset-0 mt-4">
+                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
+                        <defs>
+                          <linearGradient id="pnlGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="rgb(16, 185, 129)" stopOpacity="0.2"/>
+                            <stop offset="100%" stopColor="rgb(16, 185, 129)" stopOpacity="0"/>
+                          </linearGradient>
+                        </defs>
+                        <path 
+                          d="M0,95 C10,90 20,85 30,80 C40,75 45,70 50,65 C55,60 60,55 70,53 C80,51 90,49 100,45" 
+                          fill="none"
+                          stroke="rgb(16, 185, 129)"
+                          strokeWidth="2"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+                        <path 
+                          d="M0,95 C10,90 20,85 30,80 C40,75 45,70 50,65 C55,60 60,55 70,53 C80,51 90,49 100,45 L100,100 L0,100 Z" 
+                          fill="url(#pnlGradient)"
+                          strokeWidth="0"
+                        />
+                      </svg>
+                    </div>
+                    
+                    {/* Funding Rate Line */}
+                    <div className="absolute inset-0 mt-4">
+                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
+                        <path 
+                          d="M0,80 C5,75 10,70 15,75 C20,80 25,82 30,78 C35,74 40,72 50,74 C60,76 75,72 85,68 C95,64 100,62 100,60" 
+                          fill="none"
+                          stroke="rgb(59, 130, 246)"
+                          strokeWidth="1.5"
+                          strokeDasharray="2,2"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </div>
+                    
+                    {/* Position Value Line */}
+                    <div className="absolute inset-0 mt-4">
+                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
+                        <path 
+                          d="M0,90 C10,88 20,86 30,85 C40,84 45,82 50,80 C55,78 60,76 70,74 C80,72 90,70 100,65" 
+                          fill="none"
+                          stroke="rgb(124, 58, 237)"
+                          strokeWidth="1.5"
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </div>
+                    
+                    {/* Profitability threshold */}
+                    <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-rose-400/60 h-0"></div>
+                    
+                    {/* Time markers */}
+                    <div className="absolute inset-x-0 bottom-0 flex justify-between text-xs text-muted-foreground">
+                      <span>Feb 15</span>
+                      <span>Mar 15</span>
+                      <span>Apr 15</span>
+                      <span>May 15</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Stats box */}
+              <div className="absolute top-4 right-4 bg-background/90 p-2 rounded-md backdrop-blur-sm">
+                <div className="text-sm font-medium">Initial: $100,000</div>
+                <div className="text-sm font-medium text-emerald-500">
+                  Current: $110,230
+                </div>
+                <div className="text-xs text-emerald-500">+10.23%</div>
+              </div>
+            </div>
+            
+            {/* Legend */}
+            <div className="flex flex-wrap justify-between mt-2 text-xs">
+              <div className="flex items-center gap-1 mr-4 mb-1">
+                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                <span>Account Value</span>
+              </div>
+              <div className="flex items-center gap-1 mr-4 mb-1">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span>Funding Rate Spread</span>
+              </div>
+              <div className="flex items-center gap-1 mr-4 mb-1">
+                <div className="w-3 h-3 rounded-full bg-violet-500"></div>
+                <span>Position Value</span>
+              </div>
+              <div className="flex items-center gap-1 mb-1">
+                <div className="w-4 h-1 bg-rose-400/60"></div>
+                <span>Threshold (0.105%)</span>
+              </div>
             </div>
           </div>
           
