@@ -7,8 +7,9 @@ import { Heading, Subheading } from '@/components/ui/headings'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowLeft,  ArrowUpRight } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight } from 'lucide-react'
 import { StrategyDetailModal } from '@/components/markets/strategy-detail-modal'
+import { useSearchParams } from 'next/navigation'
 
 interface Strategy {
   asset: string
@@ -50,10 +51,14 @@ interface DeltaNeutralData {
 
 export default function StrategyPage({ params }: { params: Promise<{ asset: string }> }) {
   const resolvedParams = use(params)
+  const searchParams = useSearchParams()
   const [strategies, setStrategies] = useState<Strategy[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const assetName = decodeURIComponent(resolvedParams.asset)
+  
+  // Get the source page from URL params (default to markets if not provided)
+  const fromPage = searchParams.get('from') || 'markets'
   
   // Handler functions for order actions
   const handleTopUp = (orderId: string) => {
@@ -165,9 +170,9 @@ export default function StrategyPage({ params }: { params: Promise<{ asset: stri
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-2 mb-2">
-            <Link href="/markets">
+            <Link href={`/${fromPage}`}>
               <Button variant="ghost" size="sm" className="gap-1">
-                <ArrowLeft className="h-4 w-4" /> Back to Markets
+                <ArrowLeft className="h-4 w-4" /> Back to {fromPage.charAt(0).toUpperCase() + fromPage.slice(1)}
               </Button>
             </Link>
           </div>
@@ -186,9 +191,9 @@ export default function StrategyPage({ params }: { params: Promise<{ asset: stri
           <div className="text-center space-y-3">
             <p className="text-lg font-medium">No strategies available for {assetName}</p>
             <p className="text-muted-foreground">Check back later for new opportunities</p>
-            <Link href="/markets">
+            <Link href={`/${fromPage}`}>
               <Button variant="outline" className="mt-4">
-                Explore Other Markets
+                {fromPage === 'portfolio' ? 'Back to Portfolio' : 'Explore Other Markets'}
               </Button>
             </Link>
           </div>
