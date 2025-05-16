@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Heading, Subheading } from '@/components/ui/headings'
 import { ArborPanel, ArborPanelContent, ArborPanelHeader, ArborPanelTitle } from '@/components/ui/arbor-panel'
 import { RadixTabs, RadixTabsContent, RadixTabsList, RadixTabsTrigger } from '@/components/ui/radix-tabs'
+import { StrategyOrderModal } from './strategy-order-modal'
 
 // Performance Chart Component
 interface PerformanceChartProps {
@@ -204,6 +205,7 @@ interface StrategyDetailModalProps {
 
 export function StrategyDetailModal({ strategy, trigger }: StrategyDetailModalProps) {
   const [open, setOpen] = useState(false)
+  const [shouldOpenOrderModal, setShouldOpenOrderModal] = useState(false)
 
   // Calculate position size in USDC
   const getPositionSizeInUSDC = (): string => {
@@ -362,67 +364,10 @@ export function StrategyDetailModal({ strategy, trigger }: StrategyDetailModalPr
                     </div>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <Button variant="outline" size="sm" className="w-full gap-1.5">
-                      View Strategy Address <ExternalLinkIcon className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
                 </ArborPanelContent>
               </ArborPanel>
             </div>
 
-            {/* Active Orders */}
-            {strategy.activeOrders.length > 0 && (
-              <ArborPanel>
-                <ArborPanelHeader>
-                  <ArborPanelTitle>Active Orders</ArborPanelTitle>
-                </ArborPanelHeader>
-                <ArborPanelContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {strategy.activeOrders.map((order) => (
-                      <div key={order.id} className="border border-border rounded-md p-3">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <div className="font-medium">{order.id}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {new Date(order.createdAt).toLocaleDateString()}
-                            </div>
-                          </div>
-                          <div className={`px-2 py-1 text-xs rounded-full ${
-                            order.side === 'long' 
-                              ? 'bg-emerald-100 text-emerald-800' 
-                              : 'bg-rose-100 text-rose-800'
-                          }`}>
-                            {order.side.toUpperCase()}
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">DEX:</span> <span className="font-medium uppercase">{order.dex}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Status:</span> <span className="font-medium capitalize">{order.status.replace('_', ' ')}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Size:</span> <span className="font-medium">{order.size}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Entry:</span> <span className="font-medium">${order.entryPrice}</span>
-                          </div>
-                          <div className="col-span-2">
-                            <span className="text-muted-foreground">PnL:</span> <span className={`font-medium ${
-                              parseFloat(order.pnl) >= 0 ? 'text-emerald-500' : 'text-rose-400'
-                            }`}>
-                              {parseFloat(order.pnl) >= 0 ? '+' : ''}{order.pnl} USDC
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </ArborPanelContent>
-              </ArborPanel>
-            )}
           </RadixTabsContent>
 
           {/* Performance Tab */}
@@ -476,9 +421,109 @@ export function StrategyDetailModal({ strategy, trigger }: StrategyDetailModalPr
 
                   <div className="space-y-3">
                     <Heading size="h5">Volume Analysis</Heading>
-                    <div className="h-[150px] bg-muted/30 rounded-lg flex items-center justify-center">
-                      <div className="text-center text-sm text-muted-foreground">
-                        Inflow & outflow volume area chart would display here
+                    <div className="h-[150px] bg-muted/30 rounded-lg p-3 relative">
+                      {/* Volume Analysis Chart */}
+                      <div className="absolute inset-0 p-3">
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="text-xs text-muted-foreground">Volume (USD)</div>
+                          <div className="flex space-x-2 text-xs">
+                            <div className="flex items-center">
+                              <div className="w-2 h-2 rounded-full bg-emerald-500 mr-1"></div>
+                              <span>Inflow</span>
+                            </div>
+                            <div className="flex items-center">
+                              <div className="w-2 h-2 rounded-full bg-rose-500 mr-1"></div>
+                              <span>Outflow</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="h-[120px] relative">
+                          {/* Y-axis */}
+                          <div className="absolute left-0 h-full flex flex-col justify-between items-end pr-1 text-[10px] text-muted-foreground">
+                            <span>100K</span>
+                            <span>50K</span>
+                            <span>0</span>
+                          </div>
+                          
+                          {/* Chart area */}
+                          <div className="absolute left-8 right-0 h-full">
+                            {/* Grid lines */}
+                            <div className="absolute inset-0 flex flex-col justify-between">
+                              <div className="border-t border-dashed border-muted-foreground/20 h-0"></div>
+                              <div className="border-t border-dashed border-muted-foreground/20 h-0"></div>
+                              <div className="border-t border-dashed border-muted-foreground/20 h-0"></div>
+                            </div>
+                            
+                            {/* Outflow Area (Red) */}
+                            <div className="absolute inset-0">
+                              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
+                                <defs>
+                                  <linearGradient id="outflowGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="rgb(244, 63, 94)" stopOpacity="0.2"/>
+                                    <stop offset="100%" stopColor="rgb(244, 63, 94)" stopOpacity="0"/>
+                                  </linearGradient>
+                                </defs>
+                                <path 
+                                  d="M0,70 C5,75 15,78 25,72 C35,66 45,70 55,74 C65,78 75,75 85,68 C95,61 100,65 100,60 L100,100 L0,100 Z" 
+                                  fill="url(#outflowGradient)"
+                                  stroke="none"
+                                />
+                                <path 
+                                  d="M0,70 C5,75 15,78 25,72 C35,66 45,70 55,74 C65,78 75,75 85,68 C95,61 100,65 100,60" 
+                                  fill="none"
+                                  stroke="rgb(244, 63, 94)"
+                                  strokeWidth="1"
+                                  strokeLinejoin="round"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </div>
+                            
+                            {/* Inflow Area (Green) */}
+                            <div className="absolute inset-0">
+                              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
+                                <defs>
+                                  <linearGradient id="inflowGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="rgb(16, 185, 129)" stopOpacity="0.2"/>
+                                    <stop offset="100%" stopColor="rgb(16, 185, 129)" stopOpacity="0"/>
+                                  </linearGradient>
+                                </defs>
+                                <path 
+                                  d="M0,50 C10,45 20,40 30,36 C40,32 50,30 60,35 C70,40 80,30 90,25 C95,22 100,20 100,20 L100,100 L0,100 Z" 
+                                  fill="url(#inflowGradient)"
+                                  stroke="none"
+                                />
+                                <path 
+                                  d="M0,50 C10,45 20,40 30,36 C40,32 50,30 60,35 C70,40 80,30 90,25 C95,22 100,20 100,20" 
+                                  fill="none"
+                                  stroke="rgb(16, 185, 129)"
+                                  strokeWidth="1"
+                                  strokeLinejoin="round"
+                                  strokeLinecap="round"
+                                />
+                              </svg>
+                            </div>
+                            
+                            {/* X-axis time markers */}
+                            <div className="absolute inset-x-0 bottom-[-18px] flex justify-between text-[10px] text-muted-foreground">
+                              <span>Apr 15</span>
+                              <span>Apr 22</span>
+                              <span>Apr 29</span>
+                              <span>May 6</span>
+                              <span>May 13</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Stats overlay */}
+                      <div className="absolute top-3 right-3 bg-background/90 text-xs p-1.5 rounded-md backdrop-blur-sm">
+                        <div className="flex flex-col gap-1">
+                          <div>Net Volume: <span className="text-emerald-500">+$32.45K</span></div>
+                          <div>7D Inflow: <span className="font-medium">$89.75K</span></div>
+                          <div>7D Outflow: <span className="font-medium">$57.30K</span></div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -490,9 +535,6 @@ export function StrategyDetailModal({ strategy, trigger }: StrategyDetailModalPr
           {/* Funding Analysis Tab */}
           <RadixTabsContent value="funding" className="space-y-4">
             <ArborPanel>
-              <ArborPanelHeader>
-                <ArborPanelTitle>Funding Rate Analysis</ArborPanelTitle>
-              </ArborPanelHeader>
               <ArborPanelContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -525,10 +567,114 @@ export function StrategyDetailModal({ strategy, trigger }: StrategyDetailModalPr
 
                   <div>
                     <Heading size="h5" className="mb-3">Historical Rate Distribution</Heading>
-                    <div className="h-[200px] bg-muted/30 rounded-lg flex items-center justify-center">
-                      <div className="text-center text-sm text-muted-foreground">
-                        Bell-shaped curves showing funding rate distribution<br />
-                        with medians and means over history
+                    <div className="h-[200px] bg-muted/30 rounded-lg p-3 relative">
+                      {/* Historical Rate Distribution Chart */}
+                      <div className="absolute inset-0 p-3">
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="text-xs text-muted-foreground">Distribution Frequency</div>
+                          <div className="flex space-x-3 text-xs">
+                            <div className="flex items-center">
+                              <div className="w-2 h-2 rounded-full bg-blue-500 mr-1"></div>
+                              <span>{strategy.longDex.name}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <div className="w-2 h-2 rounded-full bg-violet-500 mr-1"></div>
+                              <span>{strategy.shortDex.name}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="h-[170px] relative">
+                          {/* Chart area */}
+                          <div className="absolute inset-0">
+                            {/* Grid lines */}
+                            <div className="absolute inset-0 flex flex-col justify-between pt-5 pb-10">
+                              <div className="border-t border-dashed border-muted-foreground/20 h-0"></div>
+                              <div className="border-t border-dashed border-muted-foreground/20 h-0"></div>
+                              <div className="border-t border-dashed border-muted-foreground/20 h-0"></div>
+                            </div>
+                            
+                            {/* Bell curves */}
+                            <div className="absolute inset-0 pt-5">
+                              {/* Long DEX curve */}
+                              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
+                                <defs>
+                                  <linearGradient id="longGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="rgb(59, 130, 246)" stopOpacity="0.3"/>
+                                    <stop offset="100%" stopColor="rgb(59, 130, 246)" stopOpacity="0"/>
+                                  </linearGradient>
+                                </defs>
+                                <path 
+                                  d="M0,80 C5,78 10,72 15,60 C20,48 25,30 30,20 C35,10 40,5 50,2 C60,5 65,10 70,20 C75,30 80,48 85,60 C90,72 95,78 100,80 L100,100 L0,100 Z" 
+                                  fill="url(#longGradient)"
+                                  stroke="none"
+                                />
+                                <path 
+                                  d="M0,80 C5,78 10,72 15,60 C20,48 25,30 30,20 C35,10 40,5 50,2 C60,5 65,10 70,20 C75,30 80,48 85,60 C90,72 95,78 100,80" 
+                                  fill="none"
+                                  stroke="rgb(59, 130, 246)"
+                                  strokeWidth="1.5"
+                                  strokeLinejoin="round"
+                                  strokeLinecap="round"
+                                />
+                                {/* Mean vertical line */}
+                                <line x1="50" y1="0" x2="50" y2="80" stroke="rgb(59, 130, 246)" strokeWidth="1" strokeDasharray="2,2" />
+                              </svg>
+                            </div>
+                            
+                            {/* Short DEX curve (slightly offset) */}
+                            <div className="absolute inset-0 pt-5">
+                              <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
+                                <defs>
+                                  <linearGradient id="shortGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="rgb(124, 58, 237)" stopOpacity="0.3"/>
+                                    <stop offset="100%" stopColor="rgb(124, 58, 237)" stopOpacity="0"/>
+                                  </linearGradient>
+                                </defs>
+                                <path 
+                                  d="M10,85 C15,83 20,77 25,65 C30,53 35,35 40,25 C45,15 50,10 60,7 C70,10 75,15 80,25 C85,35 90,53 95,65 C100,77 105,83 110,85 L110,100 L10,100 Z" 
+                                  fill="url(#shortGradient)"
+                                  stroke="none"
+                                />
+                                <path 
+                                  d="M10,85 C15,83 20,77 25,65 C30,53 35,35 40,25 C45,15 50,10 60,7 C70,10 75,15 80,25 C85,35 90,53 95,65 C100,77 105,83 110,85" 
+                                  fill="none"
+                                  stroke="rgb(124, 58, 237)"
+                                  strokeWidth="1.5"
+                                  strokeLinejoin="round"
+                                  strokeLinecap="round"
+                                />
+                                {/* Mean vertical line */}
+                                <line x1="60" y1="0" x2="60" y2="85" stroke="rgb(124, 58, 237)" strokeWidth="1" strokeDasharray="2,2" />
+                              </svg>
+                            </div>
+                            
+                            {/* X-axis */}
+                            <div className="absolute bottom-2 inset-x-0 flex justify-between text-[10px] text-muted-foreground">
+                              <span>-0.04%</span>
+                              <span>-0.02%</span>
+                              <span>0%</span>
+                              <span>+0.02%</span>
+                              <span>+0.04%</span>
+                            </div>
+                            
+                            {/* Rate differential highlight */}
+                            <div className="absolute bottom-6 w-full flex justify-center">
+                              <div className="px-2 py-0.5 bg-background/90 text-[10px] rounded backdrop-blur-sm">
+                                <span className="text-emerald-500 font-medium">+{(Math.abs(strategy.longDex.fundingRate - strategy.shortDex.fundingRate) / 10000).toFixed(4)}%</span> spread
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Stats overlay */}
+                      <div className="absolute top-3 right-3 bg-background/90 text-xs p-1.5 rounded-md backdrop-blur-sm">
+                        <div className="flex flex-col gap-1">
+                          <div>{strategy.longDex.name} Mean: <span className="font-medium">{formatFundingRate(strategy.longDex.fundingRate * 0.8)}</span></div>
+                          <div>{strategy.shortDex.name} Mean: <span className="font-medium">{formatFundingRate(strategy.shortDex.fundingRate * 0.9)}</span></div>
+                          <div>Volatility: <span className="font-medium text-amber-500">Medium</span></div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -550,9 +696,24 @@ export function StrategyDetailModal({ strategy, trigger }: StrategyDetailModalPr
               <Button variant="outline">
                 Download Historical Data
               </Button>
-              <Button variant="primary" className="bg-emerald-500 hover:bg-emerald-600">
-                Initialize Position
-              </Button>
+              <StrategyOrderModal 
+                strategy={strategy} 
+                trigger={
+                  <Button 
+                    variant="default" 
+                    className="bg-emerald-500 hover:bg-emerald-600"
+                    onClick={() => {
+                      // Close the current modal and set flag to open order modal
+                      setShouldOpenOrderModal(true);
+                      // setOpen(false);
+                    }}
+                  >
+                    Place Order
+                  </Button>
+                }
+                open={shouldOpenOrderModal}
+                onOpenChange={(state) => setShouldOpenOrderModal(state)}
+              />
             </div>
           </RadixTabsContent>
         </RadixTabs>

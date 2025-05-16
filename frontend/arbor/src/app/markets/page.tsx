@@ -276,9 +276,9 @@ export default function MarketsPage() {
       {/* Page Header */}
       <div className="space-y-2">
         <Heading size="h3" decoration="branch">Markets</Heading>
-        <Subheading>Explore funding rates and arbitrage opportunities across markets</Subheading>
+        <Subheading>Explore arbitrage opportunities across markets</Subheading>
         <p className="text-sm text-muted-foreground max-w-3xl">
-          Arbor streamlines complex arbitrage strategies with powerful tools for both retail and institutional traders.
+          Arbor streamlines delta neutral arbitrage strategies with powerful tools for both retail and institutional traders.
         </p>
       </div>
 
@@ -346,201 +346,7 @@ export default function MarketsPage() {
             )?.asset || 'N/A'}
           </div>
         </ArborPanel>
-
-        <ArborPanel className="p-4">
-          <div className="flex justify-between items-start">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">Best Arbitrage</div>
-              <div className="text-2xl font-bold text-foreground">{(Math.max(...combinedMarkets.map(m => m.annualizedArbitrageRate || 0)) * 100).toFixed(2)}%</div>
-            </div>
-            <div className="p-2 bg-violet-100/20 rounded-md">
-              <ExternalLink className="h-5 w-5 text-violet-500" />
-            </div>
-          </div>
-          <div className="mt-3 text-xs text-muted-foreground">
-            Annualized on {combinedMarkets.find(m => m.annualizedArbitrageRate === Math.max(...combinedMarkets.map(m => m.annualizedArbitrageRate || 0)))?.asset || 'N/A'}
-          </div>
-        </ArborPanel>
       </div>
-
-      {/* Market Data Controls */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-
-        <div className="flex flex-wrap items-center gap-3 ml-auto">
-          <div className="relative w-full md:w-auto">
-            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input 
-              type="text" 
-              placeholder="Search assets..." 
-              className="h-9 w-full md:w-48 rounded-md border border-input bg-card pl-9 pr-3 py-2 text-sm"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-1.5"
-            onClick={() => {
-              // Toggle between common sorting options
-              const nextSortOptions = [
-                { key: 'annualizedArbitrageRate', direction: 'desc' as const },
-                { key: 'fundingRateDifference', direction: 'desc' as const },
-                { key: 'asset', direction: 'asc' as const }
-              ];
-              
-              const currentIndex = nextSortOptions.findIndex(
-                option => option.key === sortConfig.key && option.direction === sortConfig.direction
-              );
-              const nextIndex = (currentIndex + 1) % nextSortOptions.length;
-              setSortConfig(nextSortOptions[nextIndex]);
-            }}
-          >
-            <ArrowDownUp className="h-3.5 w-3.5" /> 
-            Sort: {
-              sortConfig.key === 'annualizedArbitrageRate' ? 'Arbitrage' : 
-              sortConfig.key === 'fundingRateDifference' ? 'Funding Diff' : 'Name'
-            }
-          </Button>
-          
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <FilterIcon className="h-3.5 w-3.5" /> Filter
-          </Button>
-        </div>
-      </div>
-          
-      {/* Market Data Table */}
-      <ArborPanel>
-        <ArborPanelHeader>
-          <ArborPanelTitle>
-            {activeTab === 'arbitrage' ? 'Arbitrage Opportunities' : 'Funding Rates'}
-          </ArborPanelTitle>
-        </ArborPanelHeader>
-        
-        <ArborPanelContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/10">
-                  <TableHead className="font-semibold">Asset</TableHead>
-                  <TableHead className="font-semibold">Price</TableHead>
-                  <TableHead className="font-semibold">Drift Funding</TableHead>
-                  <TableHead className="font-semibold">Zeta Funding</TableHead>
-                  <TableHead className="font-semibold">
-                    <div className="flex items-center cursor-pointer" onClick={() => handleSort('fundingRateDifference')}>
-                      Funding Diff
-                      {sortConfig.key === 'fundingRateDifference' && (
-                        <ArrowDownUp className="ml-1 h-3.5 w-3.5" />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold">
-                    <div className="flex items-center cursor-pointer" onClick={() => handleSort('annualizedArbitrageRate')}>
-                      Annualized Rate
-                      {sortConfig.key === 'annualizedArbitrageRate' && (
-                        <ArrowDownUp className="ml-1 h-3.5 w-3.5" />
-                      )}
-                    </div>
-                  </TableHead>
-                  <TableHead className="font-semibold">Risk</TableHead>
-                  <TableHead className="font-semibold">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              
-              <TableBody>
-                {sortedMarkets.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      No markets match your search criteria.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  sortedMarkets.map((market) => {
-                    const riskInfo = getRiskLevel(market.annualizedArbitrageRate)
-                    
-                    return (
-                      <TableRow key={market.asset} className="hover:bg-muted/5">
-                        <TableCell className="font-medium">
-                          <div className="flex items-center">
-                            <div className="p-1.5 rounded-md bg-muted/20 mr-2.5">
-                              <span className="text-xs font-bold">{market.asset.split('-')[0]}</span>
-                            </div>
-                            <div>{market.asset}</div>
-                          </div>
-                        </TableCell>
-                        
-                        <TableCell>
-                          {formatPrice(market.drift?.twapPrice || market.zeta?.twapPrice)}
-                        </TableCell>
-                        
-                        <TableCell>
-                          <div className={`${market.drift?.fundingRate && market.drift.fundingRate >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            {market.drift ? formatFundingRate(market.drift.fundingRate / 10000) : 'Not Available'}
-                          </div>
-                          {market.drift && (
-                            <div className="text-xs text-muted-foreground">
-                              Last Update: {new Date(market.drift.lastFundingRateTimestamp * 1000).toLocaleTimeString()}
-                            </div>
-                          )}
-                        </TableCell>
-                        
-                        <TableCell>
-                          <div className={`${market.zeta?.fundingRate && market.zeta.fundingRate >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            {market.zeta ? formatFundingRate(market.zeta.fundingRate / 10000) : 'Not Available'}
-                          </div>
-                          {market.zeta && (
-                            <div className="text-xs text-muted-foreground">
-                              Last Update: {new Date(market.zeta.lastFundingRateTimestamp * 1000).toLocaleTimeString()}
-                            </div>
-                          )}
-                        </TableCell>
-                        
-                        <TableCell>
-                          {market.fundingRateDifference ? (
-                            <div className="font-medium">
-                              {(market.fundingRateDifference * 100).toFixed(6)}%
-                            </div>
-                          ) : (
-                            <div className="text-muted-foreground">N/A</div>
-                          )}
-                        </TableCell>
-                        
-                        <TableCell>
-                          {market.annualizedArbitrageRate ? (
-                            <div className="text-emerald-500 font-medium">
-                              {(market.annualizedArbitrageRate * 100).toFixed(2)}%
-                            </div>
-                          ) : (
-                            <div className="text-muted-foreground">N/A</div>
-                          )}
-                          {market.arbitrageRate && (
-                            <div className="text-xs text-muted-foreground">
-                              {(market.arbitrageRate * 100).toFixed(4)}% daily
-                            </div>
-                          )}
-                        </TableCell>
-                        
-                        <TableCell>
-                          {market.annualizedArbitrageRate ? (
-                            <span className={`inline-block px-1.5 py-0.5 rounded-sm text-xs ${riskInfo.className}`}>
-                              {riskInfo.level}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        
-                      </TableRow>
-                    )
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </ArborPanelContent>
-      </ArborPanel>
-
       <div className="mt-6">
         <ArborPanel>
           <ArborPanelHeader>
@@ -702,17 +508,9 @@ export default function MarketsPage() {
                           {/* Actions */}
                           <TableCell className="p-3">
                             <div className="flex flex-col gap-1.5 items-center justify-center h-full">
-                              <StrategyDetailModal
-                                strategy={strategy}
-                                trigger={
-                                  <Button variant="outline" size="sm" className="w-full text-xs">
-                                    View Details <ArrowUpRight className="h-3 w-3 ml-1" />
-                                  </Button>
-                                }
-                              />
                               <Link href={`/strategies/${strategy.asset}`}>
-                                <Button variant="ghost" size="sm" className="w-full text-muted-foreground text-xs">
-                                  Strategy Page
+                                <Button variant="arbor-outline" size="sm" className="w-full h-8 text-xs">
+                                  View Strategy <ArrowUpRight className="h-3 w-3" />
                                 </Button>
                               </Link>
                             </div>

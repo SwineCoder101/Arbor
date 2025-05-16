@@ -37,6 +37,7 @@ export function FundingRateAggregator() {
 
   return (
     <div className="space-y-6">
+      
       {viewMode === 'cards' ? (
         <Tabs variant="card" defaultValue={selectedAsset}>
           {assets.map(asset => (

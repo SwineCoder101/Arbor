@@ -92,14 +92,6 @@ export function StrategyCard({
           </div>
         )}
         
-        {!actions && (
-          <div className="flex justify-end mt-4">
-            <Button variant="arbor-ghost" size="sm" className="gap-1">
-              View Details
-              <ArrowUpRight className="h-3 w-3" />
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );

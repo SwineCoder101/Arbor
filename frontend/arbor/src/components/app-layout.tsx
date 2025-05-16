@@ -17,7 +17,7 @@ export function AppLayout({
 }) {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-      <div className="flex flex-col min-h-screen bg-background font-inter arbor-green-burst">
+      <div className="flex flex-col min-h-screen bg-background  arbor-green-burst">
         {/* Decorative background pattern */}
         <div className="fixed inset-0 z-[-1] arbor-grid-pattern opacity-50 pointer-events-none" />
         

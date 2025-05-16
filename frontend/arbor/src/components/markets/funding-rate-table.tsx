@@ -549,14 +549,14 @@ export function FundingRateTable() {
                       {/* Actions */}
                       <TableCell className="p-3">
                         <div className="flex flex-col gap-1.5 items-center justify-center h-full">
-                          <Button variant="primary" size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs py-1.5">
+                          <Button variant="default" size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs py-1.5">
                             Place Order
                           </Button>
                           <StrategyDetailModal 
                             strategy={strategy} 
                             trigger={
                               <Button variant="ghost" size="sm" className="w-full text-muted-foreground text-xs py-1.5">
-                                View Details <ArrowUpRight className="h-3 w-3 ml-1" />
+                                <ArrowUpRight className="h-3 w-3 ml-1" />
                               </Button>
                             }
                           />

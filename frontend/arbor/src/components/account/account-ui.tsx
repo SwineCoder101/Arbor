@@ -10,6 +10,8 @@ import {
   useGetTokenAccounts,
   useRequestAirdrop,
   useTransferSol,
+  useMintUsdc,
+  useGetUsdcBalance,
 } from './account-data-access'
 import { ellipsify } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -24,11 +26,20 @@ import { ErrorBoundary } from 'next/dist/client/components/error-boundary'
 
 export function AccountBalance({ address }: { address: Address }) {
   const query = useGetBalance({ address })
+  const usdcQuery = useGetUsdcBalance({ address })
 
   return (
-    <h1 className="text-5xl font-bold cursor-pointer" onClick={() => query.refetch()}>
-      {query.data ? <BalanceSol balance={query.data} /> : '...'} SOL
-    </h1>
+    <div>
+      <div className="flex gap-8 items-center">
+        <h1 className="text-3xl font-bold cursor-pointer" onClick={() => query.refetch()}>
+          {query.data ? <BalanceSol balance={query.data} /> : '...'} SOL
+        </h1>
+        <h1 className="text-3xl font-bold cursor-pointer flex items-center" onClick={() => usdcQuery.refetch()}>
+          <img src="/usdc-logo.png" alt="USDC" className="h-6 w-6 mr-2" />
+          {usdcQuery.data !== undefined ? usdcQuery.data.toFixed(2) : '...'} USDC
+        </h1>
+      </div>
+    </div>
   )
 }
 
@@ -74,8 +85,12 @@ export function AccountButtons({ address }: { address: Address }) {
         <ErrorBoundary errorComponent={() => null}>
           {account ? <ModalSend address={address} account={account} /> : null}
         </ErrorBoundary>
-        <ModalReceive address={address} />
+        <ModalMintUsdc address={address} />
       </div>
+      <br/>
+      <p>
+        <strong>Address:</strong> {address}
+      </p>
     </div>
   )
 }
@@ -267,7 +282,7 @@ function ModalAirdrop({ address }: { address: Address }) {
 
   return (
     <AppModal
-      title="Airdrop"
+      title="Airdrop SOL"
       submitDisabled={!amount || mutation.isPending}
       submitLabel="Request Airdrop"
       submit={() => mutation.mutateAsync(parseFloat(amount))}
@@ -276,6 +291,32 @@ function ModalAirdrop({ address }: { address: Address }) {
       <Input
         disabled={mutation.isPending}
         id="amount"
+        min="1"
+        onChange={(e) => setAmount(e.target.value)}
+        placeholder="Amount"
+        step="any"
+        type="number"
+        value={amount}
+      />
+    </AppModal>
+  )
+}
+
+function ModalMintUsdc({ address }: { address: Address }) {
+  const mutation = useMintUsdc({ address })
+  const [amount, setAmount] = useState('100')
+
+  return (
+    <AppModal
+      title="Airdrop USDC"
+      submitDisabled={!amount || mutation.isPending}
+      submitLabel="Mint USDC"
+      submit={() => mutation.mutateAsync(parseFloat(amount))}
+    >
+      <Label htmlFor="usdc-amount">Amount</Label>
+      <Input
+        disabled={mutation.isPending}
+        id="usdc-amount"
         min="1"
         onChange={(e) => setAmount(e.target.value)}
         placeholder="Amount"
