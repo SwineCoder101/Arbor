@@ -401,6 +401,159 @@ export function StrategyOrderModal({ strategy, trigger }: StrategyOrderModalProp
             </ArborPanelContent>
           </ArborPanel>
         </div>
+        
+        {/* Risk Analysis Panel */}
+        <ArborPanel className="mt-6">
+          <ArborPanelHeader>
+            <ArborPanelTitle>Risk Analysis Breakdown</ArborPanelTitle>
+          </ArborPanelHeader>
+          <ArborPanelContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column - Risk Factors */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Risk Factors & Mitigations</h4>
+                
+                <div className="space-y-3">
+                  <div className="p-3 border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/50 rounded-md">
+                    <h5 className="text-xs font-semibold flex items-center gap-1.5 mb-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400">
+                        <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clipRule="evenodd" />
+                      </svg>
+                      Market Volatility Risk
+                    </h5>
+                    <p className="text-xs">
+                      Sudden price movements can cause liquidation of one or both positions.
+                    </p>
+                    <p className="text-xs mt-1">
+                      <span className="font-medium">Mitigation:</span> Delta-neutral strategy reduces directional exposure. Stop-loss at {riskParams.stopLoss} prevents catastrophic losses.
+                    </p>
+                  </div>
+                  
+                  <div className="p-3 border border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-900/50 rounded-md">
+                    <h5 className="text-xs font-semibold flex items-center gap-1.5 mb-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400">
+                        <path d="M10 2a.75.75 0 0 1 .75.75v5.59l1.95-2.1a.75.75 0 1 1 1.1 1.02l-3.25 3.5a.75.75 0 0 1-1.1 0L6.2 7.26a.75.75 0 1 1 1.1-1.02l1.95 2.1V2.75A.75.75 0 0 1 10 2Z" />
+                        <path d="M5.273 4.5a1.25 1.25 0 0 0-1.205.918l-1.523 5.52c-.006.02-.01.041-.015.062H6a1 1 0 0 1 .894.553l.448.894a1 1 0 0 0 .894.553h3.438a1 1 0 0 0 .86-.49l.606-1.02A1 1 0 0 1 14 11h3.47a1.318 1.318 0 0 0-.015-.062l-1.523-5.52a1.25 1.25 0 0 0-1.205-.918h-.977a.75.75 0 0 1 0-1.5h.977a2.75 2.75 0 0 1 2.651 2.019l1.523 5.52c.066.239.099.485.099.732V15a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-3.73c0-.246.033-.492.099-.731l1.523-5.52A2.75 2.75 0 0 1 5.273 3h.977a.75.75 0 0 1 0 1.5h-.977Z" />
+                      </svg>
+                      Funding Rate Change
+                    </h5>
+                    <p className="text-xs">
+                      Funding rates may converge or flip direction, reducing or eliminating profit.
+                    </p>
+                    <p className="text-xs mt-1">
+                      <span className="font-medium">Mitigation:</span> Take profit threshold at {riskParams.takeProfit} locks in gains. Positions can be closed before funding rates change significantly.
+                    </p>
+                  </div>
+                  
+                  <div className="p-3 border border-purple-200 bg-purple-50 dark:bg-purple-950/20 dark:border-purple-900/50 rounded-md">
+                    <h5 className="text-xs font-semibold flex items-center gap-1.5 mb-1.5">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5.59L6.3 7.65a.75.75 0 0 0-1.1 1.02l3.25 3.5a.75.75 0 0 0 1.1 0l3.25-3.5a.75.75 0 1 0-1.1-1.02l-1.95 2.06V5Z" clipRule="evenodd" />
+                      </svg>
+                      Liquidity Risk
+                    </h5>
+                    <p className="text-xs">
+                      Low liquidity on one or both exchanges can cause slippage or prevent timely exits.
+                    </p>
+                    <p className="text-xs mt-1">
+                      <span className="font-medium">Mitigation:</span> Max slippage limit set to {riskParams.maxSlippage}. Position sizes optimized for market depth.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right Column - Risk Matrix */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium">Risk Metrics</h4>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h5 className="text-xs font-medium mb-2">Liquidation Risk Assessment</h5>
+                    <div className="h-4 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full ${
+                          riskLevel === "low" ? "w-1/4 bg-emerald-500" : 
+                          riskLevel === "medium" ? "w-1/2 bg-amber-500" : 
+                          "w-3/4 bg-rose-500"
+                        }`}
+                      />
+                    </div>
+                    <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+                      <span>Lower</span>
+                      <span>Higher</span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-3 bg-muted/20 rounded-md">
+                      <h5 className="text-xs font-medium mb-1">Max Drawdown Estimate</h5>
+                      <p className="text-sm font-semibold">
+                        {riskLevel === "low" ? "3-5%" : riskLevel === "medium" ? "5-10%" : "10-15%"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Based on historical volatility
+                      </p>
+                    </div>
+                    
+                    <div className="p-3 bg-muted/20 rounded-md">
+                      <h5 className="text-xs font-medium mb-1">Risk/Reward Ratio</h5>
+                      <p className="text-sm font-semibold">
+                        {riskLevel === "low" ? "1:3" : riskLevel === "medium" ? "1:4" : "1:6"}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Potential downside vs. upside
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 bg-muted/10 border border-muted/20 rounded-md">
+                    <h5 className="text-xs font-medium mb-2">Strategy Health Score</h5>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${
+                            riskLevel === "low" 
+                              ? "w-[85%] bg-emerald-500" 
+                              : riskLevel === "medium" 
+                                ? "w-[70%] bg-amber-500" 
+                                : "w-[55%] bg-rose-500"
+                          }`}
+                        />
+                      </div>
+                      <span className="text-sm font-medium">{
+                        riskLevel === "low" 
+                          ? "85/100" 
+                          : riskLevel === "medium" 
+                            ? "70/100" 
+                            : "55/100"
+                      }</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Combined assessment of market conditions, exchange reliability, and strategy parameters.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 rounded-md">
+              <h5 className="text-xs font-medium flex items-center gap-1.5 mb-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0Zm-7-4a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM9 9a.75.75 0 0 0 0 1.5h.253a.25.25 0 0 1 .244.304l-.459 2.066A1.75 1.75 0 0 0 10.747 15H11a.75.75 0 0 0 0-1.5h-.253a.25.25 0 0 1-.244-.304l.459-2.066A1.75 1.75 0 0 0 9.253 9H9Z" clipRule="evenodd" />
+                </svg>
+                Risk Summary
+              </h5>
+              <p className="text-xs">
+                {riskLevel === "low" 
+                  ? "Conservative approach with minimal market exposure. Lower profit potential but higher safety margin against liquidation and market volatility." 
+                  : riskLevel === "medium" 
+                    ? "Balanced risk-reward profile optimized for current market conditions. Moderate profit potential with reasonable safeguards against adverse scenarios."
+                    : "Aggressive approach to maximize yield potential. Higher exposure to market volatility and liquidity risks with increased profit opportunity."
+                }
+              </p>
+            </div>
+          </ArborPanelContent>
+        </ArborPanel>
 
         {/* Order Summary */}
         <ArborPanel className="mt-4">
