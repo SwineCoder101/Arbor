@@ -508,17 +508,9 @@ export default function MarketsPage() {
                           {/* Actions */}
                           <TableCell className="p-3">
                             <div className="flex flex-col gap-1.5 items-center justify-center h-full">
-                              <StrategyDetailModal
-                                strategy={strategy}
-                                trigger={
-                                  <Button variant="outline" size="sm" className="w-full text-xs">
-                                    View Details <ArrowUpRight className="h-3 w-3 ml-1" />
-                                  </Button>
-                                }
-                              />
                               <Link href={`/strategies/${strategy.asset}`}>
-                                <Button variant="ghost" size="sm" className="w-full text-muted-foreground text-xs">
-                                  Strategy Page
+                                <Button variant="arbor-outline" size="sm" className="w-full h-8 text-xs">
+                                  View Strategy <ArrowUpRight className="h-3 w-3" />
                                 </Button>
                               </Link>
                             </div>
