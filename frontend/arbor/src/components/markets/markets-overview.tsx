@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from "next/link"
 import { useMarkets, MarketName } from './markets-provider'
 import { MarketCard, MarketLogo } from '@/components/ui/market-card'
 import { Button } from '@/components/ui/button'
@@ -34,9 +35,11 @@ export function MarketsOverview() {
           <Heading size="h3" decoration="branch">Markets Overview</Heading>
           <Subheading>Compare perps markets across protocols</Subheading>
         </div>
-        <Button variant="arbor-outline" size="sm" className="w-auto gap-1">
-          View all markets <ArrowUpRight className="h-3.5 w-3.5" />
-        </Button>
+        <Link href="/markets">
+          <Button variant="arbor-outline" size="sm" className="w-auto gap-1">
+            View all markets <ArrowUpRight className="h-3.5 w-3.5" />
+          </Button>
+        </Link>
       </div>
 
       <Tabs defaultValue="all">

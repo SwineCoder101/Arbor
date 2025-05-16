@@ -549,7 +549,7 @@ export function FundingRateTable() {
                       {/* Actions */}
                       <TableCell className="p-3">
                         <div className="flex flex-col gap-1.5 items-center justify-center h-full">
-                          <Button variant="primary" size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs py-1.5">
+                          <Button variant="default" size="sm" className="w-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs py-1.5">
                             Place Order
                           </Button>
                           <StrategyDetailModal 

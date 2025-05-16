@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 const links: { label: string; path: string }[] = [
   { label: 'Home', path: '/' },
-  { label: 'Dashboard', path: '/dashboard' },
+  // { label: 'Dashboard', path: '/dashboard' },
   { label: 'Markets', path: '/markets' },
   { label: 'Portfolio', path: '/portfolio' },
   { label: 'Account', path: '/account' },

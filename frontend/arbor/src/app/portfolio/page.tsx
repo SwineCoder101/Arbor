@@ -93,6 +93,25 @@ export default function PortfolioPage() {
     key: string;
     direction: 'asc' | 'desc';
   }>({ key: 'asset', direction: 'asc' })
+  
+  // Handler functions for order actions
+  const handleTopUp = (orderId: string) => {
+    console.log(`Topping up order: ${orderId}`)
+    // Implementation for depositing more funds into the strategy
+    alert(`Top up functionality for order: ${orderId}`)
+  }
+  
+  const handleClaimYield = (orderId: string) => {
+    console.log(`Claiming yield for order: ${orderId}`)
+    // Implementation for claiming accrued yield
+    alert(`Claimed yield for order: ${orderId}`)
+  }
+  
+  const handleWithdraw = (orderId: string) => {
+    console.log(`Withdrawing from order: ${orderId}`)
+    // Implementation for withdrawing funds from the strategy
+    alert(`Withdrawal initiated for order: ${orderId}`)
+  }
 
   // Fetch data when component mounts
   useEffect(() => {
@@ -555,12 +574,13 @@ export default function PortfolioPage() {
                       <TableHead className="font-semibold">Status</TableHead>
                       <TableHead className="font-semibold">Created</TableHead>
                       <TableHead className="font-semibold">PnL</TableHead>
+                      <TableHead className="font-semibold">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredOrders.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                           No orders match your search criteria.
                         </TableCell>
                       </TableRow>
@@ -608,6 +628,34 @@ export default function PortfolioPage() {
                           </TableCell>
                           <TableCell className={parseFloat(order.pnl) >= 0 ? 'text-emerald-500' : 'text-rose-500'}>
                             {parseFloat(order.pnl) >= 0 ? '+' : ''}{order.pnl} USDC
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-7 text-xs"
+                                onClick={() => handleTopUp(order.id)}
+                              >
+                                Top Up
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-7 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                onClick={() => handleClaimYield(order.id)}
+                              >
+                                Claim Yield
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                                onClick={() => handleWithdraw(order.id)}
+                              >
+                                Withdraw
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))
