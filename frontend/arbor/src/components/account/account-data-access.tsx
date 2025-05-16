@@ -151,6 +151,49 @@ export function useRequestAirdrop({ address }: { address: Address }) {
   })
 }
 
+export function useMintUsdc({ address }: { address: Address }) {
+  const { cluster } = useWalletUiCluster()
+  const { client } = useWalletUi()
+  const queryClient = useQueryClient()
+  const toastTransaction = useTransactionToast()
+
+  return useMutation({
+    mutationKey: ['mint-usdc', { cluster, address }],
+    mutationFn: async (amount: number = 100) => {
+      // This is a mock implementation for demo purposes
+      // In a real application, this would call a token minting program
+      console.log(`Minting ${amount} USDC for ${address.toString()}`)
+      
+      // Simulate a transaction signature
+      return `mock-tx-${Math.random().toString(36).substring(2)}`
+    },
+    onSuccess: (signature) => {
+      toastTransaction(signature)
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['get-token-accounts', { cluster, address }] }),
+        queryClient.invalidateQueries({ queryKey: ['get-signatures', { cluster, address }] }),
+      ])
+    },
+  })
+}
+
+export function useGetUsdcBalance({ address }: { address: Address }) {
+  const { cluster } = useWalletUiCluster()
+  const { client } = useWalletUi()
+
+  return useQuery({
+    queryKey: ['get-usdc-balance', { cluster, address }],
+    queryFn: async () => {
+      // This is a mock implementation
+      // In a real app, it would query the USDC token account balance
+      // You would need to know the USDC mint address and find the token account owned by this address
+      
+      // For demo purposes, return a random balance
+      return Math.floor(Math.random() * 10000) / 100
+    },
+  })
+}
+
 async function createTransaction({
   amount,
   destination,
