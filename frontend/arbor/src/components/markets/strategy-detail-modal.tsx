@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Heading, Subheading } from '@/components/ui/headings'
 import { ArborPanel, ArborPanelContent, ArborPanelHeader, ArborPanelTitle } from '@/components/ui/arbor-panel'
 import { RadixTabs, RadixTabsContent, RadixTabsList, RadixTabsTrigger } from '@/components/ui/radix-tabs'
+import { StrategyOrderModal } from './strategy-order-modal'
 
 // Performance Chart Component
 interface PerformanceChartProps {
@@ -490,9 +491,18 @@ export function StrategyDetailModal({ strategy, trigger }: StrategyDetailModalPr
               <Button variant="outline">
                 Download Historical Data
               </Button>
-              <Button variant="default" className="bg-emerald-500 hover:bg-emerald-600">
-                Place Order
-              </Button>
+              <StrategyOrderModal 
+                strategy={strategy} 
+                trigger={
+                  <Button 
+                    variant="default" 
+                    className="bg-emerald-500 hover:bg-emerald-600"
+                    onClick={() => setOpen(false)} // Close detail modal first
+                  >
+                    Place Order
+                  </Button>
+                }
+              />
             </div>
           </RadixTabsContent>
         </RadixTabs>

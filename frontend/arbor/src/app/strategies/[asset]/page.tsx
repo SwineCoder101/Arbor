@@ -7,9 +7,11 @@ import { Heading, Subheading } from '@/components/ui/headings'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowLeft, ArrowUpRight } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, PlusCircle, DollarSign, LogOut } from 'lucide-react'
 import { StrategyDetailModal } from '@/components/markets/strategy-detail-modal'
+import { StrategyOrderModal, StrategyActionModal } from '@/components/markets/strategy-order-modal'
 import { useSearchParams } from 'next/navigation'
+import { useToast } from '@/components/ui/use-toast'
 
 interface Strategy {
   asset: string
@@ -56,27 +58,56 @@ export default function StrategyPage({ params }: { params: Promise<{ asset: stri
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const assetName = decodeURIComponent(resolvedParams.asset)
+  const { toast } = useToast()
   
   // Get the source page from URL params (default to markets if not provided)
   const fromPage = searchParams.get('from') || 'markets'
   
   // Handler functions for order actions
-  const handleTopUp = (orderId: string) => {
-    console.log(`Topping up order: ${orderId}`)
+  const handleTopUpConfirm = (orderId: string, amount: number) => {
+    console.log(`Topping up order: ${orderId} with amount: ${amount}`)
     // Implementation for depositing more funds into the strategy
-    alert(`Top up functionality for order: ${orderId}`)
+    
+    toast({
+      variant: "info",
+      title: "Top Up Order",
+      description: `Added ${amount} USDC to order: ${orderId}`,
+      action: (
+        <div className="flex items-center justify-center w-6 h-6 bg-blue-100 rounded-full">
+          <PlusCircle className="h-4 w-4 text-blue-600" />
+        </div>
+      ),
+    });
   }
   
   const handleClaimYield = (orderId: string) => {
     console.log(`Claiming yield for order: ${orderId}`)
     // Implementation for claiming accrued yield
-    alert(`Claimed yield for order: ${orderId}`)
+    toast({
+      variant: "success",
+      title: "Yield Claimed",
+      description: `Successfully claimed yield for order: ${orderId}`,
+      action: (
+        <div className="flex items-center justify-center w-6 h-6 bg-emerald-100 rounded-full">
+          <DollarSign className="h-4 w-4 text-emerald-600" />
+        </div>
+      ),
+    })
   }
   
-  const handleWithdraw = (orderId: string) => {
-    console.log(`Withdrawing from order: ${orderId}`)
+  const handleWithdrawConfirm = (orderId: string, amount: number) => {
+    console.log(`Withdrawing from order: ${orderId} with amount: ${amount}`)
     // Implementation for withdrawing funds from the strategy
-    alert(`Withdrawal initiated for order: ${orderId}`)
+    toast({
+      variant: "warning",
+      title: "Withdrawal Processed",
+      description: `${amount} USDC withdrawn from order: ${orderId}`,
+      action: (
+        <div className="flex items-center justify-center w-6 h-6 bg-amber-100 rounded-full">
+          <LogOut className="h-4 w-4 text-amber-600" />
+        </div>
+      ),
+    })
   }
 
   // Fetch data when component mounts
@@ -266,9 +297,7 @@ export default function StrategyPage({ params }: { params: Promise<{ asset: stri
                               </Button>
                             } 
                           />
-                          <Button size="sm" variant="arbor" className="text-xs bg-emerald-500 hover:bg-emerald-600 text-white">
-                            Execute Order
-                          </Button>
+                          <StrategyOrderModal strategy={strategy} />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -401,14 +430,21 @@ export default function StrategyPage({ params }: { params: Promise<{ asset: stri
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-1">
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  className="h-7 text-xs"
-                                  onClick={() => handleTopUp(order.id)}
-                                >
-                                  Top Up
-                                </Button>
+                                <StrategyActionModal 
+                                  orderId={order.id}
+                                  assetUnit={strategies[0].asset.split('-')[0]}
+                                  action="topUp"
+                                  onConfirm={(amount) => handleTopUpConfirm(order.id, amount)}
+                                  trigger={
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-7 text-xs"
+                                    >
+                                      Top Up
+                                    </Button>
+                                  }
+                                />
                                 <Button 
                                   variant="outline" 
                                   size="sm" 
@@ -417,14 +453,21 @@ export default function StrategyPage({ params }: { params: Promise<{ asset: stri
                                 >
                                   Claim Yield
                                 </Button>
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50"
-                                  onClick={() => handleWithdraw(order.id)}
-                                >
-                                  Withdraw
-                                </Button>
+                                <StrategyActionModal 
+                                  orderId={order.id}
+                                  assetUnit={strategies[0].asset.split('-')[0]}
+                                  action="withdraw"
+                                  onConfirm={(amount) => handleWithdrawConfirm(order.id, amount)}
+                                  trigger={
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                                    >
+                                      Withdraw
+                                    </Button>
+                                  }
+                                />
                               </div>
                             </TableCell>
                           </TableRow>
