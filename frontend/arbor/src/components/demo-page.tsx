@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { AppHero } from './app-hero'
 import { Button } from './ui/button'
 import { ArborPanel } from './ui/arbor-panel'
@@ -44,9 +45,11 @@ export function DemoPage() {
         }
       >
         <div className="flex flex-wrap gap-2 justify-center mt-4">
+            <Link href="/markets">
           <Button variant="arbor" size="lg" className="gap-1">
-            Launch App <ArrowRight className="h-4 w-4" />
+              Launch App <ArrowRight className="h-4 w-4" />
           </Button>
+            </Link>
           <Button variant="arbor-outline" size="lg">
             Read Docs
           </Button>

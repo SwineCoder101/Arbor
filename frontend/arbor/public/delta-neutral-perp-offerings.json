@@ -18,7 +18,7 @@
       "estimatedDailyProfit": "8955.22",
       "estimatedAnnualProfit": "3268654.43",
       "riskAssessment": "High",
-      "strategyType": "Premium Arbitrage",
+      "strategyType": "Funding Rate Arbitrage",
       "identifiedAt": "2025-05-13T23:04:51.165Z",
       "activeOrders": [
         {
@@ -153,7 +153,7 @@
       "estimatedDailyProfit": "151.79",
       "estimatedAnnualProfit": "55402.88",
       "riskAssessment": "Medium",
-      "strategyType": "Premium Arbitrage",
+      "strategyType": "Funding Rate Arbitrage",
       "identifiedAt": "2025-05-12T16:48:21.982Z",
       "activeOrders": [
         {
@@ -187,7 +187,7 @@
       "estimatedDailyProfit": "110.80",
       "estimatedAnnualProfit": "40443.52",
       "riskAssessment": "Low",
-      "strategyType": "Liquidity Mining",
+      "strategyType": "Funding Rate Arbitrage",
       "identifiedAt": "2025-05-10T08:32:12.784Z",
       "activeOrders": [
         {
@@ -266,7 +266,7 @@
       "estimatedDailyProfit": "158.89",
       "estimatedAnnualProfit": "57996.49",
       "riskAssessment": "Medium",
-      "strategyType": "Premium Arbitrage",
+      "strategyType": "Funding Rate Arbitrage",
       "identifiedAt": "2025-05-11T04:18:35.290Z",
       "activeOrders": [
         {
@@ -300,7 +300,7 @@
       "estimatedDailyProfit": "183.51",
       "estimatedAnnualProfit": "66982.25",
       "riskAssessment": "Low",
-      "strategyType": "Liquidity Mining",
+      "strategyType": "Funding Rate Arbitrage",
       "identifiedAt": "2025-05-09T13:42:19.513Z",
       "activeOrders": []
     },
@@ -344,7 +344,7 @@
       "estimatedDailyProfit": "185.60",
       "estimatedAnnualProfit": "67742.98",
       "riskAssessment": "Medium",
-      "strategyType": "Premium Arbitrage",
+      "strategyType": "Funding Rate Arbitrage",
       "identifiedAt": "2025-05-10T17:36:54.723Z",
       "activeOrders": [
         {
@@ -380,7 +380,7 @@
       "estimatedDailyProfit": "8955.22",
       "estimatedAnnualProfit": "3268654.43",
       "riskAssessment": "High",
-      "strategyType": "Premium Arbitrage",
+      "strategyType": "Funding Rate Arbitrage",
       "identifiedAt": "2025-05-13T23:04:51.165Z"
     },
     {
@@ -422,7 +422,7 @@
       "estimatedDailyProfit": "110.80",
       "estimatedAnnualProfit": "40443.52",
       "riskAssessment": "Low",
-      "strategyType": "Liquidity Mining",
+      "strategyType": "Funding Rate Arbitrage",
       "identifiedAt": "2025-05-10T08:32:12.784Z"
     },
     {
@@ -443,7 +443,7 @@
       "estimatedDailyProfit": "185.60",
       "estimatedAnnualProfit": "67742.98",
       "riskAssessment": "Medium",
-      "strategyType": "Premium Arbitrage",
+      "strategyType": "Funding Rate Arbitrage",
       "identifiedAt": "2025-05-10T17:36:54.723Z"
     },
     {
