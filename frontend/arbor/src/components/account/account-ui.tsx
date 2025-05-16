@@ -30,12 +30,15 @@ export function AccountBalance({ address }: { address: Address }) {
 
   return (
     <div>
-      <h1 className="text-5xl font-bold cursor-pointer" onClick={() => query.refetch()}>
-        {query.data ? <BalanceSol balance={query.data} /> : '...'} SOL
-      </h1>
-      <h2 className="text-2xl mt-2 font-bold cursor-pointer" onClick={() => usdcQuery.refetch()}>
-        {usdcQuery.data !== undefined ? usdcQuery.data.toFixed(2) : '...'} USDC
-      </h2>
+      <div className="flex gap-8 items-center">
+        <h1 className="text-3xl font-bold cursor-pointer" onClick={() => query.refetch()}>
+          {query.data ? <BalanceSol balance={query.data} /> : '...'} SOL
+        </h1>
+        <h1 className="text-3xl font-bold cursor-pointer flex items-center" onClick={() => usdcQuery.refetch()}>
+          <img src="/usdc-logo.png" alt="USDC" className="h-6 w-6 mr-2" />
+          {usdcQuery.data !== undefined ? usdcQuery.data.toFixed(2) : '...'} USDC
+        </h1>
+      </div>
     </div>
   )
 }
