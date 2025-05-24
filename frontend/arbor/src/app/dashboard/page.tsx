@@ -1,17 +1,27 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { ArborPanel, ArborPanelHeader, ArborPanelTitle, ArborPanelContent } from '@/components/ui/arbor-panel'
-import { Heading, Subheading } from '@/components/ui/headings'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { ArborPanel, ArborPanelContent, ArborPanelHeader, ArborPanelTitle } from '@/components/ui/arbor-panel'
 import { Button } from '@/components/ui/button'
-import { ArrowUpRight, PieChart, BarChart3, ArrowRight, Wallet, TrendingUp, History, PanelTop } from 'lucide-react'
+import { Heading, Subheading } from '@/components/ui/headings'
+import { ArrowRight, BarChart3, History, PanelTop, PieChart, TrendingUp, Wallet } from 'lucide-react'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 // Dashboard component that displays an overview of the user's portfolio, strategies, and market data
+interface PortfolioData {
+  totalActiveOrders: number;
+  totalInvested: number;
+  estimatedDailyProfit: number;
+  estimatedAnnualProfit: number;
+  riskExposure: {
+    low: number;
+    medium: number;
+    high: number;
+  };
+}
+
 export default function Dashboard() {
-  const [portfolioData, setPortfolioData] = useState<any>(null)
-  const [topStrategies, setTopStrategies] = useState<any[]>([])
+  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -26,7 +36,6 @@ export default function Dashboard() {
         const data = await response.json()
         
         setPortfolioData(data.portfolio.summary)
-        setTopStrategies(data.topArbitrageOpportunities.slice(0, 3))
         setIsLoading(false)
       } catch (err) {
         setError('Error loading data')
@@ -38,20 +47,6 @@ export default function Dashboard() {
     fetchData()
   }, [])
 
-  // Determine risk class for styling
-  const getRiskClass = (risk: string) => {
-    switch (risk) {
-      case 'Low':
-        return 'bg-emerald-100 text-emerald-800'
-      case 'Medium':
-        return 'bg-amber-100 text-amber-800'
-      case 'High':
-        return 'bg-rose-100 text-rose-800'
-      default:
-        return 'bg-slate-100 text-slate-800'
-    }
-  }
-
   if (isLoading) {
     return <div className="p-8">Loading dashboard data...</div>
   }
@@ -59,6 +54,10 @@ export default function Dashboard() {
   if (error) {
     return <div className="p-8">Error: {error}</div>
   }
+
+  const totalRiskExposure = (portfolioData?.riskExposure?.low ?? 0) + 
+    (portfolioData?.riskExposure?.medium ?? 0) + 
+    (portfolioData?.riskExposure?.high ?? 0)
 
   return (
     <div className="container py-8 space-y-6">
@@ -77,14 +76,14 @@ export default function Dashboard() {
           <div className="flex justify-between items-start">
             <div>
               <div className="text-sm font-medium text-muted-foreground mb-1">Total Active Positions</div>
-              <div className="text-2xl font-bold text-foreground">{portfolioData?.totalActiveOrders || 0}</div>
+              <div className="text-2xl font-bold text-foreground">{portfolioData?.totalActiveOrders ?? 0}</div>
             </div>
             <div className="p-2 bg-emerald-100/20 rounded-md">
               <PanelTop className="h-5 w-5 text-emerald-500" />
             </div>
           </div>
           <div className="mt-3 text-xs text-muted-foreground">
-            Across {portfolioData?.riskExposure?.low + portfolioData?.riskExposure?.medium + portfolioData?.riskExposure?.high || 0} strategies
+            Across {totalRiskExposure} strategies
           </div>
         </div>
 

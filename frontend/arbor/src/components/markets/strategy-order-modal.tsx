@@ -1,15 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Leaf, ArrowUpRight, CheckCircle } from 'lucide-react'
-import { useToast } from '@/components/ui/use-toast'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { ArborPanel, ArborPanelContent, ArborPanelHeader, ArborPanelTitle } from '@/components/ui/arbor-panel'
 import { Button } from '@/components/ui/button'
-import { Heading, Subheading } from '@/components/ui/headings'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { TreeNode } from '@/components/ui/tree-node'
-import { ArborPanel, ArborPanelContent, ArborPanelHeader, ArborPanelTitle } from '@/components/ui/arbor-panel'
+import { useToast } from '@/components/ui/use-toast'
+import { CheckCircle, Leaf } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 // Types imported from strategy-detail-modal.tsx
 interface DexInfo {

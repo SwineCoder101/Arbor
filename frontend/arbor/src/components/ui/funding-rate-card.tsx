@@ -1,8 +1,8 @@
-import * as React from "react";
 import { cn } from "@/lib/utils";
-import { cva, type VariantProps } from "class-variance-authority";
-import { Card, CardContent, CardHeader, CardTitle } from "./card";
+import { cva } from "class-variance-authority";
 import { ArrowUpRight } from "lucide-react";
+import * as React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "./card";
 
 const fundingRateVariants = cva("px-2 py-1 text-xs font-medium rounded-full", {
   variants: {

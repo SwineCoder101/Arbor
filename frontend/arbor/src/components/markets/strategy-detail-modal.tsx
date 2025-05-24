@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { ArrowUpDownIcon, BarChart3Icon, CircleDollarSignIcon, ExternalLinkIcon, TrendingUpIcon } from 'lucide-react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Heading, Subheading } from '@/components/ui/headings'
 import { ArborPanel, ArborPanelContent, ArborPanelHeader, ArborPanelTitle } from '@/components/ui/arbor-panel'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Heading } from '@/components/ui/headings'
 import { RadixTabs, RadixTabsContent, RadixTabsList, RadixTabsTrigger } from '@/components/ui/radix-tabs'
+import { ArrowUpDownIcon, BarChart3Icon, CircleDollarSignIcon, TrendingUpIcon } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { StrategyOrderModal } from './strategy-order-modal'
 
 // Performance Chart Component

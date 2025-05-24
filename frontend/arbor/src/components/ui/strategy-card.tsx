@@ -1,8 +1,6 @@
-import * as React from "react";
 import { cn } from "@/lib/utils";
+import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./card";
-import { Button } from "./button";
-import { ArrowUpRight } from "lucide-react";
 
 interface StrategyCardProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;

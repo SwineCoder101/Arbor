@@ -1,16 +1,14 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useMarkets } from './markets-provider'
+import { ArborPanel, ArborPanelContent, ArborPanelHeader, ArborPanelTitle } from '@/components/ui/arbor-panel'
+import { Button } from '@/components/ui/button'
 import { FundingRateCard } from '@/components/ui/funding-rate-card'
 import { MarketLogo } from '@/components/ui/market-card'
-import { Tabs, Tab } from '@/components/ui/tabs'
-import { ArborPanel, ArborPanelHeader, ArborPanelTitle, ArborPanelContent } from '@/components/ui/arbor-panel'
-import { Heading, Subheading } from '@/components/ui/headings'
-import { Button } from '@/components/ui/button'
-import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription } from '@/components/ui/modal'
-import { Search, FilterIcon, ArrowDownUp } from 'lucide-react'
+import { Modal, ModalContent, ModalDescription, ModalHeader, ModalTitle } from '@/components/ui/modal'
+import { Tab, Tabs } from '@/components/ui/tabs'
+import { useState } from 'react'
 import { FundingRateTable } from './funding-rate-table'
+import { useMarkets } from './markets-provider'
 
 export function FundingRateAggregator() {
   const { markets, isLoading } = useMarkets()
