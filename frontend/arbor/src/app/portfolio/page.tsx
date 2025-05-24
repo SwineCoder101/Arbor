@@ -13,7 +13,7 @@ import {
   Wallet, 
   TrendingUp, 
   ArrowDownUp, 
-  Filter, 
+  // Filter, 
   Search,
   CircleDollarSign,
   Gauge,
@@ -530,7 +530,7 @@ export default function PortfolioPage() {
                 <div className="bg-muted/5 rounded-md p-8 text-center">
                   <AlertTriangle className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
                   <p className="text-lg font-medium">No active strategies</p>
-                  <p className="text-muted-foreground mb-4">You don't have any active strategies in your portfolio.</p>
+                  <p className="text-muted-foreground mb-4">You don&apos;t have any active strategies in your portfolio.</p>
                   <Link href="/markets">
                     <Button>Explore Markets</Button>
                   </Link>

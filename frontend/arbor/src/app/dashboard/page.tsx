@@ -3,15 +3,69 @@
 import { useState, useEffect } from 'react'
 import { ArborPanel, ArborPanelHeader, ArborPanelTitle, ArborPanelContent } from '@/components/ui/arbor-panel'
 import { Heading, Subheading } from '@/components/ui/headings'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+// import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { ArrowUpRight, PieChart, BarChart3, ArrowRight, Wallet, TrendingUp, History, PanelTop } from 'lucide-react'
+import {PieChart, BarChart3, ArrowRight, Wallet, TrendingUp, History, PanelTop } from 'lucide-react' /*ArrowUpRight*/
 import Link from 'next/link'
+
+interface DexInfo {
+  name: string
+  fundingRate: number
+  price?: number
+}
+
+interface Order {
+  id: string
+  side: string
+  dex: string
+  size: string
+  entryPrice: string
+  status: string
+  createdAt: string
+  wallet: string
+  pnl: string
+}
+
+interface Strategy {
+  asset: string
+  longDex: DexInfo
+  shortDex: DexInfo
+  arbitrageRateAnnualized: string
+  arbitrageRateDaily: string
+  recommendedSize: string
+  estimatedDailyProfit: string
+  estimatedAnnualProfit: string
+  riskAssessment: string
+  strategyType: string
+  identifiedAt: string
+  activeOrders: Order[]
+}
+
+interface PortfolioSummary {
+  totalActiveOrders: number
+  totalInvested: string
+  estimatedDailyProfit: string
+  estimatedAnnualProfit: string
+  riskExposure: {
+    low: number
+    medium: number
+    high: number
+  }
+}
+
+interface DeltaNeutralData {
+  deltaNeutralOfferings: Strategy[]
+  topArbitrageOpportunities: Strategy[]
+  portfolio: {
+    summary: PortfolioSummary
+    allOrders: Order[]
+  }
+}
 
 // Dashboard component that displays an overview of the user's portfolio, strategies, and market data
 export default function Dashboard() {
-  const [portfolioData, setPortfolioData] = useState<any>(null)
-  const [topStrategies, setTopStrategies] = useState<any[]>([])
+  const [portfolioData, setPortfolioData] = useState<PortfolioSummary | null>(null)
+  // const [topStrategies, setTopStrategies] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -23,10 +77,10 @@ export default function Dashboard() {
         if (!response.ok) {
           throw new Error('Failed to fetch data')
         }
-        const data = await response.json()
+        const data: DeltaNeutralData = await response.json()
         
         setPortfolioData(data.portfolio.summary)
-        setTopStrategies(data.topArbitrageOpportunities.slice(0, 3))
+        // setTopStrategies(data.topArbitrageOpportunities.slice(0, 3))
         setIsLoading(false)
       } catch (err) {
         setError('Error loading data')
@@ -39,18 +93,18 @@ export default function Dashboard() {
   }, [])
 
   // Determine risk class for styling
-  const getRiskClass = (risk: string) => {
-    switch (risk) {
-      case 'Low':
-        return 'bg-emerald-100 text-emerald-800'
-      case 'Medium':
-        return 'bg-amber-100 text-amber-800'
-      case 'High':
-        return 'bg-rose-100 text-rose-800'
-      default:
-        return 'bg-slate-100 text-slate-800'
-    }
-  }
+  // const getRiskClass = (risk: string) => {
+  //   switch (risk) {
+  //     case 'Low':
+  //       return 'bg-emerald-100 text-emerald-800'
+  //     case 'Medium':
+  //       return 'bg-amber-100 text-amber-800'
+  //     case 'High':
+  //       return 'bg-rose-100 text-rose-800'
+  //     default:
+  //       return 'bg-slate-100 text-slate-800'
+  //   }
+  // }
 
   if (isLoading) {
     return <div className="p-8">Loading dashboard data...</div>
@@ -84,7 +138,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-3 text-xs text-muted-foreground">
-            Across {portfolioData?.riskExposure?.low + portfolioData?.riskExposure?.medium + portfolioData?.riskExposure?.high || 0} strategies
+            Across {(portfolioData?.riskExposure?.low || 0) + (portfolioData?.riskExposure?.medium || 0) + (portfolioData?.riskExposure?.high || 0)} strategies
           </div>
         </div>
 

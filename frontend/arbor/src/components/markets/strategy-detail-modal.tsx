@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowUpDownIcon, BarChart3Icon, CircleDollarSignIcon, ExternalLinkIcon, TrendingUpIcon } from 'lucide-react'
+import { ArrowUpDownIcon, BarChart3Icon, CircleDollarSignIcon, TrendingUpIcon } from 'lucide-react' //ExternalLinkIcon
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Heading, Subheading } from '@/components/ui/headings'
+import { Heading } from '@/components/ui/headings' //Subheading
 import { ArborPanel, ArborPanelContent, ArborPanelHeader, ArborPanelTitle } from '@/components/ui/arbor-panel'
 import { RadixTabs, RadixTabsContent, RadixTabsList, RadixTabsTrigger } from '@/components/ui/radix-tabs'
 import { StrategyOrderModal } from './strategy-order-modal'
@@ -103,6 +103,7 @@ function PerformanceChart({ asset }: PerformanceChartProps) {
           </div>
           
           <div className="h-[280px] w-full relative">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/performance-chart-placeholder.svg" alt="Performance Chart" className="w-full h-full object-cover" />
             
             {/* Overlay some stats from our actual JSON data */}

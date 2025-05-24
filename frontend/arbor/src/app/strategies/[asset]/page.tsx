@@ -33,17 +33,19 @@ interface Strategy {
   riskAssessment: string
   strategyType: string
   identifiedAt: string
-  activeOrders: Array<{
-    id: string
-    side: string
-    dex: string
-    size: string
-    entryPrice: string
-    status: string
-    createdAt: string
-    wallet: string
-    pnl: string
-  }>
+  activeOrders: Array<Order>
+}
+
+export interface Order {
+  id: string
+  side: string
+  dex: string
+  size: string
+  entryPrice: string
+  status: string
+  createdAt: string
+  wallet: string
+  pnl: string
 }
 
 interface DeltaNeutralData {
@@ -152,7 +154,7 @@ export default function StrategyPage({ params }: { params: Promise<{ asset: stri
   }
 
   // Calculate the average entry price
-  const calculateAverageEntry = (orders: any[]): string => {
+  const calculateAverageEntry = (orders: Order[]): string => {
     if (!orders || orders.length === 0) return '0.00'
     
     const totalSize = orders.reduce((sum, order) => sum + parseFloat(order.size), 0)
@@ -163,7 +165,7 @@ export default function StrategyPage({ params }: { params: Promise<{ asset: stri
   }
 
   // Calculate total PnL for a set of orders
-  const calculateTotalPnl = (orders: any[]): number => {
+  const calculateTotalPnl = (orders: Order[]): number => {
     if (!orders || orders.length === 0) return 0
     
     return orders.reduce((sum, order) => sum + parseFloat(order.pnl), 0)

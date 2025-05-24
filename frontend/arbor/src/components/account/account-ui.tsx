@@ -35,6 +35,7 @@ export function AccountBalance({ address }: { address: Address }) {
           {query.data ? <BalanceSol balance={query.data} /> : '...'} SOL
         </h1>
         <h1 className="text-3xl font-bold cursor-pointer flex items-center" onClick={() => usdcQuery.refetch()}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/usdc-logo.png" alt="USDC" className="h-6 w-6 mr-2" />
           {usdcQuery.data !== undefined ? usdcQuery.data.toFixed(2) : '...'} USDC
         </h1>
@@ -267,14 +268,14 @@ function BalanceSol({ balance }: { balance: Lamports }) {
   return <span>{lamportsToSol(balance)}</span>
 }
 
-function ModalReceive({ address }: { address: Address }) {
-  return (
-    <AppModal title="Receive">
-      <p>Receive assets by sending them to your public key:</p>
-      <code>{address.toString()}</code>
-    </AppModal>
-  )
-}
+// function ModalReceive({ address }: { address: Address }) {
+//   return (
+//     <AppModal title="Receive">
+//       <p>Receive assets by sending them to your public key:</p>
+//       <code>{address.toString()}</code>
+//     </AppModal>
+//   )
+// }
 
 function ModalAirdrop({ address }: { address: Address }) {
   const mutation = useRequestAirdrop({ address })
