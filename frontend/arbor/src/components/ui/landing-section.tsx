@@ -1,7 +1,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Leaf } from "lucide-react";
+// import { Leaf } from "lucide-react";
 
 const landingSectionVariants = cva("py-16 md:py-24", {
   variants: {
@@ -25,7 +25,7 @@ const landingSectionVariants = cva("py-16 md:py-24", {
 });
 
 interface LandingSectionProps
-  extends React.HTMLAttributes<HTMLElement>,
+  extends Omit<React.HTMLAttributes<HTMLElement>, 'title'>,
     VariantProps<typeof landingSectionVariants> {
   title?: React.ReactNode;
   subtitle?: React.ReactNode;

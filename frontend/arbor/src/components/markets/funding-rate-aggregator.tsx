@@ -6,17 +6,17 @@ import { FundingRateCard } from '@/components/ui/funding-rate-card'
 import { MarketLogo } from '@/components/ui/market-card'
 import { Tabs, Tab } from '@/components/ui/tabs'
 import { ArborPanel, ArborPanelHeader, ArborPanelTitle, ArborPanelContent } from '@/components/ui/arbor-panel'
-import { Heading, Subheading } from '@/components/ui/headings'
+// import { Heading, Subheading } from '@/components/ui/headings'
 import { Button } from '@/components/ui/button'
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription } from '@/components/ui/modal'
-import { Search, FilterIcon, ArrowDownUp } from 'lucide-react'
+// import { Search, FilterIcon, ArrowDownUp } from 'lucide-react'
 import { FundingRateTable } from './funding-rate-table'
 
 export function FundingRateAggregator() {
   const { markets, isLoading } = useMarkets()
   const [selectedAsset, setSelectedAsset] = useState('BTC-PERP')
   const [showModal, setShowModal] = useState(false)
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table')
+  const [viewMode] = useState<'table' | 'cards'>('table') //setViewMode
 
   if (isLoading) {
     return <div>Loading funding rates...</div>
@@ -32,7 +32,10 @@ export function FundingRateAggregator() {
   const getMarketsForAsset = (asset: string) => {
     // In a real app, you would filter by asset
     // For demo purposes, just return all perp markets
-    return perpMarkets
+
+    const filteredMarkets = perpMarkets.filter(market => market.name === asset);
+
+    return filteredMarkets || perpMarkets
   }
 
   return (

@@ -5,20 +5,20 @@ import { ArborPanel, ArborPanelHeader, ArborPanelTitle, ArborPanelContent } from
 import { Heading, Subheading } from '@/components/ui/headings'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Tabs, Tab } from '@/components/ui/tabs'
+// import { Tabs, Tab } from '@/components/ui/tabs'
 import {
   Search,
   ArrowUpRight,
-  ArrowDownUp,
+  // ArrowDownUp,
   TrendingUp,
   TrendingDown,
-  ExternalLink,
+  // ExternalLink,
   InfoIcon,
-  FilterIcon,
+  // FilterIcon,
   BarChart3
 } from 'lucide-react'
 import Link from 'next/link'
-import { StrategyDetailModal } from '@/components/markets/strategy-detail-modal'
+// import { StrategyDetailModal } from '@/components/markets/strategy-detail-modal'
 
 interface PerpsData {
   name: string
@@ -76,17 +76,17 @@ interface DeltaNeutralData {
 }
 
 export default function MarketsPage() {
-  const [driftPerps, setDriftPerps] = useState<PerpsData[]>([])
-  const [zetaPerps, setZetaPerps] = useState<PerpsData[]>([])
+  // const [driftPerps, setDriftPerps] = useState<PerpsData[]>([])
+  // const [zetaPerps, setZetaPerps] = useState<PerpsData[]>([])
   const [combinedMarkets, setCombinedMarkets] = useState<CombinedMarketData[]>([])
   const [deltaNeutralStrategies, setDeltaNeutralStrategies] = useState<Strategy[]>([])
-  const [sortConfig, setSortConfig] = useState<{
-    key: string;
-    direction: 'asc' | 'desc';
-  }>({ key: 'annualizedArbitrageRate', direction: 'desc' })
-  const [searchQuery, setSearchQuery] = useState('')
+  // const [sortConfig, setSortConfig] = useState<{
+  //   key: string;
+  //   direction: 'asc' | 'desc';
+  // }>({ key: 'annualizedArbitrageRate', direction: 'desc' })
+  // const [searchQuery, setSearchQuery] = useState('')
   const [strategySearchQuery, setStrategySearchQuery] = useState('')
-  const [activeTab, setActiveTab] = useState('arbitrage')
+  // const [activeTab, setActiveTab] = useState('arbitrage')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -111,8 +111,8 @@ export default function MarketsPage() {
         const zetaData: PerpsData[] = await zetaResponse.json()
         const deltaNeutralData: DeltaNeutralData = await deltaNeutralResponse.json()
         
-        setDriftPerps(driftData)
-        setZetaPerps(zetaData)
+        // setDriftPerps(driftData)
+        // setZetaPerps(zetaData)
         setDeltaNeutralStrategies(deltaNeutralData.deltaNeutralOfferings)
         
         // Create combined market data
@@ -166,78 +166,78 @@ export default function MarketsPage() {
   }, [])
 
   // Filter and sort the market data
-  const filteredMarkets = combinedMarkets.filter(market => {
-    if (!searchQuery) return true
-    return market.asset.toLowerCase().includes(searchQuery.toLowerCase())
-  })
+  // const filteredMarkets = combinedMarkets.filter(market => {
+  //   if (!searchQuery) return true
+  //   return market.asset.toLowerCase().includes(searchQuery.toLowerCase())
+  // })
 
   // Sort the filtered markets
-  const sortedMarkets = [...filteredMarkets].sort((a, b) => {
-    const aValue = a[sortConfig.key as keyof CombinedMarketData] as number | undefined || 0
-    const bValue = b[sortConfig.key as keyof CombinedMarketData] as number | undefined || 0
+  // const sortedMarkets = [...filteredMarkets].sort((a, b) => {
+  //   const aValue = a[sortConfig.key as keyof CombinedMarketData] as number | undefined || 0
+  //   const bValue = b[sortConfig.key as keyof CombinedMarketData] as number | undefined || 0
     
-    if (sortConfig.direction === 'asc') {
-      return aValue - bValue
-    } else {
-      return bValue - aValue
-    }
-  })
+  //   if (sortConfig.direction === 'asc') {
+  //     return aValue - bValue
+  //   } else {
+  //     return bValue - aValue
+  //   }
+  // })
 
   // Format funding rate to display percentage
-  const formatFundingRate = (rate?: number): string => {
-    if (rate === undefined) return 'N/A'
+  // const formatFundingRate = (rate?: number): string => {
+  //   if (rate === undefined) return 'N/A'
     
-    // Assuming rate is already in percentage
-    const formatted = rate.toFixed(6)
-    return rate >= 0 ? `+${formatted}%` : `${formatted}%`
-  }
+  //   // Assuming rate is already in percentage
+  //   const formatted = rate.toFixed(6)
+  //   return rate >= 0 ? `+${formatted}%` : `${formatted}%`
+  // }
 
   // Format price to display in USD
-  const formatPrice = (price?: number): string => {
-    if (price === undefined) return 'N/A'
+  // const formatPrice = (price?: number): string => {
+  //   if (price === undefined) return 'N/A'
     
-    // Convert from quote decimals (typically 6 for USDC)
-    const priceInUsd = price / 1000000
+  //   // Convert from quote decimals (typically 6 for USDC)
+  //   const priceInUsd = price / 1000000
     
-    // Format based on size
-    if (priceInUsd >= 1000) {
-      return `$${(priceInUsd).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
-    } else if (priceInUsd >= 1) {
-      return `$${(priceInUsd).toLocaleString(undefined, { maximumFractionDigits: 4 })}`
-    } else {
-      return `$${(priceInUsd).toLocaleString(undefined, { maximumFractionDigits: 6 })}`
-    }
-  }
+  //   // Format based on size
+  //   if (priceInUsd >= 1000) {
+  //     return `$${(priceInUsd).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+  //   } else if (priceInUsd >= 1) {
+  //     return `$${(priceInUsd).toLocaleString(undefined, { maximumFractionDigits: 4 })}`
+  //   } else {
+  //     return `$${(priceInUsd).toLocaleString(undefined, { maximumFractionDigits: 6 })}`
+  //   }
+  // }
 
   // Handle sort when column header is clicked
-  const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'desc'
-    if (sortConfig.key === key && sortConfig.direction === 'desc') {
-      direction = 'asc'
-    }
-    setSortConfig({ key, direction })
-  }
+  // const handleSort = (key: string) => {
+  //   let direction: 'asc' | 'desc' = 'desc'
+  //   if (sortConfig.key === key && sortConfig.direction === 'desc') {
+  //     direction = 'asc'
+  //   }
+  //   setSortConfig({ key, direction })
+  // }
 
   // Determine risk level based on arbitrage rate
-  const getRiskLevel = (rate?: number): { level: string; className: string } => {
-    if (rate === undefined) return { level: 'Unknown', className: 'bg-slate-100 text-slate-800' }
+  // const getRiskLevel = (rate?: number): { level: string; className: string } => {
+  //   if (rate === undefined) return { level: 'Unknown', className: 'bg-slate-100 text-slate-800' }
     
-    if (rate >= 0.2) {
-      return { level: 'High', className: 'bg-rose-100 text-rose-800' }
-    } else if (rate >= 0.1) {
-      return { level: 'Medium', className: 'bg-amber-100 text-amber-800' }
-    } else {
-      return { level: 'Low', className: 'bg-emerald-100 text-emerald-800' }
-    }
-  }
+  //   if (rate >= 0.2) {
+  //     return { level: 'High', className: 'bg-rose-100 text-rose-800' }
+  //   } else if (rate >= 0.1) {
+  //     return { level: 'Medium', className: 'bg-amber-100 text-amber-800' }
+  //   } else {
+  //     return { level: 'Low', className: 'bg-emerald-100 text-emerald-800' }
+  //   }
+  // }
 
   // Format timestamp to human-readable date
-  const formatTimestamp = (timestamp?: number): string => {
-    if (!timestamp) return 'N/A'
+  // const formatTimestamp = (timestamp?: number): string => {
+  //   if (!timestamp) return 'N/A'
     
-    const date = new Date(timestamp * 1000) // Convert from UNIX timestamp
-    return date.toLocaleString()
-  }
+  //   const date = new Date(timestamp * 1000) // Convert from UNIX timestamp
+  //   return date.toLocaleString()
+  // }
   
   // Filter delta-neutral strategies based on search query
   const filteredStrategies = deltaNeutralStrategies.filter(strategy => {
@@ -542,7 +542,7 @@ export default function MarketsPage() {
                   <h4 className="text-base font-medium mb-1">What are Funding Rates?</h4>
                   <p className="text-sm text-muted-foreground">
                     Funding rates are periodic payments exchanged between long and short positions in perpetual contracts.
-                    They help keep the perpetual price aligned with the underlying asset's spot price.
+                    They help keep the perpetual price aligned with the underlying asset&apos;s spot price.
                   </p>
                 </div>
               </div>
@@ -597,7 +597,7 @@ export default function MarketsPage() {
                   <h4 className="text-base font-medium mb-1">Annualized Rate</h4>
                   <p className="text-sm text-muted-foreground">
                     Annualized rate represents the potential annual return from capturing funding rate differentials,
-                    assuming rates remain constant throughout the year. It's calculated as the funding rate difference
+                    assuming rates remain constant throughout the year. It&apos;s calculated as the funding rate difference
                     multiplied by the number of funding periods in a year.
                   </p>
                 </div>

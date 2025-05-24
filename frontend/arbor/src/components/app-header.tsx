@@ -3,7 +3,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Menu, X, Leaf } from 'lucide-react'
+import { Menu, X } from 'lucide-react' //Leaf
 import { ThemeSelect } from '@/components/theme-select'
 import { ClusterButton, WalletButton } from '@/components/solana/solana-provider'
 
@@ -23,6 +23,7 @@ export function AppHeader({ links = [] }: { links: { label: string; path: string
             className="flex items-center transition-colors" 
             href="/"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
               src="/arbor-finiance-logo.png" 
               alt="Arbor Finance" 

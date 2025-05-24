@@ -8,10 +8,10 @@ import { ArborPanel } from './ui/arbor-panel'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from './ui/card'
 import { MarketsProvider } from './markets/markets-provider'
 import { MarketsOverview } from './markets/markets-overview'
-import { FundingRateAggregator } from './markets/funding-rate-aggregator'
+// import { FundingRateAggregator } from './markets/funding-rate-aggregator'
 import { Heading, Subheading } from './ui/headings'
 import { StrategyCard } from './ui/strategy-card'
-import { DataCard } from './ui/data-card'
+// import { DataCard } from './ui/data-card'
 import { StatsGrid, StatCard } from './ui/stats-grid'
 import { TreeNode } from './ui/tree-node'
 import { LandingSection, FeatureGrid, Feature } from './ui/landing-section'
@@ -35,6 +35,7 @@ export function DemoPage() {
       <AppHero
         title={
           <div className="flex justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
               src="/arbor-finiance-logo-with-tagline.png"
               alt="Arbor Finance - Simplifying delta-neutral arbitrage"

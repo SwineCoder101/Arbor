@@ -1,6 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import { Leaf, Github, Twitter } from 'lucide-react'
+import { Github, Twitter } from 'lucide-react' //Leaf
 
 export function AppFooter() {
   return (
@@ -8,6 +8,7 @@ export function AppFooter() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img 
               src="/arbor-finiance-logo.png" 
               alt="Arbor Finance" 

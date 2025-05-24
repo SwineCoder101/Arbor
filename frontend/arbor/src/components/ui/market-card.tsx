@@ -187,6 +187,7 @@ export function MarketLogo({
       {...props}
     >
       {logoSrc ? (
+        // eslint-disable-next-line @next/next/no-img-element
         <img 
           src={logoSrc} 
           alt={`${market} logo`} 

@@ -28,7 +28,7 @@ interface ModalProps
   blur?: boolean;
 }
 
-const Modal = ({ children, position, ...props }: ModalProps) => (
+const Modal = ({ children, ...props }: ModalProps) => (  // position,
   <DialogPrimitive.Root {...props}>{children}</DialogPrimitive.Root>
 );
 Modal.displayName = "Modal";
@@ -37,11 +37,10 @@ const ModalTrigger = DialogPrimitive.Trigger;
 
 const ModalPortal = ({
   position,
-  className,
   children,
   ...props
 }: DialogPrimitive.DialogPortalProps & VariantProps<typeof modalVariants>) => (
-  <DialogPrimitive.Portal className={cn(className)} {...props}>
+  <DialogPrimitive.Portal {...props}>
     <div className={modalVariants({ position })}>{children}</div>
   </DialogPrimitive.Portal>
 );

@@ -103,10 +103,11 @@ export function Tabs({
         {React.Children.map(tabChildren, (child) => {
           if (!React.isValidElement(child)) return null;
           
-          const tabValue = child.props.value;
+          const childElement = child as React.ReactElement<TabProps>;
+          const tabValue = childElement.props.value;
           const isActive = activeTab === tabValue;
           
-          return React.cloneElement(child as React.ReactElement<TabProps>, {
+          return React.cloneElement(childElement, {
             variant,
             size,
             fullWidth,
@@ -119,10 +120,10 @@ export function Tabs({
         {React.Children.map(tabChildren, (child) => {
           if (!React.isValidElement(child)) return null;
           
-          const tabValue = child.props.value;
+          const childElement = child as React.ReactElement<TabProps>;
+          const tabValue = childElement.props.value;
           const isActive = activeTab === tabValue;
-          
-          return isActive ? child.props.children : null;
+          return isActive ? childElement.props.children : null;
         })}
       </div>
     </div>
@@ -142,9 +143,9 @@ export function Tab({
   variant,
   size,
   fullWidth,
-  value,
+  // value,
   isActive,
-  children,
+  // children,
   ...props
 }: TabProps) {
   return (

@@ -150,13 +150,13 @@ export function FundingRateTable() {
   }, [strategies, searchQuery, sortConfig, riskFilter])
   
   // Function to handle sort
-  const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'desc'
-    if (sortConfig.key === key && sortConfig.direction === 'desc') {
-      direction = 'asc'
-    }
-    setSortConfig({ key, direction })
-  }
+  // const handleSort = (key: string) => {
+  //   let direction: 'asc' | 'desc' = 'desc'
+  //   if (sortConfig.key === key && sortConfig.direction === 'desc') {
+  //     direction = 'asc'
+  //   }
+  //   setSortConfig({ key, direction })
+  // }
   
   // Function to toggle risk filter
   const toggleRiskFilter = (risk: string) => {
@@ -168,11 +168,11 @@ export function FundingRateTable() {
   }
 
   // Helper function to format funding rate for display
-  const formatFundingRate = (rate: number): string => {
-    // Convert from basis points to percentage
-    const percentage = rate / 10000
-    return `${percentage.toFixed(4)}%`
-  }
+  // const formatFundingRate = (rate: number): string => {
+  //   // Convert from basis points to percentage
+  //   const percentage = rate / 10000
+  //   return `${percentage.toFixed(4)}%`
+  // }
 
   // Calculate total PnL for a strategy
   const calculatePnL = (strategy: Strategy): string => {
@@ -221,7 +221,15 @@ export function FundingRateTable() {
   const getLongShortRatio = (strategy: Strategy): string => {
     // In a real app, this would be calculated based on position sizes
     // For now, use a simple 2:1 ratio as a placeholder
-    return '2:1'
+    const longSize = Number(strategy.longDex.fundingRate)
+    const shortSize = Number(strategy.shortDex.fundingRate)
+    const ratio = longSize / shortSize
+
+    if (ratio && ratio > 1) {
+      return `${ratio.toFixed(2)}:1` 
+    } else {
+      return `2:1`
+    }
   }
 
   // Calculate position size in USDC
