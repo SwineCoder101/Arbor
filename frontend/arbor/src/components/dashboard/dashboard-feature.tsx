@@ -13,8 +13,11 @@ export function DashboardFeature() {
     <div>
       <AppHero 
         title="Arbor" 
-        subtitle="A perpetual DEX aggregator aimed to facilitate arbitrage opportunities across Solana" 
-      />
+      >
+        <p className="mt-4 text-lg text-muted-foreground">
+          A perpetual DEX aggregator aimed to facilitate arbitrage opportunities across Solana
+        </p>
+      </AppHero>
       <div className="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="mb-10 text-center">
           <h2 className="text-2xl font-semibold mb-6">Key Features</h2>

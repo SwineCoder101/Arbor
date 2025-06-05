@@ -93,7 +93,7 @@ export function useTransferSol({ address, account }: { address: Address; account
     mutationFn: async (input: { destination: Address; amount: number }) => {
       try {
         const { signature } = await createTransaction({
-          txSigner,
+          txSigner: txSigner as unknown as TransactionSendingSigner,
           destination: input.destination,
           amount: input.amount,
           client,
@@ -153,7 +153,6 @@ export function useRequestAirdrop({ address }: { address: Address }) {
 
 export function useMintUsdc({ address }: { address: Address }) {
   const { cluster } = useWalletUiCluster()
-  const { client } = useWalletUi()
   const queryClient = useQueryClient()
   const toastTransaction = useTransactionToast()
 
@@ -179,7 +178,6 @@ export function useMintUsdc({ address }: { address: Address }) {
 
 export function useGetUsdcBalance({ address }: { address: Address }) {
   const { cluster } = useWalletUiCluster()
-  const { client } = useWalletUi()
 
   return useQuery({
     queryKey: ['get-usdc-balance', { cluster, address }],

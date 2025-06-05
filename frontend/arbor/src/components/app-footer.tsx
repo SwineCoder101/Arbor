@@ -1,6 +1,7 @@
 import React from 'react'
 import Link from 'next/link'
-import { Leaf, Github, Twitter } from 'lucide-react'
+import Image from 'next/image'
+import { Github, Twitter } from 'lucide-react'
 
 export function AppFooter() {
   return (
@@ -8,10 +9,13 @@ export function AppFooter() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
-            <img 
+            <Image 
               src="/arbor-finiance-logo.png" 
               alt="Arbor Finance" 
-              className="h-6" 
+              width={102}
+              height={102}
+              className="h-8" 
+              style={{ objectFit: 'contain' }}
             />
             <span className="text-muted-foreground">© {new Date().getFullYear()}</span>
           </div>

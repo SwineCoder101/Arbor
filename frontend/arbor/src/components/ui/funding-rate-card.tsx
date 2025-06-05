@@ -1,6 +1,6 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import { cva, type VariantProps } from "class-variance-authority";
+import React from 'react'
+import { cn } from '@/lib/utils'
+import { cva } from "class-variance-authority";
 import { Card, CardContent, CardHeader, CardTitle } from "./card";
 import { ArrowUpRight } from "lucide-react";
 

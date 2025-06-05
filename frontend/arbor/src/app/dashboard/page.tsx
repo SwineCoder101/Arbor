@@ -3,15 +3,23 @@
 import { useState, useEffect } from 'react'
 import { ArborPanel, ArborPanelHeader, ArborPanelTitle, ArborPanelContent } from '@/components/ui/arbor-panel'
 import { Heading, Subheading } from '@/components/ui/headings'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { ArrowUpRight, PieChart, BarChart3, ArrowRight, Wallet, TrendingUp, History, PanelTop } from 'lucide-react'
+import { PieChart, BarChart3, ArrowRight, Wallet, TrendingUp, History, PanelTop } from 'lucide-react'
 import Link from 'next/link'
 
 // Dashboard component that displays an overview of the user's portfolio, strategies, and market data
 export default function Dashboard() {
-  const [portfolioData, setPortfolioData] = useState<any>(null)
-  const [topStrategies, setTopStrategies] = useState<any[]>([])
+  const [portfolioData, setPortfolioData] = useState<{
+    totalActiveOrders?: number;
+    totalInvested?: string;
+    estimatedDailyProfit?: string;
+    estimatedAnnualProfit?: string;
+    riskExposure?: {
+      low: number;
+      medium: number;
+      high: number;
+    };
+  } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -26,7 +34,6 @@ export default function Dashboard() {
         const data = await response.json()
         
         setPortfolioData(data.portfolio.summary)
-        setTopStrategies(data.topArbitrageOpportunities.slice(0, 3))
         setIsLoading(false)
       } catch (err) {
         setError('Error loading data')
@@ -37,20 +44,6 @@ export default function Dashboard() {
 
     fetchData()
   }, [])
-
-  // Determine risk class for styling
-  const getRiskClass = (risk: string) => {
-    switch (risk) {
-      case 'Low':
-        return 'bg-emerald-100 text-emerald-800'
-      case 'Medium':
-        return 'bg-amber-100 text-amber-800'
-      case 'High':
-        return 'bg-rose-100 text-rose-800'
-      default:
-        return 'bg-slate-100 text-slate-800'
-    }
-  }
 
   if (isLoading) {
     return <div className="p-8">Loading dashboard data...</div>
@@ -84,7 +77,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="mt-3 text-xs text-muted-foreground">
-            Across {portfolioData?.riskExposure?.low + portfolioData?.riskExposure?.medium + portfolioData?.riskExposure?.high || 0} strategies
+            Across {(portfolioData?.riskExposure?.low || 0) + (portfolioData?.riskExposure?.medium || 0) + (portfolioData?.riskExposure?.high || 0)} strategies
           </div>
         </div>
 

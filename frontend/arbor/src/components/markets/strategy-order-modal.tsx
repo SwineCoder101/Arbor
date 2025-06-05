@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Leaf, ArrowUpRight, CheckCircle } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Leaf, CheckCircle } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Heading, Subheading } from '@/components/ui/headings'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { TreeNode } from '@/components/ui/tree-node'
@@ -641,7 +640,6 @@ export interface StrategyActionModalProps {
 export function StrategyActionModal({ orderId, assetUnit, action, onConfirm, trigger }: StrategyActionModalProps) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState(100);
-  const { toast } = useToast();
   
   const actionTitle = action === 'topUp' ? 'Top Up' : 'Withdraw';
   const actionDescription = action === 'topUp' 

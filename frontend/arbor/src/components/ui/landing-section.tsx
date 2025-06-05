@@ -1,7 +1,6 @@
-import * as React from "react";
+import React from 'react'
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Leaf } from "lucide-react";
 
 const landingSectionVariants = cva("py-16 md:py-24", {
   variants: {
@@ -27,7 +26,7 @@ const landingSectionVariants = cva("py-16 md:py-24", {
 interface LandingSectionProps
   extends React.HTMLAttributes<HTMLElement>,
     VariantProps<typeof landingSectionVariants> {
-  title?: React.ReactNode;
+  heading?: React.ReactNode;
   subtitle?: React.ReactNode;
   align?: "center" | "left";
   narrowContent?: boolean;
@@ -37,7 +36,7 @@ export function LandingSection({
   className,
   background,
   border,
-  title,
+  heading,
   subtitle,
   align = "center",
   narrowContent = false,
@@ -57,14 +56,14 @@ export function LandingSection({
             align === "center" && "items-center text-center"
           )}
         >
-          {title && (
+          {(heading || subtitle) && (
             <div className="mb-10">
-              {typeof title === "string" ? (
+              {typeof heading === "string" ? (
                 <h2 className="text-3xl md:text-4xl font-semibold tracking-tight mb-4">
-                  {title}
+                  {heading}
                 </h2>
               ) : (
-                title
+                heading
               )}
               {typeof subtitle === "string" ? (
                 <p className="text-lg text-muted-foreground max-w-2xl">

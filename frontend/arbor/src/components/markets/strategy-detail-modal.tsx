@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { ArrowUpDownIcon, BarChart3Icon, CircleDollarSignIcon, ExternalLinkIcon, TrendingUpIcon } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { ArrowUpDownIcon, BarChart3Icon, CircleDollarSignIcon, TrendingUpIcon } from 'lucide-react'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Heading, Subheading } from '@/components/ui/headings'
+import { Heading } from '@/components/ui/headings'
 import { ArborPanel, ArborPanelContent, ArborPanelHeader, ArborPanelTitle } from '@/components/ui/arbor-panel'
 import { RadixTabs, RadixTabsContent, RadixTabsList, RadixTabsTrigger } from '@/components/ui/radix-tabs'
 import { StrategyOrderModal } from './strategy-order-modal'
+import Image from 'next/image'
 
 // Performance Chart Component
 interface PerformanceChartProps {
@@ -103,7 +104,13 @@ function PerformanceChart({ asset }: PerformanceChartProps) {
           </div>
           
           <div className="h-[280px] w-full relative">
-            <img src="/performance-chart-placeholder.svg" alt="Performance Chart" className="w-full h-full object-cover" />
+            <Image 
+              src="/performance-chart-placeholder.svg" 
+              alt="Performance Chart" 
+              width={400}
+              height={280}
+              className="w-full h-full object-cover" 
+            />
             
             {/* Overlay some stats from our actual JSON data */}
             <div className="absolute top-4 right-4 bg-background/80 p-2 rounded-md backdrop-blur-sm">

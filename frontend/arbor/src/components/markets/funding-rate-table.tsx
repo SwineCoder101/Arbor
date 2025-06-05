@@ -1,18 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
+import React, { useState, useEffect } from 'react'
 import { ArborPanel, ArborPanelHeader, ArborPanelTitle, ArborPanelContent } from '@/components/ui/arbor-panel'
 import { Heading, Subheading } from '@/components/ui/headings'
-import { Search, FilterIcon, ArrowDownUp, ArrowUpRight } from 'lucide-react'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { Search, FilterIcon, ArrowUpRight } from 'lucide-react'
 import { StrategyDetailModal } from './strategy-detail-modal'
 
 interface DexInfo {
@@ -48,6 +41,7 @@ interface Strategy {
 
 interface DeltaNeutralData {
   deltaNeutralOfferings: Strategy[]
+  topArbitrageOpportunities: Strategy[]
 }
 
 export function FundingRateTable() {
@@ -56,7 +50,7 @@ export function FundingRateTable() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortConfig, setSortConfig] = useState<{
+  const [sortConfig] = useState<{
     key: string;
     direction: 'asc' | 'desc';
   }>({ key: 'arbitrageRateAnnualized', direction: 'desc' })
@@ -149,15 +143,6 @@ export function FundingRateTable() {
     setFilteredStrategies(result)
   }, [strategies, searchQuery, sortConfig, riskFilter])
   
-  // Function to handle sort
-  const handleSort = (key: string) => {
-    let direction: 'asc' | 'desc' = 'desc'
-    if (sortConfig.key === key && sortConfig.direction === 'desc') {
-      direction = 'asc'
-    }
-    setSortConfig({ key, direction })
-  }
-  
   // Function to toggle risk filter
   const toggleRiskFilter = (risk: string) => {
     if (riskFilter.includes(risk)) {
@@ -165,13 +150,6 @@ export function FundingRateTable() {
     } else {
       setRiskFilter([...riskFilter, risk])
     }
-  }
-
-  // Helper function to format funding rate for display
-  const formatFundingRate = (rate: number): string => {
-    // Convert from basis points to percentage
-    const percentage = rate / 10000
-    return `${percentage.toFixed(4)}%`
   }
 
   // Calculate total PnL for a strategy
@@ -191,14 +169,14 @@ export function FundingRateTable() {
   const calculateInflows = (strategy: Strategy): string => {
     // This would typically be calculated from actual data
     // For now, just use the estimated daily profit as a placeholder
-    return `$${strategy.estimatedDailyProfit}`
+    return `${strategy.estimatedDailyProfit}`
   }
 
   const calculateOutflows = (strategy: Strategy): string => {
     // This would typically be calculated from actual data
     // For now, just use a percentage of the inflows as a placeholder
     const outflow = parseFloat(strategy.estimatedDailyProfit) * 0.1 // 10% as placeholder
-    return `$${outflow.toFixed(2)}`
+    return `${outflow.toFixed(2)}`
   }
 
   // Format the funding rate range
@@ -218,7 +196,7 @@ export function FundingRateTable() {
   }
 
   // Get the ratio between long and short positions
-  const getLongShortRatio = (strategy: Strategy): string => {
+  const getLongShortRatio = (): string => {
     // In a real app, this would be calculated based on position sizes
     // For now, use a simple 2:1 ratio as a placeholder
     return '2:1'
@@ -239,8 +217,8 @@ export function FundingRateTable() {
     // This would typically be calculated based on the strategy
     // For now, just return placeholder values
     return {
-      oneWeek: `$${(parseFloat(strategy.estimatedDailyProfit) * 7).toFixed(2)}`,
-      twoWeeks: `$${(parseFloat(strategy.estimatedDailyProfit) * 14).toFixed(2)}`
+      oneWeek: `${(parseFloat(strategy.estimatedDailyProfit) * 7).toFixed(2)}`,
+      twoWeeks: `${(parseFloat(strategy.estimatedDailyProfit) * 14).toFixed(2)}`
     }
   }
 
@@ -322,34 +300,6 @@ export function FundingRateTable() {
                 </div>
               </div>
             )}
-          </div>
-          
-          <div className="relative">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-1.5"
-              onClick={() => {
-                // Toggle between common sorting options
-                const nextSortOptions = [
-                  { key: 'arbitrageRateAnnualized', direction: 'desc' as const },
-                  { key: 'estimatedDailyProfit', direction: 'desc' as const },
-                  { key: 'riskAssessment', direction: 'asc' as const },
-                  { key: 'asset', direction: 'asc' as const }
-                ];
-                
-                const currentIndex = nextSortOptions.findIndex(
-                  option => option.key === sortConfig.key && option.direction === sortConfig.direction
-                );
-                const nextIndex = (currentIndex + 1) % nextSortOptions.length;
-                setSortConfig(nextSortOptions[nextIndex]);
-              }}
-            >
-              <ArrowDownUp className="h-3.5 w-3.5" /> 
-              Sort: {sortConfig.key === 'arbitrageRateAnnualized' ? 'Rate' : 
-                    sortConfig.key === 'estimatedDailyProfit' ? 'Profit' :
-                    sortConfig.key === 'riskAssessment' ? 'Risk' : 'Name'}
-            </Button>
           </div>
           
           <div className="text-xs text-muted-foreground ml-1">
@@ -439,7 +389,7 @@ export function FundingRateTable() {
                         <div className="grid grid-cols-2 divide-x divide-border h-full">
                           <div className="p-3 flex flex-col items-center justify-center">
                             <div className="font-medium text-xs">Ratio L:S</div>
-                            <div className="text-xs mt-1 font-semibold">{getLongShortRatio(strategy)}</div>
+                            <div className="text-xs mt-1 font-semibold">{getLongShortRatio()}</div>
                           </div>
                           <div className="p-3 flex flex-col items-center justify-center">
                             <div className="font-medium text-xs">Arb Rate</div>

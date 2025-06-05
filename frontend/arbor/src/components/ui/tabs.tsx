@@ -103,7 +103,8 @@ export function Tabs({
         {React.Children.map(tabChildren, (child) => {
           if (!React.isValidElement(child)) return null;
           
-          const tabValue = child.props.value;
+          const typedChild = child as React.ReactElement<TabProps>;
+          const tabValue = typedChild.props.value;
           const isActive = activeTab === tabValue;
           
           return React.cloneElement(child as React.ReactElement<TabProps>, {
@@ -119,10 +120,13 @@ export function Tabs({
         {React.Children.map(tabChildren, (child) => {
           if (!React.isValidElement(child)) return null;
           
-          const tabValue = child.props.value;
+          // Cast child to the expected TabProps type
+          const typedChild = child as React.ReactElement<TabProps>;
+          
+          const tabValue = typedChild.props.value;
           const isActive = activeTab === tabValue;
           
-          return isActive ? child.props.children : null;
+          return isActive ? typedChild.props.children : null;
         })}
       </div>
     </div>
@@ -142,7 +146,6 @@ export function Tab({
   variant,
   size,
   fullWidth,
-  value,
   isActive,
   children,
   ...props
@@ -156,7 +159,7 @@ export function Tab({
       data-state={isActive ? "active" : "inactive"}
       {...props}
     >
-      {props.children}
+      {children}
     </button>
   );
 }

@@ -20,15 +20,16 @@ const modalVariants = cva(
   }
 );
 
-interface ModalProps
-  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Root>,
-    VariantProps<typeof modalVariants> {
-  position?: "default" | "top" | "bottom";
+interface ModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  children: React.ReactNode
+  size?: 'default' | 'lg' | 'xl' | 'full'
   showClose?: boolean;
   blur?: boolean;
 }
 
-const Modal = ({ children, position, ...props }: ModalProps) => (
+const Modal = ({ children, ...props }: ModalProps) => (
   <DialogPrimitive.Root {...props}>{children}</DialogPrimitive.Root>
 );
 Modal.displayName = "Modal";
@@ -40,9 +41,9 @@ const ModalPortal = ({
   className,
   children,
   ...props
-}: DialogPrimitive.DialogPortalProps & VariantProps<typeof modalVariants>) => (
-  <DialogPrimitive.Portal className={cn(className)} {...props}>
-    <div className={modalVariants({ position })}>{children}</div>
+}: DialogPrimitive.DialogPortalProps & VariantProps<typeof modalVariants> & { className?: string }) => (
+  <DialogPrimitive.Portal {...props}>
+    <div className={cn(modalVariants({ position }), className)}>{children}</div>
   </DialogPrimitive.Portal>
 );
 ModalPortal.displayName = DialogPrimitive.Portal.displayName;

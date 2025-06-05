@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Card, CardContent, CardHeader, CardTitle } from "./card";
 import { ArrowUpRight } from "lucide-react";
+import Image from 'next/image'
 
 const marketCardVariants = cva("overflow-hidden transition-all", {
   variants: {
@@ -187,10 +188,16 @@ export function MarketLogo({
       {...props}
     >
       {logoSrc ? (
-        <img 
+        <Image 
           src={logoSrc} 
           alt={`${market} logo`} 
-          className="w-full h-full object-contain"
+          width={48}
+          height={48}
+          className={`${
+            size === 'lg' ? 'h-12 w-12' : 
+            size === 'md' ? 'h-8 w-8' : 
+            'h-6 w-6'
+          } rounded-full object-cover`}
         />
       ) : (
         <SolanaSVG />
