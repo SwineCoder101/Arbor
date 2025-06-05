@@ -78,7 +78,7 @@ export function AppHeader({ links = [] }: { links: { label: string; path: string
         )}
 
         {showMenu && (
-          <div className="md:hidden fixed inset-x-0 top-16 bottom-0 bg-background/95 backdrop-blur-md z-40 border-t border-border">
+          <div className="md:hidden fixed inset-x-0 top-16 bg-background/97 z-50 border-t border-border">
             <div className="flex flex-col p-4 gap-6">
               <nav>
                 <ul className="flex flex-col gap-4">
