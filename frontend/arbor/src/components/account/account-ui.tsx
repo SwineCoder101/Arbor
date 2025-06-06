@@ -23,7 +23,6 @@ import { Label } from '@/components/ui/label'
 import { UiWalletAccount, useWalletUi, useWalletUiCluster } from '@wallet-ui/react'
 import { address, Address, Lamports, lamportsToSol } from 'gill'
 import { ErrorBoundary } from 'next/dist/client/components/error-boundary'
-import Image from 'next/image'
 
 export function AccountBalance({ address }: { address: Address }) {
   const query = useGetBalance({ address })
@@ -36,13 +35,6 @@ export function AccountBalance({ address }: { address: Address }) {
           {query.data ? <BalanceSol balance={query.data} /> : '...'} SOL
         </h1>
         <h1 className="text-3xl font-bold cursor-pointer flex items-center" onClick={() => usdcQuery.refetch()}>
-          <Image 
-            src="/arbor-finiance-logo.png" 
-            alt="Arbor Finance" 
-            width={24}
-            height={24}
-            className="h-6 w-6 mr-2"
-          />
           {usdcQuery.data !== undefined ? usdcQuery.data.toFixed(2) : '...'} USDC
         </h1>
       </div>
