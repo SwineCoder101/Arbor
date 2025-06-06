@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { ArborPanel, ArborPanelHeader, ArborPanelTitle, ArborPanelContent } from '@/components/ui/arbor-panel'
 import { Heading, Subheading } from '@/components/ui/headings'
-import { Button } from '@/components/ui/button'
 import {
   Search,
   TrendingUp,
@@ -13,7 +12,6 @@ import {
 import { StrategyTable } from '@/components/markets/strategy-table'
 import { StrategyCards } from '@/components/markets/strategy-cards'
 import { Input } from '@/components/ui/input'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Strategy } from '@/types/strategy'
 
 interface PerpsData {
@@ -46,9 +44,6 @@ export default function MarketsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [riskFilter, setRiskFilter] = useState('All')
-  const [dexFilter, setDexFilter] = useState('All')
-  const [strategyTypeFilter, setStrategyTypeFilter] = useState('All')
   const [isMobile, setIsMobile] = useState(false)
 
   // Fetch data when component mounts
@@ -143,11 +138,8 @@ export default function MarketsPage() {
                           strategy.strategyType.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           getStrategyName(strategy).toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesRisk = riskFilter === 'All' || strategy.riskAssessment === riskFilter
-    const matchesDex = dexFilter === 'All' || strategy.longDex.name === dexFilter || strategy.shortDex.name === dexFilter
-    const matchesStrategyType = strategyTypeFilter === 'All' || strategy.strategyType === strategyTypeFilter
 
-    return matchesSearch && matchesRisk && matchesDex && matchesStrategyType
+    return matchesSearch 
   })
   
   // Get strategy name format: <perp symbol>-<short dex>-<long dex>
@@ -269,7 +261,7 @@ export default function MarketsPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <DropdownMenu>
+            {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="gap-2">
                   <span className="text-sm">Risk</span> ({riskFilter === 'All' ? 'All' : riskFilter})
@@ -285,7 +277,7 @@ export default function MarketsPage() {
                   <DropdownMenuRadioItem value="High">High</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
 
             {/* <DropdownMenu>
               <DropdownMenuTrigger asChild>
