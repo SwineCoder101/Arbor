@@ -3,17 +3,18 @@
 import { useState, useEffect } from 'react'
 import { ArborPanel, ArborPanelHeader, ArborPanelTitle, ArborPanelContent } from '@/components/ui/arbor-panel'
 import { Heading, Subheading } from '@/components/ui/headings'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import {
   Search,
-  ArrowUpRight,
   TrendingUp,
-  TrendingDown,
   InfoIcon,
-  BarChart3
+  BarChart3,
 } from 'lucide-react'
-import Link from 'next/link'
+import { StrategyTable } from '@/components/markets/strategy-table'
+import { StrategyCards } from '@/components/markets/strategy-cards'
+import { Input } from '@/components/ui/input'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Strategy } from '@/types/strategy'
 
 interface PerpsData {
   name: string
@@ -34,37 +35,6 @@ interface CombinedMarketData {
   annualizedArbitrageRate?: number
 }
 
-interface DexInfo {
-  name: string
-  fundingRate: number
-  price?: number
-}
-
-interface Strategy {
-  asset: string
-  longDex: DexInfo
-  shortDex: DexInfo
-  arbitrageRateAnnualized: string
-  arbitrageRateDaily: string
-  recommendedSize: string
-  estimatedDailyProfit: string
-  estimatedAnnualProfit: string
-  riskAssessment: string
-  strategyType: string
-  identifiedAt: string
-  activeOrders: Array<{
-    id: string
-    side: string
-    dex: string
-    size: string
-    entryPrice: string
-    status: string
-    createdAt: string
-    wallet: string
-    pnl: string
-  }>
-}
-
 interface DeltaNeutralData {
   deltaNeutralOfferings: Strategy[]
   topArbitrageOpportunities: Strategy[]
@@ -73,9 +43,13 @@ interface DeltaNeutralData {
 export default function MarketsPage() {
   const [combinedMarkets, setCombinedMarkets] = useState<CombinedMarketData[]>([])
   const [deltaNeutralStrategies, setDeltaNeutralStrategies] = useState<Strategy[]>([])
-  const [strategySearchQuery, setStrategySearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [riskFilter, setRiskFilter] = useState('All')
+  const [dexFilter, setDexFilter] = useState('All')
+  const [strategyTypeFilter, setStrategyTypeFilter] = useState('All')
+  const [isMobile, setIsMobile] = useState(false)
 
   // Fetch data when component mounts
   useEffect(() => {
@@ -149,15 +123,31 @@ export default function MarketsPage() {
     fetchData()
   }, [])
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768) // Tailwind's 'md' breakpoint is 768px
+    }
+
+    // Set initial value
+    handleResize()
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   // Filter delta-neutral strategies based on search query
   const filteredStrategies = deltaNeutralStrategies.filter(strategy => {
-    if (!strategySearchQuery) return true
-    return (
-      strategy.asset.toLowerCase().includes(strategySearchQuery.toLowerCase()) ||
-      strategy.strategyType.toLowerCase().includes(strategySearchQuery.toLowerCase()) ||
-      strategy.longDex.name.toLowerCase().includes(strategySearchQuery.toLowerCase()) ||
-      strategy.shortDex.name.toLowerCase().includes(strategySearchQuery.toLowerCase())
-    )
+    const matchesSearch = strategy.asset.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          strategy.longDex.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          strategy.shortDex.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          strategy.strategyType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          getStrategyName(strategy).toLowerCase().includes(searchTerm.toLowerCase())
+
+    const matchesRisk = riskFilter === 'All' || strategy.riskAssessment === riskFilter
+    const matchesDex = dexFilter === 'All' || strategy.longDex.name === dexFilter || strategy.shortDex.name === dexFilter
+    const matchesStrategyType = strategyTypeFilter === 'All' || strategy.strategyType === strategyTypeFilter
+
+    return matchesSearch && matchesRisk && matchesDex && matchesStrategyType
   })
   
   // Get strategy name format: <perp symbol>-<short dex>-<long dex>
@@ -167,7 +157,7 @@ export default function MarketsPage() {
   
   // Calculate position value in USDC
   const calculatePositionValueInUSDC = (strategy: Strategy): string => {
-    const size = parseFloat(strategy.recommendedSize)
+    const size = strategy.recommendedSize
     const price = strategy.longDex.price || 0
     const totalValue = size * price
     return totalValue.toLocaleString('en-US', { maximumFractionDigits: 0 })
@@ -226,294 +216,132 @@ export default function MarketsPage() {
             </div>
           </div>
           <div className="mt-3 text-xs text-muted-foreground">
-            {combinedMarkets.find(m => 
-              (m.drift?.fundingRate || 0) / 10000 === Math.max(...combinedMarkets.map(m => (m.drift?.fundingRate || 0) / 10000)) ||
-              (m.zeta?.fundingRate || 0) / 10000 === Math.max(...combinedMarkets.map(m => (m.zeta?.fundingRate || 0) / 10000))
-            )?.asset || 'N/A'}
+            Daily and annualized funding rates
           </div>
         </ArborPanel>
 
         <ArborPanel className="p-4">
           <div className="flex justify-between items-start">
             <div>
-              <div className="text-sm font-medium text-muted-foreground mb-1">Lowest Funding</div>
-              <div className="text-2xl font-bold text-foreground flex items-center">
-                <span className="text-rose-500 mr-1">-</span>
-                {Math.abs(Math.min(...combinedMarkets.flatMap(m => [
-                  m.drift?.fundingRate || Infinity, 
-                  m.zeta?.fundingRate || Infinity
-                ].filter(v => v !== Infinity))) / 10000)}%
+              <div className="text-sm font-medium text-muted-foreground mb-1">Avg. Arb Rate</div>
+              <div className="text-2xl font-bold text-foreground">
+                {(combinedMarkets.reduce((sum, m) => sum + (m.arbitrageRate || 0), 0) / combinedMarkets.length).toFixed(2)}%
               </div>
             </div>
-            <div className="p-2 bg-rose-100/20 rounded-md">
-              <TrendingDown className="h-5 w-5 text-rose-500" />
+            <div className="p-2 bg-amber-100/20 rounded-md">
+              <TrendingUp className="h-5 w-5 text-amber-500" />
             </div>
           </div>
           <div className="mt-3 text-xs text-muted-foreground">
-            {combinedMarkets.find(m => 
-              (m.drift?.fundingRate || 0) / 10000 === Math.min(...combinedMarkets.map(m => (m.drift?.fundingRate || 0) / 10000)) ||
-              (m.zeta?.fundingRate || 0) / 10000 === Math.min(...combinedMarkets.map(m => (m.zeta?.fundingRate || 0) / 10000))
-            )?.asset || 'N/A'}
+            Average arbitrage rate across all markets
           </div>
         </ArborPanel>
-      </div>
-      <div className="mt-6">
-        <ArborPanel>
-          <ArborPanelHeader>
-            <ArborPanelTitle>Delta-Neutral Strategies</ArborPanelTitle>
-          </ArborPanelHeader>
-          
-          <ArborPanelContent>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
-              <div className="text-sm">
-                <p className="text-muted-foreground">
-                  Showing {filteredStrategies.length} of {deltaNeutralStrategies.length} strategies
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative w-full md:w-auto">
-                  <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input 
-                    type="text" 
-                    placeholder="Search strategies..." 
-                    className="h-9 w-full md:w-48 rounded-md border border-input bg-card pl-9 pr-3 py-2 text-sm"
-                    value={strategySearchQuery}
-                    onChange={(e) => setStrategySearchQuery(e.target.value)}
-                  />
-                </div>
+
+        <ArborPanel className="p-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="text-sm font-medium text-muted-foreground mb-1">Open Interest</div>
+              <div className="text-2xl font-bold text-foreground">
+                $1.2M
               </div>
             </div>
-            
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/10">
-                    <TableHead className="sticky left-0 bg-background z-10 font-semibold">Strategy Name</TableHead>
-                    <TableHead className="text-center">DEX Details</TableHead>
-                    <TableHead className="text-center">Position Info</TableHead>
-                    <TableHead className="text-center">Financial Data</TableHead>
-                    <TableHead className="text-center">Funding Rates</TableHead>
-                    <TableHead className="text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredStrategies.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        No strategies match your search criteria. Try adjusting your search criteria.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredStrategies.map((strategy) => {
-                      // Format funding rates and prepare data for display
-                      const longFundingRate = strategy.longDex.fundingRate / 10000;
-                      const shortFundingRate = strategy.shortDex.fundingRate / 10000;
-                      
-                      return (
-                        <TableRow 
-                          key={getStrategyName(strategy)} 
-                          className="hover:bg-muted/5 group"
-                        >
-                          {/* Strategy Name - Fixed on left side */}
-                          <TableCell className="sticky left-0 bg-background z-10 group-hover:bg-muted/5 font-medium h-full p-3">
-                            <div className="flex items-start h-full">
-                              <div className="p-1.5 rounded-md bg-muted/20 mr-2.5 flex items-center justify-center min-w-[36px]">
-                                <span className="text-xs font-bold uppercase">{strategy.asset.split('-')[0]}</span>
-                              </div>
-                              <div className="flex flex-col justify-between h-full">
-                                <div>
-                                  <div className="font-medium">{getStrategyName(strategy)}</div>
-                                  <div className="text-[10px] text-muted-foreground">
-                                    {strategy.strategyType}
-                                  </div>
-                                </div>
-                                <div className="mt-1.5 text-[9px]">
-                                  <span className={`inline-block px-1 py-0.5 rounded-sm leading-none ${
-                                    strategy.riskAssessment === 'Low' ? 'bg-emerald-100 text-emerald-800' : 
-                                    strategy.riskAssessment === 'Medium' ? 'bg-amber-100 text-amber-800' : 
-                                    'bg-rose-100 text-rose-800'
-                                  }`}>
-                                    {strategy.riskAssessment}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          
-                          {/* DEX Details */}
-                          <TableCell className="p-0">
-                            <div className="grid grid-cols-2 divide-x divide-border h-full">
-                              <div className="p-3 flex flex-col items-center justify-center">
-                                <div className="font-medium text-xs">Long DEX</div>
-                                <div className="uppercase tracking-wider text-xs font-medium mt-1">{strategy.longDex.name}</div>
-                              </div>
-                              <div className="p-3 flex flex-col items-center justify-center">
-                                <div className="font-medium text-xs">Short DEX</div>
-                                <div className="uppercase tracking-wider text-xs font-medium mt-1">{strategy.shortDex.name}</div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          
-                          {/* Position Info */}
-                          <TableCell className="p-0">
-                            <div className="grid grid-cols-2 divide-x divide-border h-full">
-                              <div className="p-3 flex flex-col items-center justify-center">
-                                <div className="font-medium text-xs">Size</div>
-                                <div className="text-xs mt-1 font-semibold">
-                                  {strategy.recommendedSize} {strategy.asset.split('-')[0]}
-                                </div>
-                              </div>
-                              <div className="p-3 flex flex-col items-center justify-center">
-                                <div className="font-medium text-xs">Arb Rate</div>
-                                <div className="text-xs mt-1 text-emerald-500 font-semibold">
-                                  {parseFloat(strategy.arbitrageRateAnnualized) > 0.1 ? 
-                                    <span className="flex items-center">
-                                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1"></span>
-                                      {strategy.arbitrageRateAnnualized}%
-                                    </span> : 
-                                    strategy.arbitrageRateAnnualized + '%'
-                                  }
-                                </div>
-                                <div className="text-[10px] text-muted-foreground">{strategy.arbitrageRateDaily}% daily</div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          
-                          {/* Financial Data */}
-                          <TableCell className="p-0">
-                            <div className="grid grid-cols-2 divide-x divide-border h-full">
-                              <div className="p-3 flex flex-col items-center justify-center">
-                                <div className="font-medium text-xs">Daily Profit</div>
-                                <div className="text-xs mt-1 font-semibold text-emerald-500">
-                                  ${strategy.estimatedDailyProfit} USDC
-                                </div>
-                              </div>
-                              <div className="p-3 flex flex-col items-center justify-center">
-                                <div className="font-medium text-xs">Value</div>
-                                <div className="text-xs mt-1 font-semibold">
-                                  ${calculatePositionValueInUSDC(strategy)} USDC
-                                </div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          
-                          {/* Funding Rates */}
-                          <TableCell className="p-0">
-                            <div className="grid grid-cols-2 divide-x divide-border h-full">
-                              <div className="p-2 flex flex-col items-center justify-center">
-                                <div className="font-medium text-xs">Long</div>
-                                <div className={`text-xs mt-1 ${longFundingRate >= 0 ? 'text-emerald-500' : 'text-rose-400'} font-semibold`}>
-                                  {longFundingRate >= 0 ? '+' : ''}{longFundingRate.toFixed(6)}%
-                                </div>
-                              </div>
-                              <div className="p-2 flex flex-col items-center justify-center">
-                                <div className="font-medium text-xs">Short</div>
-                                <div className={`text-xs mt-1 ${shortFundingRate >= 0 ? 'text-emerald-500' : 'text-rose-400'} font-semibold`}>
-                                  {shortFundingRate >= 0 ? '+' : ''}{shortFundingRate.toFixed(6)}%
-                                </div>
-                              </div>
-                            </div>
-                          </TableCell>
-                          
-                          {/* Actions */}
-                          <TableCell className="p-3">
-                            <div className="flex flex-col gap-1.5 items-center justify-center h-full">
-                              <Link href={`/strategies/${strategy.asset}`}>
-                                <Button variant="arbor-outline" size="sm" className="w-full h-8 text-xs">
-                                  View Strategy <ArrowUpRight className="h-3 w-3" />
-                                </Button>
-                              </Link>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
+            <div className="p-2 bg-purple-100/20 rounded-md">
+              <InfoIcon className="h-5 w-5 text-purple-500" />
             </div>
-          </ArborPanelContent>
+          </div>
+          <div className="mt-3 text-xs text-muted-foreground">
+            Total open interest on supported DEXes
+          </div>
         </ArborPanel>
       </div>
 
-      {/* Market Information */}
-      <ArborPanel variant="gradient">
+      {/* Strategies Table */}
+      <ArborPanel>
         <ArborPanelHeader>
-          <ArborPanelTitle>Understanding Funding Rates</ArborPanelTitle>
-        </ArborPanelHeader>
-        <ArborPanelContent>
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1 space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-foreground/10">
-                  <InfoIcon className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-base font-medium mb-1">What are Funding Rates?</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Funding rates are periodic payments exchanged between long and short positions in perpetual contracts.
-                    They help keep the perpetual price aligned with the underlying asset&apos;s spot price.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-foreground/10">
-                  <TrendingUp className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-base font-medium mb-1">Positive Funding Rate</h4>
-                  <p className="text-sm text-muted-foreground">
-                    When funding is positive, long positions pay short positions. This typically occurs when perpetual
-                    prices are trading above the index price, incentivizing more shorts to enter.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-foreground/10">
-                  <TrendingDown className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-base font-medium mb-1">Negative Funding Rate</h4>
-                  <p className="text-sm text-muted-foreground">
-                    When funding is negative, short positions pay long positions. This occurs when perpetual
-                    prices are trading below the index price, incentivizing more longs to enter.
-                  </p>
-                </div>
-              </div>
+          <ArborPanelTitle>Delta-Neutral Strategies</ArborPanelTitle>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                placeholder="Search strategies..."
+                className="pl-9 pr-3 py-2 rounded-md border text-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-            
-            <div className="flex-1 space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-foreground/10">
-                  <ArrowUpRight className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-base font-medium mb-1">Arbitrage Opportunities</h4>
-                  <p className="text-sm text-muted-foreground">
-                    When two DEXes have significantly different funding rates for the same asset, traders can
-                    capture the rate differential by going long on the exchange with negative (or lower) funding
-                    and short on the exchange with positive (or higher) funding.
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-full bg-foreground/10">
-                  <BarChart3 className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="text-base font-medium mb-1">Annualized Rate</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Annualized rate represents the potential annual return from capturing funding rate differentials,
-                    assuming rates remain constant throughout the year. It&apos;s calculated as the funding rate difference
-                    multiplied by the number of funding periods in a year.
-                  </p>
-                </div>
-              </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <span className="text-sm">Risk</span> ({riskFilter === 'All' ? 'All' : riskFilter})
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48">
+                <DropdownMenuLabel>Filter by Risk</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup value={riskFilter} onValueChange={setRiskFilter}>
+                  <DropdownMenuRadioItem value="All">All</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Low">Low</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Medium">Medium</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="High">High</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <span className="text-sm">DEX</span> ({dexFilter === 'All' ? 'All' : dexFilter})
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48">
+                <DropdownMenuLabel>Filter by DEX</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup value={dexFilter} onValueChange={setDexFilter}>
+                  <DropdownMenuRadioItem value="All">All</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Drift">Drift</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Jupiter">Jupiter</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Meteora">Meteora</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Raydium">Raydium</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <span className="text-sm">Type</span> ({strategyTypeFilter === 'All' ? 'All' : strategyTypeFilter})
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48">
+                <DropdownMenuLabel>Filter by Strategy Type</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup value={strategyTypeFilter} onValueChange={setStrategyTypeFilter}>
+                  <DropdownMenuRadioItem value="All">All</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Perp-Spot">Perp-Spot</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="Spot-Spot">Spot-Spot</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu> */}
+            <div className="text-xs text-muted-foreground ml-1">
+              {filteredStrategies.length} of {deltaNeutralStrategies.length} strategies
             </div>
           </div>
+        </ArborPanelHeader>
+        
+        <ArborPanelContent>
+          {isMobile ? (
+            <StrategyCards 
+              filteredStrategies={filteredStrategies} 
+              getStrategyName={getStrategyName} 
+              calculatePositionValueInUSDC={calculatePositionValueInUSDC} 
+            />
+          ) : (
+            <StrategyTable 
+              filteredStrategies={filteredStrategies} 
+              getStrategyName={getStrategyName} 
+              calculatePositionValueInUSDC={calculatePositionValueInUSDC} 
+            />
+          )}
         </ArborPanelContent>
       </ArborPanel>
     </div>
