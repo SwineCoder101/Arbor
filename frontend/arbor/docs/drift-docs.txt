@@ -1,0 +1,3362 @@
+Concepts
+BN / Precision
+The Drift SDK uses BigNum (BN), using this package, to represent numerical values. This is because Solana tokens tend to use levels of precision which are too precise for standard Javascript floating point numbers to handle. All numbers in BN are represented as integers, and we will often denote the precision of the number so that it can be converted back down to a regular number.
+
+Example:
+a BigNum: 10,500,000, with precision 10^6, is equal to 10.5 because 10,500,000 / 10^6 = 10.5.
+The Drift SDK uses some common precisions, which are available as constants to import from the SDK.
+
+Precision Name	Value
+FUNDING_RATE_BUFFER	10^3
+QUOTE_PRECISION	10^6
+PEG_PRECISION	10^6
+PRICE_PRECISION	10^6
+AMM_RESERVE_PRECISION	10^9
+BASE_PRECISION	10^9
+Important Note for BigNum division
+
+Because BN only supports integers, you need to be conscious of the numbers you are using when dividing. BN will return the floor when using the regular division function; if you want to get the exact division, you need to add the modulus of the two numbers as well. There is a helper function convertToNumber in the SDK which will do this for you.
+
+import {convertToNumber} from @drift-labs/sdk
+
+// Gets the floor value
+new BN(10500).div(new BN(1000)).toNumber(); // = 10
+
+// Gets the exact value
+new BN(10500).div(new BN(1000)).toNumber() + BN(10500).mod(new BN(1000)).toNumber(); // = 10.5
+
+// Also gets the exact value
+convertToNumber(new BN(10500), new BN(1000)); // = 10.5
+Examples
+Setting up an account and making a trade
+import * as anchor from '@coral-xyz/anchor';
+import { AnchorProvider } from '@coral-xyz/anchor';
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+
+import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import {
+    calculateReservePrice,
+    DriftClient,
+    User,
+    initialize,
+    PositionDirection,
+    convertToNumber,
+    calculateTradeSlippage,
+    PRICE_PRECISION,
+    QUOTE_PRECISION,
+    Wallet,
+    PerpMarkets,
+    BASE_PRECISION,
+    getMarketOrderParams,
+    BulkAccountLoader,
+    BN,
+    calculateBidAskPrice,
+    getMarketsAndOraclesForSubscription,
+    calculateEstimatedPerpEntryPrice,
+} from '../sdk';
+
+export const getTokenAddress = (
+    mintAddress: string,
+    userPubKey: string
+): Promise<PublicKey> => {
+    return getAssociatedTokenAddress(
+        new PublicKey(mintAddress),
+        new PublicKey(userPubKey)
+    );
+};
+
+const main = async () => {
+    const env = 'devnet';
+    // const env = 'mainnet-beta';
+
+    // Initialize Drift SDK
+    const sdkConfig = initialize({ env });
+
+    // Set up the Wallet and Provider
+    if (!process.env.ANCHOR_WALLET) {
+        throw new Error('ANCHOR_WALLET env var must be set.');
+    }
+
+    if (!process.env.ANCHOR_PROVIDER_URL) {
+        throw new Error('ANCHOR_PROVIDER_URL env var must be set.');
+    }
+
+    const provider = anchor.AnchorProvider.local(
+        process.env.ANCHOR_PROVIDER_URL,
+        {
+            preflightCommitment: 'confirmed',
+            skipPreflight: false,
+            commitment: 'confirmed',
+        }
+    );
+    // Check SOL Balance
+    const lamportsBalance = await provider.connection.getBalance(
+        provider.wallet.publicKey
+    );
+    console.log(
+        provider.wallet.publicKey.toString(),
+        env,
+        'SOL balance:',
+        lamportsBalance / 10 ** 9
+    );
+
+    // Misc. other things to set up
+    const usdcTokenAddress = await getTokenAddress(
+        sdkConfig.USDC_MINT_ADDRESS,
+        provider.wallet.publicKey.toString()
+    );
+
+    // Set up the Drift Client
+    const driftPublicKey = new PublicKey(sdkConfig.DRIFT_PROGRAM_ID);
+    const bulkAccountLoader = new BulkAccountLoader(
+        provider.connection,
+        'confirmed',
+        1000
+    );
+    const driftClient = new DriftClient({
+        connection: provider.connection,
+        wallet: provider.wallet,
+        programID: driftPublicKey,
+        accountSubscription: {
+            type: 'polling',
+            accountLoader: bulkAccountLoader,
+        },
+    });
+    await driftClient.subscribe();
+
+    console.log('subscribed to driftClient');
+
+    // Set up user client
+    const user = new User({
+        driftClient: driftClient,
+        userAccountPublicKey: await driftClient.getUserAccountPublicKey(),
+        accountSubscription: {
+            type: 'polling',
+            accountLoader: bulkAccountLoader,
+        },
+    });
+
+    //// Check if user account exists for the current wallet
+    const userAccountExists = await user.exists();
+
+    if (!userAccountExists) {
+        console.log(
+            'initializing to',
+            env,
+            ' drift account for',
+            provider.wallet.publicKey.toString()
+        );
+
+        //// Create a Drift V2 account by Depositing some USDC ($10,000 in this case)
+        const depositAmount = new BN(10000).mul(QUOTE_PRECISION);
+        await driftClient.initializeUserAccountAndDepositCollateral(
+            depositAmount,
+            await getTokenAddress(
+                usdcTokenAddress.toString(),
+                provider.wallet.publicKey.toString()
+            )
+        );
+    }
+
+    await user.subscribe();
+
+    // Get current price
+    const solMarketInfo = PerpMarkets[env].find(
+        (market) => market.baseAssetSymbol === 'SOL'
+    );
+
+    const marketIndex = solMarketInfo.marketIndex;
+
+    // Get vAMM bid and ask price
+    const [bid, ask] = calculateBidAskPrice(
+        driftClient.getPerpMarketAccount(marketIndex).amm,
+        driftClient.getOracleDataForPerpMarket(marketIndex)
+    );
+
+    const formattedBidPrice = convertToNumber(bid, PRICE_PRECISION);
+    const formattedAskPrice = convertToNumber(ask, PRICE_PRECISION);
+
+    console.log(
+        env,
+        `vAMM bid: $${formattedBidPrice} and ask: $${formattedAskPrice}`
+    );
+
+    const solMarketAccount = driftClient.getPerpMarketAccount(
+        solMarketInfo.marketIndex
+    );
+    console.log(env, `Placing a 1 SOL-PERP LONG order`);
+
+    const txSig = await driftClient.placePerpOrder(
+        getMarketOrderParams({
+            baseAssetAmount: new BN(1).mul(BASE_PRECISION),
+            direction: PositionDirection.LONG,
+            marketIndex: solMarketAccount.marketIndex,
+        })
+    );
+    console.log(
+        env,
+        `Placed a 1 SOL-PERP LONG order. Tranaction signature: ${txSig}`
+    );
+};
+
+main();
+
+-------
+
+Class DriftClient
+DriftClient
+This class is the main way to interact with Drift Protocol. It allows you to subscribe to the various accounts where the Market's state is stored, as well as: opening positions, liquidating, settling funding, depositing & withdrawing, and more.
+
+Hierarchy
+DriftClient
+AdminClient
+Defined in sdk/src/driftClient.ts:180
+Constructors
+constructor
+Properties
+_isSubscribed
+accountSubscriber
+activeSubAccountId
+authority
+authoritySubAccountMap?
+connection
+enableMetricsEvents?
+eventEmitter
+includeDelegates?
+lookupTableAccount
+marketLookupTable
+metricsEventEmitter
+mustIncludePerpMarketIndexes
+mustIncludeSpotMarketIndexes
+opts?
+perpMarketLastSlotCache
+program
+provider
+receiverProgram?
+sbOnDemandProgram?
+sbOnDemandProgramdId
+sbProgramFeedConfigs?
+signerPublicKey?
+skipLoadUsers?
+spotMarketLastSlotCache
+statePublicKey?
+swiftID
+txHandler
+txParams
+txSender
+txVersion
+userAccountSubscriptionConfig
+userStats?
+userStatsAccountPublicKey
+userStatsAccountSubscriptionConfig
+users
+wallet
+wormholeProgram?
+Accessors
+isSubscribed
+Methods
+addAndSubscribeToUsers
+addInsuranceFundStake
+addOpenbookRemainingAccounts
+addPerpLpShares
+addPerpMarketToRemainingAccountMaps
+addPhoenixRemainingAccounts
+addSerumRemainingAccounts
+addSpotFulfillmentAccounts
+addSpotMarketToRemainingAccountMaps
+addTokenMintToRemainingAccounts
+addUser
+buildAndSignTransactionsMap
+buildBulkTransactions
+buildTransaction
+buildTransactionsMap
+cancelAndPlaceOrders
+cancelOrder
+cancelOrderByUserId
+cancelOrders
+cancelOrdersByIds
+cancelRequestRemoveInsuranceFundStake
+closePosition
+convertToPerpPrecision
+convertToPricePrecision
+convertToSpotPrecision
+createAssociatedTokenAccountIdempotentInstruction
+createDepositTxn
+createInitializeUserAccountAndDepositCollateral
+createInitializeUserAccountAndDepositCollateralIxs
+createUser
+decodeSwiftOrderParamsMessage
+decodeSwiftServerMessage
+deleteUser
+deposit
+depositIntoSpotMarketRevenuePool
+emulateAccount
+encodeSwiftOrderParamsMessage
+encodeSwiftServerMessage
+fetchAccounts
+fetchAllUserAccounts
+fetchMarketLookupTableAccount
+fetchReferrerNameAccount
+fillPerpOrder
+fillSpotOrder
+forceCancelOrders
+forceGetPerpMarketAccount
+forceGetSpotMarketAccount
+forceGetStateAccount
+forceGetUserAccount
+getAddInsuranceFundStakeIx
+getAddPerpLpSharesIx
+getAssociatedTokenAccount
+getAssociatedTokenAccountCreationIx
+getCancelOrderByUserIdIx
+getCancelOrderIx
+getCancelOrdersByIdsIx
+getCancelOrdersIx
+getDepositInstruction
+getDepositIntoSpotMarketRevenuePoolIx
+getDepositTxnIx
+getFillPerpOrderIx
+getFillSpotOrderIx
+getForceCancelOrdersIx
+getInitializeInsuranceFundStakeIx
+getInitializeUserInstructions
+getInitializeUserStatsIx
+getJupiterSwapIx
+getJupiterSwapIxV6
+getLiquidateBorrowForPerpPnlIx
+getLiquidatePerpIx
+getLiquidatePerpPnlForDepositIx
+getLiquidatePerpWithFillIx
+getLiquidateSpotIx
+getMarketFees
+getMarketIndexAndType
+getModifyOrderByUserIdIx
+getModifyOrderIx
+getNextSubAccountId
+getOpenbookV2FulfillmentConfig
+getOpenbookV2FulfillmentConfigs
+getOracleDataForPerpMarket
+getOracleDataForSpotMarket
+getOraclePriceDataAndSlot
+getOrder
+getOrderByUserId
+getPerpMarketAccount
+getPerpMarketAccounts
+getPerpMarketExtendedInfo
+getPhoenixV1FulfillmentConfig
+getPhoenixV1FulfillmentConfigs
+getPlaceAndMakePerpOrderIx
+getPlaceAndMakeSpotOrderIx
+getPlaceAndMakeSwiftPerpOrderIxs
+getPlaceAndTakePerpOrderIx
+getPlaceAndTakeSpotOrderIx
+getPlaceOrdersIx
+getPlacePerpOrderIx
+getPlaceSpotOrderIx
+getPlaceSwiftTakerPerpOrderIxs
+getPostPythPullOracleUpdateAtomicIxs
+getPostSwitchboardOnDemandUpdateAtomicIx
+getQuoteAssetTokenAmount
+getQuoteSpotMarketAccount
+getQuoteValuePerLpShare
+getReceiverProgram
+getReclaimRentIx
+getReferredUserStatsAccountsByReferrer
+getReferrerNameAccountsForAuthority
+getRemainingAccountMapsForUsers
+getRemainingAccounts
+getRemovePerpLpSharesInExpiringMarket
+getRemovePerpLpSharesIx
+getResolvePerpBankruptcyIx
+getResolvePerpPnlDeficitIx
+getResolveSpotBankruptcyIx
+getRevertFillIx
+getSerumV3FulfillmentConfig
+getSerumV3FulfillmentConfigs
+getSetUserStatusToBeingLiquidatedIx
+getSettleExpiredMarketIx
+getSettleFundingPaymentIx
+getSettlePNLsIxs
+getSettleRevenueToInsuranceFundIx
+getSignerPublicKey
+getSpotMarketAccount
+getSpotMarketAccounts
+getSpotPosition
+getStakeForMSOLIx
+getStateAccount
+getStatePublicKey
+getSwapIx
+getSwitchboardOnDemandProgram
+getTokenAmount
+getTokenProgramForSpotMarket
+getTransferDepositIx
+getTriggerOrderIx
+getUpdateAMMsIx
+getUpdateAdvancedDlpIx
+getUpdateFundingRateIx
+getUpdatePerpBidAskTwapIx
+getUpdatePrelaunchOracleIx
+getUpdatePythPullOracleIxs
+getUpdateUserCustomMarginRatioIx
+getUpdateUserGovTokenInsuranceStakeIx
+getUpdateUserIdleIx
+getUpdateUserMarginTradingEnabledIx
+getUpdateUserOpenOrdersCountIx
+getUpdateUserQuoteAssetInsuranceStakeIx
+getUpdateUserReduceOnlyIx
+getUser
+getUserAccount
+getUserAccountAndSlot
+getUserAccountPublicKey
+getUserAccountsAndAddressesForAuthority
+getUserAccountsForAuthority
+getUserAccountsForDelegate
+getUserDeletionIx
+getUserMapKey
+getUserStats
+getUserStatsAccountPublicKey
+getUsers
+getWithdrawIx
+getWrappedSolAccountCreationIxs
+hasUser
+initializeInsuranceFundStake
+initializeReferrerName
+initializeUserAccount
+initializeUserAccountAndDepositCollateral
+initializeUserAccountForDevnet
+liquidateBorrowForPerpPnl
+liquidatePerp
+liquidatePerpPnlForDeposit
+liquidatePerpWithFill
+liquidateSpot
+modifyOrder
+modifyOrderByUserOrderId
+modifyPerpOrder
+modifyPerpOrderByUserOrderId
+mustIncludeMarketsInIx
+openPosition
+placeAndMakePerpOrder
+placeAndMakeSpotOrder
+placeAndMakeSwiftPerpOrder
+placeAndTakePerpOrder
+placeAndTakePerpWithAdditionalOrders
+placeAndTakeSpotOrder
+placeOrders
+placePerpOrder
+placeSpotOrder
+placeSwiftTakerOrder
+postMultiPythPullOracleUpdatesAtomic
+postPythPullOracleUpdateAtomic
+postSwitchboardOnDemandUpdate
+prepareMarketOrderTxs
+preparePlaceAndTakePerpOrderWithAdditionalOrders
+preparePlaceAndTakeSpotOrder
+preparePlaceOrdersTx
+preparePlaceSpotOrderTx
+reclaimRent
+removeInsuranceFundStake
+removePerpLpShares
+removePerpLpSharesInExpiringMarket
+requestRemoveInsuranceFundStake
+resolvePerpBankruptcy
+resolvePerpPnlDeficit
+resolveSpotBankruptcy
+sendMarketOrderAndGetSignedFillTx
+sendSignedTx
+sendTransaction
+setUserStatusToBeingLiquidated
+settleExpiredMarket
+settleExpiredMarketPoolsToRevenuePool
+settleFundingPayment
+settleLP
+settleLPIx
+settleMultiplePNLs
+settleMultiplePNLsIx
+settlePNL
+settlePNLIx
+settlePNLs
+settleRevenueToInsuranceFund
+signMessage
+signSwiftOrderParamsMessage
+signSwiftServerMessage
+stakeForMSOL
+subscribe
+subscribeUsers
+swap
+switchActiveUser
+transferDeposit
+triggerEvent
+triggerOrder
+unsubscribe
+unsubscribeUsers
+updateAMMs
+updateFundingRate
+updatePerpBidAskTwap
+updatePrelaunchOracle
+updatePythPullOracle
+updateSpotMarketCumulativeInterest
+updateSpotMarketCumulativeInterestIx
+updateUserAdvancedLp
+updateUserCustomMarginRatio
+updateUserDelegate
+updateUserGovTokenInsuranceStake
+updateUserIdle
+updateUserMarginTradingEnabled
+updateUserName
+updateUserOpenOrdersCount
+updateUserQuoteAssetInsuranceStake
+updateUserReduceOnly
+updateWallet
+withdraw
+withdrawAllDustPositions
+Constructors
+constructor
+new DriftClient(config: DriftClientConfig): DriftClient
+Parameters
+config: DriftClientConfig
+Returns DriftClient
+Defined in sdk/src/driftClient.ts:230
+Properties
+_isSubscribed
+_isSubscribed: boolean = false
+Defined in sdk/src/driftClient.ts:198
+accountSubscriber
+accountSubscriber: DriftClientAccountSubscriber
+Defined in sdk/src/driftClient.ts:192
+activeSubAccountId
+activeSubAccountId: number
+Defined in sdk/src/driftClient.ts:189
+authority
+authority: PublicKey
+Defined in sdk/src/driftClient.ts:204
+Optional
+authoritySubAccountMap
+authoritySubAccountMap?: Map<string, number[]>
+Defined in sdk/src/driftClient.ts:208
+connection
+connection: Connection
+Defined in sdk/src/driftClient.ts:181
+Optional
+enableMetricsEvents
+enableMetricsEvents?: boolean
+Defined in sdk/src/driftClient.ts:212
+eventEmitter
+eventEmitter: StrictEventEmitter<EventEmitter<DefaultEventMap>, DriftClientAccountEvents, DriftClientAccountEvents, "addEventListener" | "removeEventListener", "on" | "addListener" | "removeListener" | "once" | "emit">
+Defined in sdk/src/driftClient.ts:193
+Optional
+includeDelegates
+includeDelegates?: boolean
+Defined in sdk/src/driftClient.ts:207
+lookupTableAccount
+lookupTableAccount: AddressLookupTableAccount
+Defined in sdk/src/driftClient.ts:206
+marketLookupTable
+marketLookupTable: PublicKey
+Defined in sdk/src/driftClient.ts:205
+metricsEventEmitter
+metricsEventEmitter: StrictEventEmitter<EventEmitter<DefaultEventMap>, DriftClientMetricsEvents, DriftClientMetricsEvents, "addEventListener" | "removeEventListener", "on" | "addListener" | "removeListener" | "once" | "emit">
+Defined in sdk/src/driftClient.ts:194
+mustIncludePerpMarketIndexes
+mustIncludePerpMarketIndexes: Set<number> = ...
+Defined in sdk/src/driftClient.ts:202
+mustIncludeSpotMarketIndexes
+mustIncludeSpotMarketIndexes: Set<number> = ...
+Defined in sdk/src/driftClient.ts:203
+Optional
+opts
+opts?: ConfirmOptions
+Defined in sdk/src/driftClient.ts:186
+perpMarketLastSlotCache
+perpMarketLastSlotCache: Map<number, number> = ...
+Defined in sdk/src/driftClient.ts:200
+program
+program: Program<Idl>
+Defined in sdk/src/driftClient.ts:183
+provider
+provider: AnchorProvider
+Defined in sdk/src/driftClient.ts:185
+Optional
+receiverProgram
+receiverProgram?: Program<PythSolanaReceiver>
+Defined in sdk/src/driftClient.ts:216
+Optional
+sbOnDemandProgram
+sbOnDemandProgram?: Program<Idl>
+Defined in sdk/src/driftClient.ts:219
+sbOnDemandProgramdId
+sbOnDemandProgramdId: PublicKey
+Defined in sdk/src/driftClient.ts:218
+Optional
+sbProgramFeedConfigs
+sbProgramFeedConfigs?: Map<string, any>
+Defined in sdk/src/driftClient.ts:220
+Optional
+signerPublicKey
+signerPublicKey?: PublicKey
+Defined in sdk/src/driftClient.ts:477
+Optional
+skipLoadUsers
+skipLoadUsers?: boolean
+Defined in sdk/src/driftClient.ts:209
+spotMarketLastSlotCache
+spotMarketLastSlotCache: Map<number, number> = ...
+Defined in sdk/src/driftClient.ts:201
+Optional
+statePublicKey
+statePublicKey?: PublicKey
+Defined in sdk/src/driftClient.ts:466
+swiftID
+swiftID: PublicKey
+Defined in sdk/src/driftClient.ts:184
+txHandler
+txHandler: TxHandler
+Defined in sdk/src/driftClient.ts:214
+txParams
+txParams: TxParams
+Defined in sdk/src/driftClient.ts:211
+txSender
+txSender: TxSender
+Defined in sdk/src/driftClient.ts:199
+txVersion
+txVersion: TransactionVersion
+Defined in sdk/src/driftClient.ts:210
+userAccountSubscriptionConfig
+userAccountSubscriptionConfig: UserSubscriptionConfig
+Defined in sdk/src/driftClient.ts:190
+Optional
+userStats
+userStats?: UserStats
+Defined in sdk/src/driftClient.ts:188
+userStatsAccountPublicKey
+userStatsAccountPublicKey: PublicKey
+Defined in sdk/src/driftClient.ts:1509
+userStatsAccountSubscriptionConfig
+userStatsAccountSubscriptionConfig: UserStatsSubscriptionConfig
+Defined in sdk/src/driftClient.ts:191
+users
+users: Map<string, User> = ...
+Defined in sdk/src/driftClient.ts:187
+wallet
+wallet: IWallet
+Defined in sdk/src/driftClient.ts:182
+Optional
+wormholeProgram
+wormholeProgram?: Program<WormholeCoreBridgeSolana>
+Defined in sdk/src/driftClient.ts:217
+Accessors
+isSubscribed
+get isSubscribed(): boolean
+Returns boolean
+Defined in sdk/src/driftClient.ts:222
+set isSubscribed(val: boolean): void
+Parameters
+val: boolean
+Returns void
+Defined in sdk/src/driftClient.ts:226
+Methods
+addAndSubscribeToUsers
+addAndSubscribeToUsers(authority?: PublicKey): Promise<boolean>
+Adds and subscribes to users based on params set by the constructor or by updateWallet.
+
+Parameters
+Optional authority: PublicKey
+Returns Promise<boolean>
+Defined in sdk/src/driftClient.ts:843
+addInsuranceFundStake
+addInsuranceFundStake(__namedParameters: {
+    amount: BN;
+    collateralAccountPublicKey: PublicKey;
+    fromSubaccount?: boolean;
+    initializeStakeAccount?: boolean;
+    marketIndex: number;
+    txParams?: TxParams;
+}): Promise<string>
+Add to an insurance fund stake and optionally initialize the account
+
+Parameters
+__namedParameters: {
+    amount: BN;
+    collateralAccountPublicKey: PublicKey;
+    fromSubaccount?: boolean;
+    initializeStakeAccount?: boolean;
+    marketIndex: number;
+    txParams?: TxParams;
+}
+amount: BN
+collateralAccountPublicKey: PublicKey
+The account where the funds to stake come from. Usually an associated token account
+
+Optional fromSubaccount?: boolean
+Optional -- withdraw from current subaccount to fund stake amount, instead of wallet balance
+
+Optional initializeStakeAccount?: boolean
+Add instructions to initialize the staking account -- required if its the first time the currrent authority has staked in this market
+
+marketIndex: number
+Spot market index
+
+Optional txParams?: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7139
+addOpenbookRemainingAccounts
+addOpenbookRemainingAccounts(marketIndex: number, remainingAccounts: AccountMeta[], fulfillmentConfig: OpenbookV2FulfillmentConfigAccount): void
+Parameters
+marketIndex: number
+remainingAccounts: AccountMeta[]
+fulfillmentConfig: OpenbookV2FulfillmentConfigAccount
+Returns void
+Defined in sdk/src/driftClient.ts:4130
+addPerpLpShares
+addPerpLpShares(amount: BN, marketIndex: number, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+amount: BN
+marketIndex: number
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:2929
+addPerpMarketToRemainingAccountMaps
+addPerpMarketToRemainingAccountMaps(marketIndex: number, writable: boolean, oracleAccountMap: Map<string, AccountMeta>, spotMarketAccountMap: Map<number, AccountMeta>, perpMarketAccountMap: Map<number, AccountMeta>): void
+Parameters
+marketIndex: number
+writable: boolean
+oracleAccountMap: Map<string, AccountMeta>
+spotMarketAccountMap: Map<number, AccountMeta>
+perpMarketAccountMap: Map<number, AccountMeta>
+Returns void
+Defined in sdk/src/driftClient.ts:1766
+addPhoenixRemainingAccounts
+addPhoenixRemainingAccounts(marketIndex: number, remainingAccounts: AccountMeta[], fulfillmentConfig: PhoenixV1FulfillmentConfigAccount): void
+Parameters
+marketIndex: number
+remainingAccounts: AccountMeta[]
+fulfillmentConfig: PhoenixV1FulfillmentConfigAccount
+Returns void
+Defined in sdk/src/driftClient.ts:4073
+addSerumRemainingAccounts
+addSerumRemainingAccounts(marketIndex: number, remainingAccounts: AccountMeta[], fulfillmentConfig: SerumV3FulfillmentConfigAccount): void
+Parameters
+marketIndex: number
+remainingAccounts: AccountMeta[]
+fulfillmentConfig: SerumV3FulfillmentConfigAccount
+Returns void
+Defined in sdk/src/driftClient.ts:3982
+addSpotFulfillmentAccounts
+addSpotFulfillmentAccounts(marketIndex: number, remainingAccounts: AccountMeta[], fulfillmentConfig?: SerumV3FulfillmentConfigAccount | PhoenixV1FulfillmentConfigAccount | OpenbookV2FulfillmentConfigAccount): void
+Parameters
+marketIndex: number
+remainingAccounts: AccountMeta[]
+Optional fulfillmentConfig: SerumV3FulfillmentConfigAccount | PhoenixV1FulfillmentConfigAccount | OpenbookV2FulfillmentConfigAccount
+Returns void
+Defined in sdk/src/driftClient.ts:3938
+addSpotMarketToRemainingAccountMaps
+addSpotMarketToRemainingAccountMaps(marketIndex: number, writable: boolean, oracleAccountMap: Map<string, AccountMeta>, spotMarketAccountMap: Map<number, AccountMeta>): void
+Parameters
+marketIndex: number
+writable: boolean
+oracleAccountMap: Map<string, AccountMeta>
+spotMarketAccountMap: Map<number, AccountMeta>
+Returns void
+Defined in sdk/src/driftClient.ts:1794
+addTokenMintToRemainingAccounts
+addTokenMintToRemainingAccounts(spotMarketAccount: SpotMarketAccount, remainingAccounts: AccountMeta[]): void
+Parameters
+spotMarketAccount: SpotMarketAccount
+remainingAccounts: AccountMeta[]
+Returns void
+Defined in sdk/src/driftClient.ts:2167
+addUser
+addUser(subAccountId: number, authority?: PublicKey, userAccount?: UserAccount): Promise<boolean>
+Parameters
+subAccountId: number
+Optional authority: PublicKey
+Optional userAccount: UserAccount
+Returns Promise<boolean>
+Defined in sdk/src/driftClient.ts:812
+buildAndSignTransactionsMap
+buildAndSignTransactionsMap(instructionsMap: Record<string, TransactionInstruction | TransactionInstruction[]>, txParams?: TxParams, txVersion?: TransactionVersion, lookupTables?: AddressLookupTableAccount[], forceVersionedTransaction?: boolean): Promise<{
+    signedTxData: SignedTxData[];
+    signedTxMap: Record<string, Transaction>;
+} | {
+    signedTxData: SignedTxData[];
+    signedTxMap: MappedRecord<Record<string, TransactionInstruction | TransactionInstruction[]>, Transaction | VersionedTransaction>;
+}>
+Parameters
+instructionsMap: Record<string, TransactionInstruction | TransactionInstruction[]>
+Optional txParams: TxParams
+Optional txVersion: TransactionVersion
+Optional lookupTables: AddressLookupTableAccount[]
+Optional forceVersionedTransaction: boolean
+Returns Promise<{
+    signedTxData: SignedTxData[];
+    signedTxMap: Record<string, Transaction>;
+} | {
+    signedTxData: SignedTxData[];
+    signedTxMap: MappedRecord<Record<string, TransactionInstruction | TransactionInstruction[]>, Transaction | VersionedTransaction>;
+}>
+Defined in sdk/src/driftClient.ts:8160
+buildBulkTransactions
+buildBulkTransactions(instructions: (TransactionInstruction | TransactionInstruction[])[], txParams?: TxParams, txVersion?: TransactionVersion, lookupTables?: AddressLookupTableAccount[], forceVersionedTransaction?: boolean): Promise<(Transaction | VersionedTransaction)[]>
+Parameters
+instructions: (TransactionInstruction | TransactionInstruction[])[]
+Optional txParams: TxParams
+Optional txVersion: TransactionVersion
+Optional lookupTables: AddressLookupTableAccount[]
+Optional forceVersionedTransaction: boolean
+Returns Promise<(Transaction | VersionedTransaction)[]>
+Defined in sdk/src/driftClient.ts:8117
+buildTransaction
+buildTransaction(instructions: TransactionInstruction | TransactionInstruction[], txParams?: TxParams, txVersion?: TransactionVersion, lookupTables?: AddressLookupTableAccount[], forceVersionedTransaction?: boolean, recentBlockhash?: Readonly<{
+    blockhash: string;
+    lastValidBlockHeight: number;
+}>): Promise<Transaction | VersionedTransaction>
+Parameters
+instructions: TransactionInstruction | TransactionInstruction[]
+Optional txParams: TxParams
+Optional txVersion: TransactionVersion
+Optional lookupTables: AddressLookupTableAccount[]
+Optional forceVersionedTransaction: boolean
+Optional recentBlockhash: Readonly<{
+    blockhash: string;
+    lastValidBlockHeight: number;
+}>
+Returns Promise<Transaction | VersionedTransaction>
+Defined in sdk/src/driftClient.ts:8095
+buildTransactionsMap
+buildTransactionsMap(instructionsMap: Record<string, TransactionInstruction | TransactionInstruction[]>, txParams?: TxParams, txVersion?: TransactionVersion, lookupTables?: AddressLookupTableAccount[], forceVersionedTransaction?: boolean): Promise<MappedRecord<Record<string, TransactionInstruction | TransactionInstruction[]>, Transaction | VersionedTransaction>>
+Parameters
+instructionsMap: Record<string, TransactionInstruction | TransactionInstruction[]>
+Optional txParams: TxParams
+Optional txVersion: TransactionVersion
+Optional lookupTables: AddressLookupTableAccount[]
+Optional forceVersionedTransaction: boolean
+Returns Promise<MappedRecord<Record<string, TransactionInstruction | TransactionInstruction[]>, Transaction | VersionedTransaction>>
+Defined in sdk/src/driftClient.ts:8137
+cancelAndPlaceOrders
+cancelAndPlaceOrders(cancelOrderParams: {
+    direction?: PositionDirection;
+    marketIndex?: number;
+    marketType?: MarketType;
+}, placeOrderParams: OrderParams[], txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+cancelOrderParams: {
+    direction?: PositionDirection;
+    marketIndex?: number;
+    marketType?: MarketType;
+}
+Optional direction?: PositionDirection
+Optional marketIndex?: number
+Optional marketType?: MarketType
+placeOrderParams: OrderParams[]
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3549
+cancelOrder
+cancelOrder(orderId?: number, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+Optional orderId: number
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3370
+cancelOrderByUserId
+cancelOrderByUserId(userOrderId: number, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+userOrderId: number
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3407
+cancelOrders
+cancelOrders(marketType?: MarketType, marketIndex?: number, direction?: PositionDirection, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+Optional marketType: MarketType
+Optional marketIndex: number
+Optional direction: PositionDirection
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3485
+cancelOrdersByIds
+cancelOrdersByIds(orderIds?: number[], txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+Optional orderIds: number[]
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3448
+cancelRequestRemoveInsuranceFundStake
+cancelRequestRemoveInsuranceFundStake(marketIndex: number, txParams?: TxParams): Promise<string>
+Parameters
+marketIndex: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7274
+closePosition
+closePosition(marketIndex: number, limitPrice?: BN, subAccountId?: number): Promise<string>
+Deprecated
+use placePerpOrder or placeAndTakePerpOrder instead
+
+Parameters
+marketIndex: number
+Optional limitPrice: BN
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:5856
+convertToPerpPrecision
+convertToPerpPrecision(amount: number | BN): BN
+Converts an amount to the perp precision. The perp market precision is BASE_PRECISION (1e9).
+
+Parameters
+amount: number | BN
+Returns BN
+Defined in sdk/src/driftClient.ts:1601
+convertToPricePrecision
+convertToPricePrecision(amount: number | BN): BN
+Converts an amount to the price precision. The perp market precision is PRICE_PRECISION (1e6).
+
+Parameters
+amount: number | BN
+Returns BN
+Defined in sdk/src/driftClient.ts:1613
+convertToSpotPrecision
+convertToSpotPrecision(marketIndex: number, amount: number | BN): BN
+Converts an amount to the spot precision for a given market. The spot market precision is based on the token mint decimals.
+
+Parameters
+marketIndex: number
+amount: number | BN
+Returns BN
+Defined in sdk/src/driftClient.ts:1592
+createAssociatedTokenAccountIdempotentInstruction
+createAssociatedTokenAccountIdempotentInstruction(account: PublicKey, payer: PublicKey, owner: PublicKey, mint: PublicKey, tokenProgram?: PublicKey): TransactionInstruction
+Parameters
+account: PublicKey
+payer: PublicKey
+owner: PublicKey
+mint: PublicKey
+tokenProgram: PublicKey = TOKEN_PROGRAM_ID
+Returns TransactionInstruction
+Defined in sdk/src/driftClient.ts:1906
+createDepositTxn
+createDepositTxn(amount: BN, marketIndex: number, associatedTokenAccount: PublicKey, subAccountId?: number, reduceOnly?: boolean, txParams?: TxParams): Promise<Transaction | VersionedTransaction>
+Parameters
+amount: BN
+marketIndex: number
+associatedTokenAccount: PublicKey
+Optional subAccountId: number
+reduceOnly: boolean = false
+Optional txParams: TxParams
+Returns Promise<Transaction | VersionedTransaction>
+Defined in sdk/src/driftClient.ts:1986
+createInitializeUserAccountAndDepositCollateral
+createInitializeUserAccountAndDepositCollateral(amount: BN, userTokenAccount: PublicKey, marketIndex?: number, subAccountId?: number, name?: string, fromSubAccountId?: number, referrerInfo?: ReferrerInfo, donateAmount?: BN, txParams?: TxParams, customMaxMarginRatio?: number): Promise<[Transaction | VersionedTransaction, PublicKey]>
+Parameters
+amount: BN
+userTokenAccount: PublicKey
+marketIndex: number = 0
+subAccountId: number = 0
+Optional name: string
+Optional fromSubAccountId: number
+Optional referrerInfo: ReferrerInfo
+Optional donateAmount: BN
+Optional txParams: TxParams
+Optional customMaxMarginRatio: number
+Returns Promise<[Transaction | VersionedTransaction, PublicKey]>
+Defined in sdk/src/driftClient.ts:2314
+createInitializeUserAccountAndDepositCollateralIxs
+createInitializeUserAccountAndDepositCollateralIxs(amount: BN, userTokenAccount: PublicKey, marketIndex?: number, subAccountId?: number, name?: string, fromSubAccountId?: number, referrerInfo?: ReferrerInfo, donateAmount?: BN, customMaxMarginRatio?: number): Promise<{
+    ixs: TransactionInstruction[];
+    userAccountPublicKey: PublicKey;
+}>
+Parameters
+amount: BN
+userTokenAccount: PublicKey
+marketIndex: number = 0
+subAccountId: number = 0
+Optional name: string
+Optional fromSubAccountId: number
+Optional referrerInfo: ReferrerInfo
+Optional donateAmount: BN
+Optional customMaxMarginRatio: number
+Returns Promise<{
+    ixs: TransactionInstruction[];
+    userAccountPublicKey: PublicKey;
+}>
+Defined in sdk/src/driftClient.ts:2194
+createUser
+createUser(subAccountId: number, accountSubscriptionConfig: UserSubscriptionConfig, authority?: PublicKey): User
+Parameters
+subAccountId: number
+accountSubscriptionConfig: UserSubscriptionConfig
+Optional authority: PublicKey
+Returns User
+Defined in sdk/src/driftClient.ts:399
+decodeSwiftOrderParamsMessage
+decodeSwiftOrderParamsMessage(encodedMessage: Buffer): SwiftOrderParamsMessage
+Parameters
+encodedMessage: Buffer
+Returns SwiftOrderParamsMessage
+Defined in sdk/src/driftClient.ts:5423
+decodeSwiftServerMessage
+decodeSwiftServerMessage(encodedMessage: Buffer): SwiftServerMessage
+Parameters
+encodedMessage: Buffer
+Returns SwiftServerMessage
+Defined in sdk/src/driftClient.ts:5385
+deleteUser
+deleteUser(subAccountId?: number, txParams?: TxParams): Promise<string>
+Parameters
+subAccountId: number = 0
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:1388
+deposit
+deposit(amount: BN, marketIndex: number, associatedTokenAccount: PublicKey, subAccountId?: number, reduceOnly?: boolean, txParams?: TxParams): Promise<string>
+Deposit funds into the given spot market
+
+Parameters
+amount: BN
+to deposit
+
+marketIndex: number
+spot market index to deposit into
+
+associatedTokenAccount: PublicKey
+can be the wallet public key if using native sol
+
+Optional subAccountId: number
+subaccountId to deposit
+
+reduceOnly: boolean = false
+if true, deposit must not increase account risk
+
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:2018
+depositIntoSpotMarketRevenuePool
+depositIntoSpotMarketRevenuePool(marketIndex: number, amount: BN, userTokenAccountPublicKey: PublicKey): Promise<string>
+Parameters
+marketIndex: number
+amount: BN
+userTokenAccountPublicKey: PublicKey
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7583
+emulateAccount
+emulateAccount(emulateAuthority: PublicKey): Promise<boolean>
+Update the subscribed accounts to a given authority, while leaving the connected wallet intact. This allows a user to emulate another user's account on the UI and sign permissionless transactions with their own wallet.
+
+Parameters
+emulateAuthority: PublicKey
+Returns Promise<boolean>
+Defined in sdk/src/driftClient.ts:747
+encodeSwiftOrderParamsMessage
+encodeSwiftOrderParamsMessage(orderParamsMessage: SwiftOrderParamsMessage): Buffer
+Parameters
+orderParamsMessage: SwiftOrderParamsMessage
+Returns Buffer
+Defined in sdk/src/driftClient.ts:5414
+encodeSwiftServerMessage
+encodeSwiftServerMessage(message: SwiftServerMessage): Buffer
+Parameters
+message: SwiftServerMessage
+Returns Buffer
+Defined in sdk/src/driftClient.ts:5374
+fetchAccounts
+fetchAccounts(): Promise<void>
+Forces the accountSubscriber to fetch account updates from rpc
+
+Returns Promise<void>
+Defined in sdk/src/driftClient.ts:439
+fetchAllUserAccounts
+fetchAllUserAccounts(includeIdle?: boolean): Promise<ProgramAccount<UserAccount>[]>
+Parameters
+includeIdle: boolean = true
+Returns Promise<ProgramAccount<UserAccount>[]>
+Defined in sdk/src/driftClient.ts:1286
+fetchMarketLookupTableAccount
+fetchMarketLookupTableAccount(): Promise<AddressLookupTableAccount>
+Returns Promise<AddressLookupTableAccount>
+Defined in sdk/src/driftClient.ts:633
+fetchReferrerNameAccount
+fetchReferrerNameAccount(name: string): Promise<ReferrerNameAccount>
+Parameters
+name: string
+Returns Promise<ReferrerNameAccount>
+Defined in sdk/src/driftClient.ts:1496
+fillPerpOrder
+fillPerpOrder(userAccountPublicKey: PublicKey, user: UserAccount, order?: Pick<Order, "marketIndex" | "orderId">, makerInfo?: MakerInfo | MakerInfo[], referrerInfo?: ReferrerInfo, txParams?: TxParams, fillerPublicKey?: number): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+user: UserAccount
+Optional order: Pick<Order, "marketIndex" | "orderId">
+Optional makerInfo: MakerInfo | MakerInfo[]
+Optional referrerInfo: ReferrerInfo
+Optional txParams: TxParams
+Optional fillerPublicKey: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3642
+fillSpotOrder
+fillSpotOrder(userAccountPublicKey: PublicKey, user: UserAccount, order?: Order, fulfillmentConfig?: SerumV3FulfillmentConfigAccount | PhoenixV1FulfillmentConfigAccount | OpenbookV2FulfillmentConfigAccount, makerInfo?: MakerInfo | MakerInfo[], referrerInfo?: ReferrerInfo, txParams?: TxParams): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+user: UserAccount
+Optional order: Order
+Optional fulfillmentConfig: SerumV3FulfillmentConfigAccount | PhoenixV1FulfillmentConfigAccount | OpenbookV2FulfillmentConfigAccount
+Optional makerInfo: MakerInfo | MakerInfo[]
+Optional referrerInfo: ReferrerInfo
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3828
+forceCancelOrders
+forceCancelOrders(userAccountPublicKey: PublicKey, user: UserAccount, txParams?: TxParams, fillerPublicKey?: PublicKey): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+user: UserAccount
+Optional txParams: TxParams
+Optional fillerPublicKey: PublicKey
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:4845
+forceGetPerpMarketAccount
+forceGetPerpMarketAccount(marketIndex: number): Promise<PerpMarketAccount>
+Forces a fetch to rpc before returning accounts. Useful for anchor tests.
+
+Parameters
+marketIndex: number
+Returns Promise<PerpMarketAccount>
+Defined in sdk/src/driftClient.ts:508
+forceGetSpotMarketAccount
+forceGetSpotMarketAccount(marketIndex: number): Promise<SpotMarketAccount>
+Forces a fetch to rpc before returning accounts. Useful for anchor tests.
+
+Parameters
+marketIndex: number
+Returns Promise<SpotMarketAccount>
+Defined in sdk/src/driftClient.ts:540
+forceGetStateAccount
+forceGetStateAccount(): Promise<StateAccount>
+Forces a fetch to rpc before returning accounts. Useful for anchor tests.
+
+Returns Promise<StateAccount>
+Defined in sdk/src/driftClient.ts:493
+forceGetUserAccount
+forceGetUserAccount(subAccountId?: number): Promise<UserAccount>
+Forces a fetch to rpc before returning accounts. Useful for anchor tests.
+
+Parameters
+Optional subAccountId: number
+Returns Promise<UserAccount>
+Defined in sdk/src/driftClient.ts:1540
+getAddInsuranceFundStakeIx
+getAddInsuranceFundStakeIx(marketIndex: number, amount: BN, collateralAccountPublicKey: PublicKey): Promise<TransactionInstruction>
+Parameters
+marketIndex: number
+amount: BN
+collateralAccountPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:7098
+getAddPerpLpSharesIx
+getAddPerpLpSharesIx(amount: BN, marketIndex: number, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+amount: BN
+marketIndex: number
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:2947
+getAssociatedTokenAccount
+getAssociatedTokenAccount(marketIndex: number, useNative?: boolean, tokenProgram?: PublicKey): Promise<PublicKey>
+Get the associated token address for the given spot market
+
+Parameters
+marketIndex: number
+useNative: boolean = true
+tokenProgram: PublicKey = TOKEN_PROGRAM_ID
+Returns Promise<PublicKey>
+Defined in sdk/src/driftClient.ts:1888
+getAssociatedTokenAccountCreationIx
+getAssociatedTokenAccountCreationIx(tokenMintAddress: PublicKey, associatedTokenAddress: PublicKey, tokenProgram: PublicKey): TransactionInstruction
+Parameters
+tokenMintAddress: PublicKey
+associatedTokenAddress: PublicKey
+tokenProgram: PublicKey
+Returns TransactionInstruction
+Defined in sdk/src/driftClient.ts:2180
+getCancelOrderByUserIdIx
+getCancelOrderByUserIdIx(userOrderId: number, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+userOrderId: number
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3423
+getCancelOrderIx
+getCancelOrderIx(orderId?: number, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+Optional orderId: number
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3386
+getCancelOrdersByIdsIx
+getCancelOrdersByIdsIx(orderIds?: number[], subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+Optional orderIds: number[]
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3464
+getCancelOrdersIx
+getCancelOrdersIx(marketType: MarketType, marketIndex: number, direction: PositionDirection, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+marketType: MarketType
+marketIndex: number
+direction: PositionDirection
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3508
+getDepositInstruction
+getDepositInstruction(amount: BN, marketIndex: number, userTokenAccount: PublicKey, subAccountId?: number, reduceOnly?: boolean, userInitialized?: boolean): Promise<TransactionInstruction>
+Parameters
+amount: BN
+marketIndex: number
+userTokenAccount: PublicKey
+Optional subAccountId: number
+reduceOnly: boolean = false
+userInitialized: boolean = true
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:2040
+getDepositIntoSpotMarketRevenuePoolIx
+getDepositIntoSpotMarketRevenuePoolIx(marketIndex: number, amount: BN, userTokenAccountPublicKey: PublicKey): Promise<TransactionInstruction>
+Parameters
+marketIndex: number
+amount: BN
+userTokenAccountPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:7556
+getDepositTxnIx
+getDepositTxnIx(amount: BN, marketIndex: number, associatedTokenAccount: PublicKey, subAccountId?: number, reduceOnly?: boolean): Promise<TransactionInstruction[]>
+Parameters
+amount: BN
+marketIndex: number
+associatedTokenAccount: PublicKey
+Optional subAccountId: number
+reduceOnly: boolean = false
+Returns Promise<TransactionInstruction[]>
+Defined in sdk/src/driftClient.ts:1931
+getFillPerpOrderIx
+getFillPerpOrderIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, order: Pick<Order, "marketIndex" | "orderId">, makerInfo?: MakerInfo | MakerInfo[], referrerInfo?: ReferrerInfo, fillerSubAccountId?: number): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+order: Pick<Order, "marketIndex" | "orderId">
+Optional makerInfo: MakerInfo | MakerInfo[]
+Optional referrerInfo: ReferrerInfo
+Optional fillerSubAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3669
+getFillSpotOrderIx
+getFillSpotOrderIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, order?: Order, fulfillmentConfig?: SerumV3FulfillmentConfigAccount | PhoenixV1FulfillmentConfigAccount | OpenbookV2FulfillmentConfigAccount, makerInfo?: MakerInfo | MakerInfo[], referrerInfo?: ReferrerInfo, fillerPublicKey?: PublicKey): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+Optional order: Order
+Optional fulfillmentConfig: SerumV3FulfillmentConfigAccount | PhoenixV1FulfillmentConfigAccount | OpenbookV2FulfillmentConfigAccount
+Optional makerInfo: MakerInfo | MakerInfo[]
+Optional referrerInfo: ReferrerInfo
+Optional fillerPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3858
+getForceCancelOrdersIx
+getForceCancelOrdersIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, fillerPublicKey?: PublicKey): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+Optional fillerPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:4866
+getInitializeInsuranceFundStakeIx
+getInitializeInsuranceFundStakeIx(marketIndex: number): Promise<TransactionInstruction>
+Parameters
+marketIndex: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:7072
+getInitializeUserInstructions
+getInitializeUserInstructions(subAccountId?: number, name?: string, referrerInfo?: ReferrerInfo): Promise<[PublicKey, TransactionInstruction]>
+Parameters
+subAccountId: number = 0
+Optional name: string
+Optional referrerInfo: ReferrerInfo
+Returns Promise<[PublicKey, TransactionInstruction]>
+Defined in sdk/src/driftClient.ts:941
+getInitializeUserStatsIx
+getInitializeUserStatsIx(): Promise<TransactionInstruction>
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:1005
+getJupiterSwapIx
+getJupiterSwapIx(__namedParameters: {
+    amount: BN;
+    inAssociatedTokenAccount?: PublicKey;
+    inMarketIndex: number;
+    jupiterClient: JupiterClient;
+    onlyDirectRoutes?: boolean;
+    outAssociatedTokenAccount?: PublicKey;
+    outMarketIndex: number;
+    reduceOnly?: SwapReduceOnly;
+    route?: Route;
+    slippageBps?: number;
+    swapMode?: SwapMode;
+    userAccountPublicKey?: PublicKey;
+}): Promise<{
+    ixs: TransactionInstruction[];
+    lookupTables: AddressLookupTableAccount[];
+}>
+Parameters
+__namedParameters: {
+    amount: BN;
+    inAssociatedTokenAccount?: PublicKey;
+    inMarketIndex: number;
+    jupiterClient: JupiterClient;
+    onlyDirectRoutes?: boolean;
+    outAssociatedTokenAccount?: PublicKey;
+    outMarketIndex: number;
+    reduceOnly?: SwapReduceOnly;
+    route?: Route;
+    slippageBps?: number;
+    swapMode?: SwapMode;
+    userAccountPublicKey?: PublicKey;
+}
+amount: BN
+Optional inAssociatedTokenAccount?: PublicKey
+inMarketIndex: number
+jupiterClient: JupiterClient
+Optional onlyDirectRoutes?: boolean
+Optional outAssociatedTokenAccount?: PublicKey
+outMarketIndex: number
+Optional reduceOnly?: SwapReduceOnly
+Optional route?: Route
+Optional slippageBps?: number
+Optional swapMode?: SwapMode
+Optional userAccountPublicKey?: PublicKey
+Returns Promise<{
+    ixs: TransactionInstruction[];
+    lookupTables: AddressLookupTableAccount[];
+}>
+Defined in sdk/src/driftClient.ts:4322
+getJupiterSwapIxV6
+getJupiterSwapIxV6(__namedParameters: {
+    amount: BN;
+    inAssociatedTokenAccount?: PublicKey;
+    inMarketIndex: number;
+    jupiterClient: JupiterClient;
+    onlyDirectRoutes?: boolean;
+    outAssociatedTokenAccount?: PublicKey;
+    outMarketIndex: number;
+    quote?: QuoteResponse;
+    reduceOnly?: SwapReduceOnly;
+    slippageBps?: number;
+    swapMode?: SwapMode;
+    userAccountPublicKey?: PublicKey;
+}): Promise<{
+    ixs: TransactionInstruction[];
+    lookupTables: AddressLookupTableAccount[];
+}>
+Parameters
+__namedParameters: {
+    amount: BN;
+    inAssociatedTokenAccount?: PublicKey;
+    inMarketIndex: number;
+    jupiterClient: JupiterClient;
+    onlyDirectRoutes?: boolean;
+    outAssociatedTokenAccount?: PublicKey;
+    outMarketIndex: number;
+    quote?: QuoteResponse;
+    reduceOnly?: SwapReduceOnly;
+    slippageBps?: number;
+    swapMode?: SwapMode;
+    userAccountPublicKey?: PublicKey;
+}
+amount: BN
+Optional inAssociatedTokenAccount?: PublicKey
+inMarketIndex: number
+jupiterClient: JupiterClient
+Optional onlyDirectRoutes?: boolean
+Optional outAssociatedTokenAccount?: PublicKey
+outMarketIndex: number
+Optional quote?: QuoteResponse
+Optional reduceOnly?: SwapReduceOnly
+Optional slippageBps?: number
+Optional swapMode?: SwapMode
+Optional userAccountPublicKey?: PublicKey
+Returns Promise<{
+    ixs: TransactionInstruction[];
+    lookupTables: AddressLookupTableAccount[];
+}>
+Defined in sdk/src/driftClient.ts:4458
+getLiquidateBorrowForPerpPnlIx
+getLiquidateBorrowForPerpPnlIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, perpMarketIndex: number, liabilityMarketIndex: number, maxLiabilityTransfer: BN, limitPrice?: BN, liquidatorSubAccountId?: number): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+perpMarketIndex: number
+liabilityMarketIndex: number
+maxLiabilityTransfer: BN
+Optional limitPrice: BN
+Optional liquidatorSubAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6632
+getLiquidatePerpIx
+getLiquidatePerpIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, marketIndex: number, maxBaseAssetAmount: BN, limitPrice?: BN, liquidatorSubAccountId?: number): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+marketIndex: number
+maxBaseAssetAmount: BN
+Optional limitPrice: BN
+Optional liquidatorSubAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6409
+getLiquidatePerpPnlForDepositIx
+getLiquidatePerpPnlForDepositIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, perpMarketIndex: number, assetMarketIndex: number, maxPnlTransfer: BN, limitPrice?: BN, liquidatorSubAccountId?: number): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+perpMarketIndex: number
+assetMarketIndex: number
+maxPnlTransfer: BN
+Optional limitPrice: BN
+Optional liquidatorSubAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6707
+getLiquidatePerpWithFillIx
+getLiquidatePerpWithFillIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, marketIndex: number, makerInfos: MakerInfo[], liquidatorSubAccountId?: number): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+marketIndex: number
+makerInfos: MakerInfo[]
+Optional liquidatorSubAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6477
+getLiquidateSpotIx
+getLiquidateSpotIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, assetMarketIndex: number, liabilityMarketIndex: number, maxLiabilityTransfer: BN, limitPrice?: BN, liquidatorSubAccountId?: number): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+assetMarketIndex: number
+liabilityMarketIndex: number
+maxLiabilityTransfer: BN
+Optional limitPrice: BN
+Optional liquidatorSubAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6557
+getMarketFees
+getMarketFees(marketType: MarketType, marketIndex?: number, user?: User): {
+    makerFee: number;
+    takerFee: number;
+}
+Calculates taker / maker fee (as a percentage, e.g. .001 = 10 basis points) for particular marketType
+
+Returns
+: {takerFee: number, makerFee: number} Precision None
+
+Parameters
+marketType: MarketType
+Optional marketIndex: number
+Optional user: User
+Returns {
+    makerFee: number;
+    takerFee: number;
+}
+makerFee: number
+takerFee: number
+Defined in sdk/src/driftClient.ts:7630
+getMarketIndexAndType
+getMarketIndexAndType(name: string): {
+    marketIndex: number;
+    marketType: MarketType;
+}
+Returns the market index and type for a given market name E.g. "SOL-PERP" -> { marketIndex: 0, marketType: MarketType.PERP }
+
+Parameters
+name: string
+Returns {
+    marketIndex: number;
+    marketType: MarketType;
+}
+marketIndex: number
+marketType: MarketType
+Defined in sdk/src/driftClient.ts:7672
+getModifyOrderByUserIdIx
+getModifyOrderByUserIdIx(__namedParameters: {
+    auctionDuration?: number;
+    auctionEndPrice?: BN;
+    auctionStartPrice?: BN;
+    immediateOrCancel?: boolean;
+    maxTs?: BN;
+    newBaseAmount?: BN;
+    newDirection?: PositionDirection;
+    newLimitPrice?: BN;
+    newOraclePriceOffset?: number;
+    newTriggerCondition?: OrderTriggerCondition;
+    newTriggerPrice?: BN;
+    policy?: ModifyOrderPolicy;
+    postOnly?: boolean;
+    reduceOnly?: boolean;
+    txParams?: TxParams;
+    userOrderId: number;
+}, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+__namedParameters: {
+    auctionDuration?: number;
+    auctionEndPrice?: BN;
+    auctionStartPrice?: BN;
+    immediateOrCancel?: boolean;
+    maxTs?: BN;
+    newBaseAmount?: BN;
+    newDirection?: PositionDirection;
+    newLimitPrice?: BN;
+    newOraclePriceOffset?: number;
+    newTriggerCondition?: OrderTriggerCondition;
+    newTriggerPrice?: BN;
+    policy?: ModifyOrderPolicy;
+    postOnly?: boolean;
+    reduceOnly?: boolean;
+    txParams?: TxParams;
+    userOrderId: number;
+}
+Optional auctionDuration?: number
+Optional auctionEndPrice?: BN
+Optional auctionStartPrice?: BN
+Optional immediateOrCancel?: boolean
+Optional maxTs?: BN
+Optional newBaseAmount?: BN
+Optional newDirection?: PositionDirection
+Optional newLimitPrice?: BN
+Optional newOraclePriceOffset?: number
+Optional newTriggerCondition?: OrderTriggerCondition
+Optional newTriggerPrice?: BN
+Optional policy?: ModifyOrderPolicy
+Optional postOnly?: boolean
+Optional reduceOnly?: boolean
+Optional txParams?: TxParams
+userOrderId: number
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6102
+getModifyOrderIx
+getModifyOrderIx(__namedParameters: {
+    auctionDuration?: number;
+    auctionEndPrice?: BN;
+    auctionStartPrice?: BN;
+    immediateOrCancel?: boolean;
+    maxTs?: BN;
+    newBaseAmount?: BN;
+    newDirection?: PositionDirection;
+    newLimitPrice?: BN;
+    newOraclePriceOffset?: number;
+    newTriggerCondition?: OrderTriggerCondition;
+    newTriggerPrice?: BN;
+    orderId: number;
+    policy?: ModifyOrderPolicy;
+    postOnly?: boolean;
+    reduceOnly?: boolean;
+}, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+__namedParameters: {
+    auctionDuration?: number;
+    auctionEndPrice?: BN;
+    auctionStartPrice?: BN;
+    immediateOrCancel?: boolean;
+    maxTs?: BN;
+    newBaseAmount?: BN;
+    newDirection?: PositionDirection;
+    newLimitPrice?: BN;
+    newOraclePriceOffset?: number;
+    newTriggerCondition?: OrderTriggerCondition;
+    newTriggerPrice?: BN;
+    orderId: number;
+    policy?: ModifyOrderPolicy;
+    postOnly?: boolean;
+    reduceOnly?: boolean;
+}
+Optional auctionDuration?: number
+Optional auctionEndPrice?: BN
+Optional auctionStartPrice?: BN
+Optional immediateOrCancel?: boolean
+Optional maxTs?: BN
+Optional newBaseAmount?: BN
+Optional newDirection?: PositionDirection
+Optional newLimitPrice?: BN
+Optional newOraclePriceOffset?: number
+Optional newTriggerCondition?: OrderTriggerCondition
+Optional newTriggerPrice?: BN
+orderId: number
+Optional policy?: ModifyOrderPolicy
+Optional postOnly?: boolean
+Optional reduceOnly?: boolean
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:5980
+getNextSubAccountId
+getNextSubAccountId(): Promise<number>
+Returns Promise<number>
+Defined in sdk/src/driftClient.ts:1018
+getOpenbookV2FulfillmentConfig
+getOpenbookV2FulfillmentConfig(openbookMarket: PublicKey): Promise<OpenbookV2FulfillmentConfigAccount>
+Parameters
+openbookMarket: PublicKey
+Returns Promise<OpenbookV2FulfillmentConfigAccount>
+Defined in sdk/src/driftClient.ts:611
+getOpenbookV2FulfillmentConfigs
+getOpenbookV2FulfillmentConfigs(): Promise<OpenbookV2FulfillmentConfigAccount[]>
+Returns Promise<OpenbookV2FulfillmentConfigAccount[]>
+Defined in sdk/src/driftClient.ts:623
+getOracleDataForPerpMarket
+getOracleDataForPerpMarket(marketIndex: number): OraclePriceData
+Parameters
+marketIndex: number
+Returns OraclePriceData
+Defined in sdk/src/driftClient.ts:7045
+getOracleDataForSpotMarket
+getOracleDataForSpotMarket(marketIndex: number): OraclePriceData
+Parameters
+marketIndex: number
+Returns OraclePriceData
+Defined in sdk/src/driftClient.ts:7051
+getOraclePriceDataAndSlot
+getOraclePriceDataAndSlot(oraclePublicKey: PublicKey): DataAndSlot<OraclePriceData>
+Parameters
+oraclePublicKey: PublicKey
+Returns DataAndSlot<OraclePriceData>
+Defined in sdk/src/driftClient.ts:560
+getOrder
+getOrder(orderId: number, subAccountId?: number): Order
+Parameters
+orderId: number
+Optional subAccountId: number
+Returns Order
+Defined in sdk/src/driftClient.ts:1867
+getOrderByUserId
+getOrderByUserId(userOrderId: number, subAccountId?: number): Order
+Parameters
+userOrderId: number
+Optional subAccountId: number
+Returns Order
+Defined in sdk/src/driftClient.ts:1873
+getPerpMarketAccount
+getPerpMarketAccount(marketIndex: number): PerpMarketAccount
+Parameters
+marketIndex: number
+Returns PerpMarketAccount
+Defined in sdk/src/driftClient.ts:498
+getPerpMarketAccounts
+getPerpMarketAccounts(): PerpMarketAccount[]
+Returns PerpMarketAccount[]
+Defined in sdk/src/driftClient.ts:523
+getPerpMarketExtendedInfo
+getPerpMarketExtendedInfo(marketIndex: number): PerpMarketExtendedInfo
+Parameters
+marketIndex: number
+Returns PerpMarketExtendedInfo
+Defined in sdk/src/driftClient.ts:7599
+getPhoenixV1FulfillmentConfig
+getPhoenixV1FulfillmentConfig(phoenixMarket: PublicKey): Promise<PhoenixV1FulfillmentConfigAccount>
+Parameters
+phoenixMarket: PublicKey
+Returns Promise<PhoenixV1FulfillmentConfigAccount>
+Defined in sdk/src/driftClient.ts:589
+getPhoenixV1FulfillmentConfigs
+getPhoenixV1FulfillmentConfigs(): Promise<PhoenixV1FulfillmentConfigAccount[]>
+Returns Promise<PhoenixV1FulfillmentConfigAccount[]>
+Defined in sdk/src/driftClient.ts:601
+getPlaceAndMakePerpOrderIx
+getPlaceAndMakePerpOrderIx(orderParams: OptionalOrderParams, takerInfo: TakerInfo, referrerInfo?: ReferrerInfo, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+orderParams: OptionalOrderParams
+takerInfo: TakerInfo
+Optional referrerInfo: ReferrerInfo
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:5324
+getPlaceAndMakeSpotOrderIx
+getPlaceAndMakeSpotOrderIx(orderParams: OptionalOrderParams, takerInfo: TakerInfo, fulfillmentConfig?: SerumV3FulfillmentConfigAccount, referrerInfo?: ReferrerInfo, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+orderParams: OptionalOrderParams
+takerInfo: TakerInfo
+Optional fulfillmentConfig: SerumV3FulfillmentConfigAccount
+Optional referrerInfo: ReferrerInfo
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:5792
+getPlaceAndMakeSwiftPerpOrderIxs
+getPlaceAndMakeSwiftPerpOrderIxs(encodedSwiftMessage: Buffer, swiftSignature: Buffer, encodedSwiftOrderParamsMessage: Buffer, swiftOrderParamsSignature: Buffer, takerExpectedOrderId: number, takerInfo: {
+    taker: PublicKey;
+    takerStats: PublicKey;
+    takerUserAccount: UserAccount;
+}, orderParams: OptionalOrderParams, referrerInfo?: ReferrerInfo, subAccountId?: number): Promise<TransactionInstruction[]>
+Parameters
+encodedSwiftMessage: Buffer
+swiftSignature: Buffer
+encodedSwiftOrderParamsMessage: Buffer
+swiftOrderParamsSignature: Buffer
+takerExpectedOrderId: number
+takerInfo: {
+    taker: PublicKey;
+    takerStats: PublicKey;
+    takerUserAccount: UserAccount;
+}
+taker: PublicKey
+takerStats: PublicKey
+takerUserAccount: UserAccount
+orderParams: OptionalOrderParams
+Optional referrerInfo: ReferrerInfo
+Optional subAccountId: number
+Returns Promise<TransactionInstruction[]>
+Defined in sdk/src/driftClient.ts:5561
+getPlaceAndTakePerpOrderIx
+getPlaceAndTakePerpOrderIx(orderParams: OptionalOrderParams, makerInfo?: MakerInfo | MakerInfo[], referrerInfo?: ReferrerInfo, successCondition?: PlaceAndTakeOrderSuccessCondition, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+orderParams: OptionalOrderParams
+Optional makerInfo: MakerInfo | MakerInfo[]
+Optional referrerInfo: ReferrerInfo
+Optional successCondition: PlaceAndTakeOrderSuccessCondition
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:5224
+getPlaceAndTakeSpotOrderIx
+getPlaceAndTakeSpotOrderIx(orderParams: OptionalOrderParams, fulfillmentConfig?: SerumV3FulfillmentConfigAccount, makerInfo?: MakerInfo, referrerInfo?: ReferrerInfo, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+orderParams: OptionalOrderParams
+Optional fulfillmentConfig: SerumV3FulfillmentConfigAccount
+Optional makerInfo: MakerInfo
+Optional referrerInfo: ReferrerInfo
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:5691
+getPlaceOrdersIx
+getPlaceOrdersIx(params: OptionalOrderParams[], subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+params: OptionalOrderParams[]
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3603
+getPlacePerpOrderIx
+getPlacePerpOrderIx(orderParams: OptionalOrderParams, subAccountId?: number, depositToTradeArgs?: {
+    depositMarketIndex: number;
+    isMakingNewAccount: boolean;
+}): Promise<TransactionInstruction>
+Parameters
+orderParams: OptionalOrderParams
+Optional subAccountId: number
+Optional depositToTradeArgs: {
+    depositMarketIndex: number;
+    isMakingNewAccount: boolean;
+}
+depositMarketIndex: number
+isMakingNewAccount: boolean
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3204
+getPlaceSpotOrderIx
+getPlaceSpotOrderIx(orderParams: OptionalOrderParams, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+orderParams: OptionalOrderParams
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3799
+getPlaceSwiftTakerPerpOrderIxs
+getPlaceSwiftTakerPerpOrderIxs(encodedSwiftServerMessage: Buffer, swiftSignature: Buffer, encodedSwiftOrderParamsMessage: Buffer, swiftOrderParamsSignature: Buffer, marketIndex: number, takerInfo: {
+    taker: PublicKey;
+    takerStats: PublicKey;
+    takerUserAccount: UserAccount;
+}): Promise<TransactionInstruction[]>
+Parameters
+encodedSwiftServerMessage: Buffer
+swiftSignature: Buffer
+encodedSwiftOrderParamsMessage: Buffer
+swiftOrderParamsSignature: Buffer
+marketIndex: number
+takerInfo: {
+    taker: PublicKey;
+    takerStats: PublicKey;
+    takerUserAccount: UserAccount;
+}
+taker: PublicKey
+takerStats: PublicKey
+takerUserAccount: UserAccount
+Returns Promise<TransactionInstruction[]>
+Defined in sdk/src/driftClient.ts:5468
+getPostPythPullOracleUpdateAtomicIxs
+getPostPythPullOracleUpdateAtomicIxs(vaaString: string, feedIds: string | string[], numSignatures?: number): Promise<TransactionInstruction[]>
+Parameters
+vaaString: string
+feedIds: string | string[]
+numSignatures: number = 2
+Returns Promise<TransactionInstruction[]>
+Defined in sdk/src/driftClient.ts:7747
+getPostSwitchboardOnDemandUpdateAtomicIx
+getPostSwitchboardOnDemandUpdateAtomicIx(feed: PublicKey, numSignatures?: number): Promise<TransactionInstruction>
+Parameters
+feed: PublicKey
+numSignatures: number = 3
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:7932
+getQuoteAssetTokenAmount
+getQuoteAssetTokenAmount(): BN
+Returns BN
+Defined in sdk/src/driftClient.ts:1562
+getQuoteSpotMarketAccount
+getQuoteSpotMarketAccount(): SpotMarketAccount
+Returns SpotMarketAccount
+Defined in sdk/src/driftClient.ts:554
+getQuoteValuePerLpShare
+getQuoteValuePerLpShare(marketIndex: number): BN
+Parameters
+marketIndex: number
+Returns BN
+Defined in sdk/src/driftClient.ts:2969
+getReceiverProgram
+getReceiverProgram(): Program<PythSolanaReceiver>
+Returns Program<PythSolanaReceiver>
+Defined in sdk/src/driftClient.ts:7697
+getReclaimRentIx
+getReclaimRentIx(userAccountPublicKey: PublicKey): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:1447
+getReferredUserStatsAccountsByReferrer
+getReferredUserStatsAccountsByReferrer(referrer: PublicKey): Promise<UserStatsAccount[]>
+Parameters
+referrer: PublicKey
+Returns Promise<UserStatsAccount[]>
+Defined in sdk/src/driftClient.ts:1352
+getReferrerNameAccountsForAuthority
+getReferrerNameAccountsForAuthority(authority: PublicKey): Promise<ReferrerNameAccount[]>
+Parameters
+authority: PublicKey
+Returns Promise<ReferrerNameAccount[]>
+Defined in sdk/src/driftClient.ts:1370
+getRemainingAccountMapsForUsers
+getRemainingAccountMapsForUsers(userAccounts: UserAccount[]): {
+    oracleAccountMap: Map<string, AccountMeta>;
+    perpMarketAccountMap: Map<number, AccountMeta>;
+    spotMarketAccountMap: Map<number, AccountMeta>;
+}
+Parameters
+userAccounts: UserAccount[]
+Returns {
+    oracleAccountMap: Map<string, AccountMeta>;
+    perpMarketAccountMap: Map<number, AccountMeta>;
+    spotMarketAccountMap: Map<number, AccountMeta>;
+}
+oracleAccountMap: Map<string, AccountMeta>
+perpMarketAccountMap: Map<number, AccountMeta>
+spotMarketAccountMap: Map<number, AccountMeta>
+Defined in sdk/src/driftClient.ts:1815
+getRemainingAccounts
+getRemainingAccounts(params: RemainingAccountParams): AccountMeta[]
+Parameters
+params: RemainingAccountParams
+Returns AccountMeta[]
+Defined in sdk/src/driftClient.ts:1644
+getRemovePerpLpSharesInExpiringMarket
+getRemovePerpLpSharesInExpiringMarket(marketIndex: number, userAccountPublicKey: PublicKey, sharesToBurn?: BN): Promise<TransactionInstruction>
+Parameters
+marketIndex: number
+userAccountPublicKey: PublicKey
+Optional sharesToBurn: BN
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:2857
+getRemovePerpLpSharesIx
+getRemovePerpLpSharesIx(marketIndex: number, sharesToBurn?: BN, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+marketIndex: number
+Optional sharesToBurn: BN
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:2893
+getResolvePerpBankruptcyIx
+getResolvePerpBankruptcyIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, marketIndex: number, liquidatorSubAccountId?: number): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+marketIndex: number
+Optional liquidatorSubAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6774
+getResolvePerpPnlDeficitIx
+getResolvePerpPnlDeficitIx(spotMarketIndex: number, perpMarketIndex: number): Promise<TransactionInstruction>
+Parameters
+spotMarketIndex: number
+perpMarketIndex: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:7526
+getResolveSpotBankruptcyIx
+getResolveSpotBankruptcyIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, marketIndex: number, liquidatorSubAccountId?: number): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+marketIndex: number
+Optional liquidatorSubAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6842
+getRevertFillIx
+getRevertFillIx(fillerPublicKey?: PublicKey): Promise<TransactionInstruction>
+Parameters
+Optional fillerPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3751
+getSerumV3FulfillmentConfig
+getSerumV3FulfillmentConfig(serumMarket: PublicKey): Promise<SerumV3FulfillmentConfigAccount>
+Parameters
+serumMarket: PublicKey
+Returns Promise<SerumV3FulfillmentConfigAccount>
+Defined in sdk/src/driftClient.ts:568
+getSerumV3FulfillmentConfigs
+getSerumV3FulfillmentConfigs(): Promise<SerumV3FulfillmentConfigAccount[]>
+Returns Promise<SerumV3FulfillmentConfigAccount[]>
+Defined in sdk/src/driftClient.ts:580
+getSetUserStatusToBeingLiquidatedIx
+getSetUserStatusToBeingLiquidatedIx(userAccountPublicKey: PublicKey, userAccount: UserAccount): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6347
+getSettleExpiredMarketIx
+getSettleExpiredMarketIx(marketIndex: number): Promise<TransactionInstruction>
+Parameters
+marketIndex: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3310
+getSettleFundingPaymentIx
+getSettleFundingPaymentIx(userAccountPublicKey: PublicKey): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:7013
+getSettlePNLsIxs
+getSettlePNLsIxs(users: {
+    settleeUserAccount: UserAccount;
+    settleeUserAccountPublicKey: PublicKey;
+}[], marketIndexes: number[]): Promise<TransactionInstruction[]>
+Parameters
+users: {
+    settleeUserAccount: UserAccount;
+    settleeUserAccountPublicKey: PublicKey;
+}[]
+marketIndexes: number[]
+Returns Promise<TransactionInstruction[]>
+Defined in sdk/src/driftClient.ts:6231
+getSettleRevenueToInsuranceFundIx
+getSettleRevenueToInsuranceFundIx(spotMarketIndex: number): Promise<TransactionInstruction>
+Parameters
+spotMarketIndex: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:7487
+getSignerPublicKey
+getSignerPublicKey(): PublicKey
+Returns PublicKey
+Defined in sdk/src/driftClient.ts:478
+getSpotMarketAccount
+getSpotMarketAccount(marketIndex: number): SpotMarketAccount
+Parameters
+marketIndex: number
+Returns SpotMarketAccount
+Defined in sdk/src/driftClient.ts:530
+getSpotMarketAccounts
+getSpotMarketAccounts(): SpotMarketAccount[]
+Returns SpotMarketAccount[]
+Defined in sdk/src/driftClient.ts:547
+getSpotPosition
+getSpotPosition(marketIndex: number, subAccountId?: number): SpotPosition
+Parameters
+marketIndex: number
+Optional subAccountId: number
+Returns SpotPosition
+Defined in sdk/src/driftClient.ts:1553
+getStakeForMSOLIx
+getStakeForMSOLIx(__namedParameters: {
+    amount: BN;
+    userAccountPublicKey?: PublicKey;
+}): Promise<TransactionInstruction[]>
+Parameters
+__namedParameters: {
+    amount: BN;
+    userAccountPublicKey?: PublicKey;
+}
+amount: BN
+Optional userAccountPublicKey?: PublicKey
+Returns Promise<TransactionInstruction[]>
+Defined in sdk/src/driftClient.ts:4731
+getStateAccount
+getStateAccount(): StateAccount
+Returns StateAccount
+Defined in sdk/src/driftClient.ts:486
+getStatePublicKey
+getStatePublicKey(): Promise<PublicKey>
+Returns Promise<PublicKey>
+Defined in sdk/src/driftClient.ts:467
+getSwapIx
+getSwapIx(__namedParameters: {
+    amountIn: BN;
+    inMarketIndex: number;
+    inTokenAccount: PublicKey;
+    limitPrice?: BN;
+    outMarketIndex: number;
+    outTokenAccount: PublicKey;
+    reduceOnly?: SwapReduceOnly;
+    userAccountPublicKey?: PublicKey;
+}): Promise<{
+    beginSwapIx: TransactionInstruction;
+    endSwapIx: TransactionInstruction;
+}>
+Get the drift begin_swap and end_swap instructions
+
+Parameters
+__namedParameters: {
+    amountIn: BN;
+    inMarketIndex: number;
+    inTokenAccount: PublicKey;
+    limitPrice?: BN;
+    outMarketIndex: number;
+    outTokenAccount: PublicKey;
+    reduceOnly?: SwapReduceOnly;
+    userAccountPublicKey?: PublicKey;
+}
+amountIn: BN
+inMarketIndex: number
+inTokenAccount: PublicKey
+Optional limitPrice?: BN
+outMarketIndex: number
+outTokenAccount: PublicKey
+Optional reduceOnly?: SwapReduceOnly
+Optional userAccountPublicKey?: PublicKey
+Returns Promise<{
+    beginSwapIx: TransactionInstruction;
+    endSwapIx: TransactionInstruction;
+}>
+Defined in sdk/src/driftClient.ts:4610
+getSwitchboardOnDemandProgram
+getSwitchboardOnDemandProgram(): Promise<Program<Idl>>
+Returns Promise<Program<Idl>>
+Defined in sdk/src/driftClient.ts:7708
+getTokenAmount
+getTokenAmount(marketIndex: number): BN
+Returns the token amount for a given market. The spot market precision is based on the token mint decimals. Positive if it is a deposit, negative if it is a borrow.
+
+Parameters
+marketIndex: number
+Returns BN
+Defined in sdk/src/driftClient.ts:1571
+getTokenProgramForSpotMarket
+getTokenProgramForSpotMarket(spotMarketAccount: SpotMarketAccount): PublicKey
+Parameters
+spotMarketAccount: SpotMarketAccount
+Returns PublicKey
+Defined in sdk/src/driftClient.ts:2158
+getTransferDepositIx
+getTransferDepositIx(amount: BN, marketIndex: number, fromSubAccountId: number, toSubAccountId: number): Promise<TransactionInstruction>
+Parameters
+amount: BN
+marketIndex: number
+fromSubAccountId: number
+toSubAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:2689
+getTriggerOrderIx
+getTriggerOrderIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, order: Order, fillerPublicKey?: PublicKey): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+order: Order
+Optional fillerPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:4808
+getUpdateAMMsIx
+getUpdateAMMsIx(marketIndexes: number[]): Promise<TransactionInstruction>
+Parameters
+marketIndexes: number[]
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:3261
+getUpdateAdvancedDlpIx
+getUpdateAdvancedDlpIx(advancedLp: boolean, subAccountId: number): Promise<TransactionInstruction>
+Parameters
+advancedLp: boolean
+subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:1227
+getUpdateFundingRateIx
+getUpdateFundingRateIx(perpMarketIndex: number, oracle: PublicKey): Promise<TransactionInstruction>
+Parameters
+perpMarketIndex: number
+oracle: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6900
+getUpdatePerpBidAskTwapIx
+getUpdatePerpBidAskTwapIx(perpMarketIndex: number, makers: [PublicKey, PublicKey][]): Promise<TransactionInstruction>
+Parameters
+perpMarketIndex: number
+makers: [PublicKey, PublicKey][]
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6966
+getUpdatePrelaunchOracleIx
+getUpdatePrelaunchOracleIx(perpMarketIndex: number): Promise<TransactionInstruction>
+Parameters
+perpMarketIndex: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6932
+getUpdatePythPullOracleIxs
+getUpdatePythPullOracleIxs(params: {
+    merklePriceUpdate: {
+        message: Buffer;
+        proof: number[][];
+    };
+}, feedId: string, encodedVaaAddress: PublicKey): Promise<TransactionInstruction>
+Parameters
+params: {
+    merklePriceUpdate: {
+        message: Buffer;
+        proof: number[][];
+    };
+}
+merklePriceUpdate: {
+    message: Buffer;
+    proof: number[][];
+}
+message: Buffer
+proof: number[][]
+feedId: string
+encodedVaaAddress: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:7897
+getUpdateUserCustomMarginRatioIx
+getUpdateUserCustomMarginRatioIx(marginRatio: number, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+marginRatio: number
+subAccountId: number = 0
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:1112
+getUpdateUserGovTokenInsuranceStakeIx
+getUpdateUserGovTokenInsuranceStakeIx(authority: PublicKey): Promise<TransactionInstruction>
+Parameters
+authority: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:7446
+getUpdateUserIdleIx
+getUpdateUserIdleIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, fillerPublicKey?: PublicKey): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+Optional fillerPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:4910
+getUpdateUserMarginTradingEnabledIx
+getUpdateUserMarginTradingEnabledIx(marginTradingEnabled: boolean, subAccountId?: number, userAccountPublicKey?: PublicKey): Promise<TransactionInstruction>
+Parameters
+marginTradingEnabled: boolean
+subAccountId: number = 0
+Optional userAccountPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:1138
+getUpdateUserOpenOrdersCountIx
+getUpdateUserOpenOrdersCountIx(userAccountPublicKey: PublicKey, userAccount: UserAccount, fillerPublicKey?: PublicKey): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+Optional fillerPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:4953
+getUpdateUserQuoteAssetInsuranceStakeIx
+getUpdateUserQuoteAssetInsuranceStakeIx(authority: PublicKey): Promise<TransactionInstruction>
+Parameters
+authority: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:7405
+getUpdateUserReduceOnlyIx
+getUpdateUserReduceOnlyIx(reduceOnly: boolean, subAccountId: number): Promise<TransactionInstruction>
+Parameters
+reduceOnly: boolean
+subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:1264
+getUser
+getUser(subAccountId?: number, authority?: PublicKey): User
+Parameters
+Optional subAccountId: number
+Optional authority: PublicKey
+Returns User
+Defined in sdk/src/driftClient.ts:1459
+getUserAccount
+getUserAccount(subAccountId?: number, authority?: PublicKey): UserAccount
+Parameters
+Optional subAccountId: number
+Optional authority: PublicKey
+Returns UserAccount
+Defined in sdk/src/driftClient.ts:1529
+getUserAccountAndSlot
+getUserAccountAndSlot(subAccountId?: number): DataAndSlot<UserAccount>
+Parameters
+Optional subAccountId: number
+Returns DataAndSlot<UserAccount>
+Defined in sdk/src/driftClient.ts:1547
+getUserAccountPublicKey
+getUserAccountPublicKey(subAccountId?: number, authority?: PublicKey): Promise<PublicKey>
+Parameters
+Optional subAccountId: number
+Optional authority: PublicKey
+Returns Promise<PublicKey>
+Defined in sdk/src/driftClient.ts:1522
+getUserAccountsAndAddressesForAuthority
+getUserAccountsAndAddressesForAuthority(authority: PublicKey): Promise<ProgramAccount<UserAccount>[]>
+Parameters
+authority: PublicKey
+Returns Promise<ProgramAccount<UserAccount>[]>
+Defined in sdk/src/driftClient.ts:1316
+getUserAccountsForAuthority
+getUserAccountsForAuthority(authority: PublicKey): Promise<UserAccount[]>
+Parameters
+authority: PublicKey
+Returns Promise<UserAccount[]>
+Defined in sdk/src/driftClient.ts:1334
+getUserAccountsForDelegate
+getUserAccountsForDelegate(delegate: PublicKey): Promise<UserAccount[]>
+Parameters
+delegate: PublicKey
+Returns Promise<UserAccount[]>
+Defined in sdk/src/driftClient.ts:1298
+getUserDeletionIx
+getUserDeletionIx(userAccountPublicKey: PublicKey): Promise<TransactionInstruction>
+Parameters
+userAccountPublicKey: PublicKey
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:1413
+getUserMapKey
+getUserMapKey(subAccountId: number, authority: PublicKey): string
+Parameters
+subAccountId: number
+authority: PublicKey
+Returns string
+Defined in sdk/src/driftClient.ts:395
+getUserStats
+getUserStats(): UserStats
+Returns UserStats
+Defined in sdk/src/driftClient.ts:1492
+getUserStatsAccountPublicKey
+getUserStatsAccountPublicKey(): PublicKey
+Returns PublicKey
+Defined in sdk/src/driftClient.ts:1510
+getUsers
+getUsers(): User[]
+Returns User[]
+Defined in sdk/src/driftClient.ts:1478
+getWithdrawIx
+getWithdrawIx(amount: BN, marketIndex: number, userTokenAccount: PublicKey, reduceOnly?: boolean, subAccountId?: number): Promise<TransactionInstruction>
+Parameters
+amount: BN
+marketIndex: number
+userTokenAccount: PublicKey
+reduceOnly: boolean = false
+Optional subAccountId: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:2610
+getWrappedSolAccountCreationIxs
+getWrappedSolAccountCreationIxs(amount: BN, includeRent?: boolean): Promise<{
+    ixs: TransactionInstruction[];
+    pubkey: PublicKey;
+    signers: Signer[];
+}>
+Parameters
+amount: BN
+Optional includeRent: boolean
+Returns Promise<{
+    ixs: TransactionInstruction[];
+    pubkey: PublicKey;
+    signers: Signer[];
+}>
+Defined in sdk/src/driftClient.ts:2102
+hasUser
+hasUser(subAccountId?: number, authority?: PublicKey): boolean
+Parameters
+Optional subAccountId: number
+Optional authority: PublicKey
+Returns boolean
+Defined in sdk/src/driftClient.ts:1470
+initializeInsuranceFundStake
+initializeInsuranceFundStake(marketIndex: number, txParams?: TxParams): Promise<string>
+Parameters
+marketIndex: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7057
+initializeReferrerName
+initializeReferrerName(name: string): Promise<string>
+Parameters
+name: string
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:1033
+initializeUserAccount
+initializeUserAccount(subAccountId?: number, name?: string, referrerInfo?: ReferrerInfo, txParams?: TxParams): Promise<[string, PublicKey]>
+Parameters
+subAccountId: number = 0
+Optional name: string
+Optional referrerInfo: ReferrerInfo
+Optional txParams: TxParams
+Returns Promise<[string, PublicKey]>
+Defined in sdk/src/driftClient.ts:908
+initializeUserAccountAndDepositCollateral
+initializeUserAccountAndDepositCollateral(amount: BN, userTokenAccount: PublicKey, marketIndex?: number, subAccountId?: number, name?: string, fromSubAccountId?: number, referrerInfo?: ReferrerInfo, donateAmount?: BN, txParams?: TxParams, customMaxMarginRatio?: number): Promise<[string, PublicKey]>
+Creates the User account for a user, and deposits some initial collateral
+
+Returns
+Parameters
+amount: BN
+userTokenAccount: PublicKey
+marketIndex: number = 0
+subAccountId: number = 0
+Optional name: string
+Optional fromSubAccountId: number
+Optional referrerInfo: ReferrerInfo
+Optional donateAmount: BN
+Optional txParams: TxParams
+Optional customMaxMarginRatio: number
+Returns Promise<[string, PublicKey]>
+Defined in sdk/src/driftClient.ts:2357
+initializeUserAccountForDevnet
+initializeUserAccountForDevnet(subAccountId?: number, name?: string, marketIndex: number, tokenFaucet: TokenFaucet, amount: BN, referrerInfo?: ReferrerInfo, txParams?: TxParams): Promise<[string, PublicKey]>
+Parameters
+subAccountId: number = 0
+name: string = DEFAULT_USER_NAME
+marketIndex: number
+tokenFaucet: TokenFaucet
+amount: BN
+Optional referrerInfo: ReferrerInfo
+Optional txParams: TxParams
+Returns Promise<[string, PublicKey]>
+Defined in sdk/src/driftClient.ts:2396
+liquidateBorrowForPerpPnl
+liquidateBorrowForPerpPnl(userAccountPublicKey: PublicKey, userAccount: UserAccount, perpMarketIndex: number, liabilityMarketIndex: number, maxLiabilityTransfer: BN, limitPrice?: BN, txParams?: TxParams, liquidatorSubAccountId?: number): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+perpMarketIndex: number
+liabilityMarketIndex: number
+maxLiabilityTransfer: BN
+Optional limitPrice: BN
+Optional txParams: TxParams
+Optional liquidatorSubAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6601
+liquidatePerp
+liquidatePerp(userAccountPublicKey: PublicKey, userAccount: UserAccount, marketIndex: number, maxBaseAssetAmount: BN, limitPrice?: BN, txParams?: TxParams, liquidatorSubAccountId?: number): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+marketIndex: number
+maxBaseAssetAmount: BN
+Optional limitPrice: BN
+Optional txParams: TxParams
+Optional liquidatorSubAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6381
+liquidatePerpPnlForDeposit
+liquidatePerpPnlForDeposit(userAccountPublicKey: PublicKey, userAccount: UserAccount, perpMarketIndex: number, assetMarketIndex: number, maxPnlTransfer: BN, limitPrice?: BN, txParams?: TxParams, liquidatorSubAccountId?: number): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+perpMarketIndex: number
+assetMarketIndex: number
+maxPnlTransfer: BN
+Optional limitPrice: BN
+Optional txParams: TxParams
+Optional liquidatorSubAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6676
+liquidatePerpWithFill
+liquidatePerpWithFill(userAccountPublicKey: PublicKey, userAccount: UserAccount, marketIndex: number, makerInfos: MakerInfo[], txParams?: TxParams, liquidatorSubAccountId?: number): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+marketIndex: number
+makerInfos: MakerInfo[]
+Optional txParams: TxParams
+Optional liquidatorSubAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6451
+liquidateSpot
+liquidateSpot(userAccountPublicKey: PublicKey, userAccount: UserAccount, assetMarketIndex: number, liabilityMarketIndex: number, maxLiabilityTransfer: BN, limitPrice?: BN, txParams?: TxParams, liquidatorSubAccountId?: number): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+assetMarketIndex: number
+liabilityMarketIndex: number
+maxLiabilityTransfer: BN
+Optional limitPrice: BN
+Optional txParams: TxParams
+Optional liquidatorSubAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6526
+modifyOrder
+modifyOrder(orderParams: {
+    auctionDuration?: number;
+    auctionEndPrice?: BN;
+    auctionStartPrice?: BN;
+    immediateOrCancel?: boolean;
+    maxTs?: BN;
+    newBaseAmount?: BN;
+    newDirection?: PositionDirection;
+    newLimitPrice?: BN;
+    newOraclePriceOffset?: number;
+    newTriggerCondition?: OrderTriggerCondition;
+    newTriggerPrice?: BN;
+    orderId: number;
+    policy?: ModifyOrderPolicy;
+    postOnly?: boolean;
+    reduceOnly?: boolean;
+}, txParams?: TxParams, subAccountId?: number): Promise<string>
+Modifies an open order (spot or perp) by closing it and replacing it with a new order.
+
+Returns
+Parameters
+orderParams: {
+    auctionDuration?: number;
+    auctionEndPrice?: BN;
+    auctionStartPrice?: BN;
+    immediateOrCancel?: boolean;
+    maxTs?: BN;
+    newBaseAmount?: BN;
+    newDirection?: PositionDirection;
+    newLimitPrice?: BN;
+    newOraclePriceOffset?: number;
+    newTriggerCondition?: OrderTriggerCondition;
+    newTriggerPrice?: BN;
+    orderId: number;
+    policy?: ModifyOrderPolicy;
+    postOnly?: boolean;
+    reduceOnly?: boolean;
+}
+Optional auctionDuration?: number
+Optional auctionEndPrice?: BN
+Optional auctionStartPrice?: BN
+Optional immediateOrCancel?: boolean
+Optional maxTs?: BN
+Optional newBaseAmount?: BN
+Optional newDirection?: PositionDirection
+Optional newLimitPrice?: BN
+Optional newOraclePriceOffset?: number
+Optional newTriggerCondition?: OrderTriggerCondition
+Optional newTriggerPrice?: BN
+orderId: number
+Optional policy?: ModifyOrderPolicy
+Optional postOnly?: boolean
+Optional reduceOnly?: boolean
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:5948
+modifyOrderByUserOrderId
+modifyOrderByUserOrderId(orderParams: {
+    auctionDuration?: number;
+    auctionEndPrice?: BN;
+    auctionStartPrice?: BN;
+    immediateOrCancel?: boolean;
+    maxTs?: BN;
+    newBaseAmount?: BN;
+    newDirection?: PositionDirection;
+    newLimitPrice?: BN;
+    newOraclePriceOffset?: number;
+    newTriggerCondition?: OrderTriggerCondition;
+    newTriggerPrice?: BN;
+    policy?: ModifyOrderPolicy;
+    postOnly?: boolean;
+    reduceOnly?: boolean;
+    userOrderId: number;
+}, txParams?: TxParams, subAccountId?: number): Promise<string>
+Modifies an open order by closing it and replacing it with a new order.
+
+Returns
+Parameters
+orderParams: {
+    auctionDuration?: number;
+    auctionEndPrice?: BN;
+    auctionStartPrice?: BN;
+    immediateOrCancel?: boolean;
+    maxTs?: BN;
+    newBaseAmount?: BN;
+    newDirection?: PositionDirection;
+    newLimitPrice?: BN;
+    newOraclePriceOffset?: number;
+    newTriggerCondition?: OrderTriggerCondition;
+    newTriggerPrice?: BN;
+    policy?: ModifyOrderPolicy;
+    postOnly?: boolean;
+    reduceOnly?: boolean;
+    userOrderId: number;
+}
+Optional auctionDuration?: number
+Optional auctionEndPrice?: BN
+Optional auctionStartPrice?: BN
+Optional immediateOrCancel?: boolean
+Optional maxTs?: BN
+Optional newBaseAmount?: BN
+Optional newDirection?: PositionDirection
+Optional newLimitPrice?: BN
+Optional newOraclePriceOffset?: number
+Optional newTriggerCondition?: OrderTriggerCondition
+Optional newTriggerPrice?: BN
+Optional policy?: ModifyOrderPolicy
+Optional postOnly?: boolean
+Optional reduceOnly?: boolean
+userOrderId: number
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6070
+modifyPerpOrder
+modifyPerpOrder(orderId: number, newBaseAmount?: BN, newLimitPrice?: BN, newOraclePriceOffset?: number): Promise<string>
+Modifies an open order by closing it and replacing it with a new order.
+
+Deprecated
+use modifyOrder instead
+
+Returns
+Parameters
+orderId: number
+Optional newBaseAmount: BN
+Optional newLimitPrice: BN
+Optional newOraclePriceOffset: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:5893
+modifyPerpOrderByUserOrderId
+modifyPerpOrderByUserOrderId(userOrderId: number, newBaseAmount?: BN, newLimitPrice?: BN, newOraclePriceOffset?: number): Promise<string>
+Modifies an open order by closing it and replacing it with a new order.
+
+Deprecated
+use modifyOrderByUserOrderId instead
+
+Returns
+Parameters
+userOrderId: number
+Optional newBaseAmount: BN
+Optional newLimitPrice: BN
+Optional newOraclePriceOffset: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:5916
+mustIncludeMarketsInIx
+mustIncludeMarketsInIx(__namedParameters: {
+    perpMarketIndexes: number[];
+    spotMarketIndexes: number[];
+}): void
+Each drift instruction must include perp and sport market accounts in the ix remaining accounts. Use this function to force a subset of markets to be included in the remaining accounts for every ix
+
+Parameters
+__namedParameters: {
+    perpMarketIndexes: number[];
+    spotMarketIndexes: number[];
+}
+perpMarketIndexes: number[]
+spotMarketIndexes: number[]
+Returns void
+Defined in sdk/src/driftClient.ts:1628
+openPosition
+openPosition(direction: PositionDirection, amount: BN, marketIndex: number, limitPrice?: BN, subAccountId?: number): Promise<string>
+Deprecated
+use placePerpOrder or placeAndTakePerpOrder instead
+
+Parameters
+direction: PositionDirection
+amount: BN
+marketIndex: number
+Optional limitPrice: BN
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3001
+placeAndMakePerpOrder
+placeAndMakePerpOrder(orderParams: OptionalOrderParams, takerInfo: TakerInfo, referrerInfo?: ReferrerInfo, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+orderParams: OptionalOrderParams
+takerInfo: TakerInfo
+Optional referrerInfo: ReferrerInfo
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:5298
+placeAndMakeSpotOrder
+placeAndMakeSpotOrder(orderParams: OptionalOrderParams, takerInfo: TakerInfo, fulfillmentConfig?: SerumV3FulfillmentConfigAccount, referrerInfo?: ReferrerInfo, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+orderParams: OptionalOrderParams
+takerInfo: TakerInfo
+Optional fulfillmentConfig: SerumV3FulfillmentConfigAccount
+Optional referrerInfo: ReferrerInfo
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:5765
+placeAndMakeSwiftPerpOrder
+placeAndMakeSwiftPerpOrder(encodedSwiftMessage: Buffer, swiftSignature: Buffer, encodedSwiftOrderParamsMessage: Buffer, swiftOrderParamsSignature: Buffer, takerExpectedOrderId: number, takerInfo: {
+    taker: PublicKey;
+    takerStats: PublicKey;
+    takerUserAccount: UserAccount;
+}, orderParams: OptionalOrderParams, referrerInfo?: ReferrerInfo, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+encodedSwiftMessage: Buffer
+swiftSignature: Buffer
+encodedSwiftOrderParamsMessage: Buffer
+swiftOrderParamsSignature: Buffer
+takerExpectedOrderId: number
+takerInfo: {
+    taker: PublicKey;
+    takerStats: PublicKey;
+    takerUserAccount: UserAccount;
+}
+taker: PublicKey
+takerStats: PublicKey
+takerUserAccount: UserAccount
+orderParams: OptionalOrderParams
+Optional referrerInfo: ReferrerInfo
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:5524
+placeAndTakePerpOrder
+placeAndTakePerpOrder(orderParams: OptionalOrderParams, makerInfo?: MakerInfo | MakerInfo[], referrerInfo?: ReferrerInfo, successCondition?: PlaceAndTakeOrderSuccessCondition, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+orderParams: OptionalOrderParams
+Optional makerInfo: MakerInfo | MakerInfo[]
+Optional referrerInfo: ReferrerInfo
+Optional successCondition: PlaceAndTakeOrderSuccessCondition
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:4975
+placeAndTakePerpWithAdditionalOrders
+placeAndTakePerpWithAdditionalOrders(orderParams: OptionalOrderParams, makerInfo?: MakerInfo | MakerInfo[], referrerInfo?: ReferrerInfo, bracketOrdersParams?: OptionalOrderParams[], txParams?: TxParams, subAccountId?: number, cancelExistingOrders?: boolean, settlePnl?: boolean, exitEarlyIfSimFails?: boolean): Promise<{
+    signedCancelExistingOrdersTx?: Transaction;
+    signedSettlePnlTx?: Transaction;
+    txSig: string;
+}>
+Parameters
+orderParams: OptionalOrderParams
+Optional makerInfo: MakerInfo | MakerInfo[]
+Optional referrerInfo: ReferrerInfo
+bracketOrdersParams: OptionalOrderParams[] = ...
+Optional txParams: TxParams
+Optional subAccountId: number
+Optional cancelExistingOrders: boolean
+Optional settlePnl: boolean
+Optional exitEarlyIfSimFails: boolean
+Returns Promise<{
+    signedCancelExistingOrdersTx?: Transaction;
+    signedSettlePnlTx?: Transaction;
+    txSig: string;
+}>
+Defined in sdk/src/driftClient.ts:5167
+placeAndTakeSpotOrder
+placeAndTakeSpotOrder(orderParams: OptionalOrderParams, fulfillmentConfig?: SerumV3FulfillmentConfigAccount, makerInfo?: MakerInfo, referrerInfo?: ReferrerInfo, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+orderParams: OptionalOrderParams
+Optional fulfillmentConfig: SerumV3FulfillmentConfigAccount
+Optional makerInfo: MakerInfo
+Optional referrerInfo: ReferrerInfo
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:5663
+placeOrders
+placeOrders(params: OrderParams[], txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+params: OrderParams[]
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3573
+placePerpOrder
+placePerpOrder(orderParams: OptionalOrderParams, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+orderParams: OptionalOrderParams
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3187
+placeSpotOrder
+placeSpotOrder(orderParams: OptionalOrderParams, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+orderParams: OptionalOrderParams
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3767
+placeSwiftTakerOrder
+placeSwiftTakerOrder(swiftServerMessage: Buffer, swiftSignature: Buffer, swiftOrderParamsMessage: Buffer, swiftOrderParamsSignature: Buffer, marketIndex: number, takerInfo: {
+    taker: PublicKey;
+    takerStats: PublicKey;
+    takerUserAccount: UserAccount;
+}, txParams?: TxParams): Promise<string>
+Parameters
+swiftServerMessage: Buffer
+swiftSignature: Buffer
+swiftOrderParamsMessage: Buffer
+swiftOrderParamsSignature: Buffer
+marketIndex: number
+takerInfo: {
+    taker: PublicKey;
+    takerStats: PublicKey;
+    takerUserAccount: UserAccount;
+}
+taker: PublicKey
+takerStats: PublicKey
+takerUserAccount: UserAccount
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:5439
+postMultiPythPullOracleUpdatesAtomic
+postMultiPythPullOracleUpdatesAtomic(vaaString: string, feedIds: string[]): Promise<string>
+Parameters
+vaaString: string
+feedIds: string[]
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7733
+postPythPullOracleUpdateAtomic
+postPythPullOracleUpdateAtomic(vaaString: string, feedId: string): Promise<string>
+Parameters
+vaaString: string
+feedId: string
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7719
+postSwitchboardOnDemandUpdate
+postSwitchboardOnDemandUpdate(feed: PublicKey, numSignatures?: number): Promise<string>
+Parameters
+feed: PublicKey
+numSignatures: number = 3
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7955
+prepareMarketOrderTxs
+prepareMarketOrderTxs(orderParams: OptionalOrderParams, userAccountPublicKey: PublicKey, userAccount: UserAccount, makerInfo?: MakerInfo | MakerInfo[], txParams?: TxParams, bracketOrdersParams?: OptionalOrderParams[], referrerInfo?: ReferrerInfo, cancelExistingOrders?: boolean, settlePnl?: boolean): Promise<{
+    cancelExistingOrdersTx?: Transaction | VersionedTransaction;
+    fillTx?: Transaction | VersionedTransaction;
+    marketOrderTx: Transaction | VersionedTransaction;
+    settlePnlTx?: Transaction | VersionedTransaction;
+}>
+Parameters
+orderParams: OptionalOrderParams
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+Optional makerInfo: MakerInfo | MakerInfo[]
+Optional txParams: TxParams
+bracketOrdersParams: OptionalOrderParams[] = ...
+Optional referrerInfo: ReferrerInfo
+Optional cancelExistingOrders: boolean
+Optional settlePnl: boolean
+Returns Promise<{
+    cancelExistingOrdersTx?: Transaction | VersionedTransaction;
+    fillTx?: Transaction | VersionedTransaction;
+    marketOrderTx: Transaction | VersionedTransaction;
+    settlePnlTx?: Transaction | VersionedTransaction;
+}>
+Defined in sdk/src/driftClient.ts:3038
+preparePlaceAndTakePerpOrderWithAdditionalOrders
+preparePlaceAndTakePerpOrderWithAdditionalOrders(orderParams: OptionalOrderParams, makerInfo?: MakerInfo | MakerInfo[], referrerInfo?: ReferrerInfo, bracketOrdersParams?: OptionalOrderParams[], txParams?: TxParams, subAccountId?: number, cancelExistingOrders?: boolean, settlePnl?: boolean, exitEarlyIfSimFails?: boolean): Promise<{
+    cancelExistingOrdersTx: Transaction | VersionedTransaction;
+    placeAndTakeTx: Transaction | VersionedTransaction;
+    settlePnlTx: Transaction | VersionedTransaction;
+}>
+Parameters
+orderParams: OptionalOrderParams
+Optional makerInfo: MakerInfo | MakerInfo[]
+Optional referrerInfo: ReferrerInfo
+bracketOrdersParams: OptionalOrderParams[] = ...
+Optional txParams: TxParams
+Optional subAccountId: number
+Optional cancelExistingOrders: boolean
+Optional settlePnl: boolean
+Optional exitEarlyIfSimFails: boolean
+Returns Promise<{
+    cancelExistingOrdersTx: Transaction | VersionedTransaction;
+    placeAndTakeTx: Transaction | VersionedTransaction;
+    settlePnlTx: Transaction | VersionedTransaction;
+}>
+Defined in sdk/src/driftClient.ts:5001
+preparePlaceAndTakeSpotOrder
+preparePlaceAndTakeSpotOrder(orderParams: OptionalOrderParams, fulfillmentConfig?: SerumV3FulfillmentConfigAccount, makerInfo?: MakerInfo, referrerInfo?: ReferrerInfo, txParams?: TxParams, subAccountId?: number): Promise<{
+    placeAndTakeSpotOrderTx: Transaction | VersionedTransaction;
+}>
+Parameters
+orderParams: OptionalOrderParams
+Optional fulfillmentConfig: SerumV3FulfillmentConfigAccount
+Optional makerInfo: MakerInfo
+Optional referrerInfo: ReferrerInfo
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<{
+    placeAndTakeSpotOrderTx: Transaction | VersionedTransaction;
+}>
+Defined in sdk/src/driftClient.ts:5639
+preparePlaceOrdersTx
+preparePlaceOrdersTx(params: OrderParams[], txParams?: TxParams, subAccountId?: number): Promise<{
+    placeOrdersTx: Transaction | VersionedTransaction;
+}>
+Parameters
+params: OrderParams[]
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<{
+    placeOrdersTx: Transaction | VersionedTransaction;
+}>
+Defined in sdk/src/driftClient.ts:3588
+preparePlaceSpotOrderTx
+preparePlaceSpotOrderTx(orderParams: OptionalOrderParams, txParams?: TxParams, subAccountId?: number): Promise<{
+    placeSpotOrderTx: Transaction | VersionedTransaction;
+}>
+Parameters
+orderParams: OptionalOrderParams
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<{
+    placeSpotOrderTx: Transaction | VersionedTransaction;
+}>
+Defined in sdk/src/driftClient.ts:3784
+reclaimRent
+reclaimRent(subAccountId?: number, txParams?: TxParams): Promise<string>
+Parameters
+subAccountId: number = 0
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:1426
+removeInsuranceFundStake
+removeInsuranceFundStake(marketIndex: number, collateralAccountPublicKey: PublicKey, txParams?: TxParams): Promise<string>
+Parameters
+marketIndex: number
+collateralAccountPublicKey: PublicKey
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7306
+removePerpLpShares
+removePerpLpShares(marketIndex: number, sharesToBurn?: BN, txParams?: TxParams, subAccountId?: number): Promise<string>
+Parameters
+marketIndex: number
+Optional sharesToBurn: BN
+Optional txParams: TxParams
+Optional subAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:2815
+removePerpLpSharesInExpiringMarket
+removePerpLpSharesInExpiringMarket(marketIndex: number, userAccountPublicKey: PublicKey, sharesToBurn?: BN, txParams?: TxParams): Promise<string>
+Parameters
+marketIndex: number
+userAccountPublicKey: PublicKey
+Optional sharesToBurn: BN
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:2836
+requestRemoveInsuranceFundStake
+requestRemoveInsuranceFundStake(marketIndex: number, amount: BN, txParams?: TxParams): Promise<string>
+Parameters
+marketIndex: number
+amount: BN
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7241
+resolvePerpBankruptcy
+resolvePerpBankruptcy(userAccountPublicKey: PublicKey, userAccount: UserAccount, marketIndex: number, txParams?: TxParams, liquidatorSubAccountId?: number): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+marketIndex: number
+Optional txParams: TxParams
+Optional liquidatorSubAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6751
+resolvePerpPnlDeficit
+resolvePerpPnlDeficit(spotMarketIndex: number, perpMarketIndex: number, txParams?: TxParams): Promise<string>
+Parameters
+spotMarketIndex: number
+perpMarketIndex: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7510
+resolveSpotBankruptcy
+resolveSpotBankruptcy(userAccountPublicKey: PublicKey, userAccount: UserAccount, marketIndex: number, txParams?: TxParams, liquidatorSubAccountId?: number): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+marketIndex: number
+Optional txParams: TxParams
+Optional liquidatorSubAccountId: number
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6819
+sendMarketOrderAndGetSignedFillTx
+sendMarketOrderAndGetSignedFillTx(orderParams: OptionalOrderParams, userAccountPublicKey: PublicKey, userAccount: UserAccount, makerInfo?: MakerInfo | MakerInfo[], txParams?: TxParams, bracketOrdersParams?: OptionalOrderParams[], referrerInfo?: ReferrerInfo, cancelExistingOrders?: boolean, settlePnl?: boolean): Promise<{
+    signedCancelExistingOrdersTx?: Transaction;
+    signedFillTx?: Transaction;
+    signedSettlePnlTx?: Transaction;
+    txSig: string;
+}>
+Sends a market order and returns a signed tx which can fill the order against the vamm, which the caller can use to fill their own order if required.
+
+Returns
+Parameters
+orderParams: OptionalOrderParams
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+Optional makerInfo: MakerInfo | MakerInfo[]
+Optional txParams: TxParams
+bracketOrdersParams: OptionalOrderParams[] = ...
+Optional referrerInfo: ReferrerInfo
+Optional cancelExistingOrders: boolean
+Builds and returns an extra transaciton to cancel the existing orders in the same perp market. Intended use is to auto-cancel TP/SL orders when closing a position. Ignored if orderParams.marketType is not MarketType.PERP
+
+Optional settlePnl: boolean
+Returns Promise<{
+    signedCancelExistingOrdersTx?: Transaction;
+    signedFillTx?: Transaction;
+    signedSettlePnlTx?: Transaction;
+    txSig: string;
+}>
+Defined in sdk/src/driftClient.ts:3137
+sendSignedTx
+sendSignedTx(tx: Transaction | VersionedTransaction, opts?: ConfirmOptions): Promise<string>
+Parameters
+tx: Transaction | VersionedTransaction
+Optional opts: ConfirmOptions
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3024
+sendTransaction
+sendTransaction(tx: Transaction | VersionedTransaction, additionalSigners?: Signer[], opts?: ConfirmOptions, preSigned?: boolean): Promise<TxSigAndSlot>
+Parameters
+tx: Transaction | VersionedTransaction
+Optional additionalSigners: Signer[]
+Optional opts: ConfirmOptions
+Optional preSigned: boolean
+Returns Promise<TxSigAndSlot>
+Defined in sdk/src/driftClient.ts:8070
+setUserStatusToBeingLiquidated
+setUserStatusToBeingLiquidated(userAccountPublicKey: PublicKey, userAccount: UserAccount): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+userAccount: UserAccount
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6364
+settleExpiredMarket
+settleExpiredMarket(marketIndex: number, txParams?: TxParams): Promise<string>
+Parameters
+marketIndex: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3295
+settleExpiredMarketPoolsToRevenuePool
+settleExpiredMarketPoolsToRevenuePool(perpMarketIndex: number, txParams?: TxParams): Promise<string>
+Parameters
+perpMarketIndex: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3335
+settleFundingPayment
+settleFundingPayment(userAccountPublicKey: PublicKey, txParams?: TxParams): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6998
+settleLP
+settleLP(settleeUserAccountPublicKey: PublicKey, marketIndex: number, txParams?: TxParams): Promise<string>
+Parameters
+settleeUserAccountPublicKey: PublicKey
+marketIndex: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:2777
+settleLPIx
+settleLPIx(settleeUserAccountPublicKey: PublicKey, marketIndex: number): Promise<TransactionInstruction>
+Parameters
+settleeUserAccountPublicKey: PublicKey
+marketIndex: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:2793
+settleMultiplePNLs
+settleMultiplePNLs(settleeUserAccountPublicKey: PublicKey, settleeUserAccount: UserAccount, marketIndexes: number[], mode: SettlePnlMode, txParams?: TxParams): Promise<string>
+Parameters
+settleeUserAccountPublicKey: PublicKey
+settleeUserAccount: UserAccount
+marketIndexes: number[]
+mode: SettlePnlMode
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6297
+settleMultiplePNLsIx
+settleMultiplePNLsIx(settleeUserAccountPublicKey: PublicKey, settleeUserAccount: UserAccount, marketIndexes: number[], mode: SettlePnlMode): Promise<TransactionInstruction>
+Parameters
+settleeUserAccountPublicKey: PublicKey
+settleeUserAccount: UserAccount
+marketIndexes: number[]
+mode: SettlePnlMode
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6320
+settlePNL
+settlePNL(settleeUserAccountPublicKey: PublicKey, settleeUserAccount: UserAccount, marketIndex: number, txParams?: TxParams): Promise<string>
+Parameters
+settleeUserAccountPublicKey: PublicKey
+settleeUserAccount: UserAccount
+marketIndex: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6254
+settlePNLIx
+settlePNLIx(settleeUserAccountPublicKey: PublicKey, settleeUserAccount: UserAccount, marketIndex: number): Promise<TransactionInstruction>
+Parameters
+settleeUserAccountPublicKey: PublicKey
+settleeUserAccount: UserAccount
+marketIndex: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:6275
+settlePNLs
+settlePNLs(users: {
+    settleeUserAccount: UserAccount;
+    settleeUserAccountPublicKey: PublicKey;
+}[], marketIndexes: number[], opts?: {
+    filterInvalidMarkets?: boolean;
+}, txParams?: TxParams): Promise<string>
+Parameters
+users: {
+    settleeUserAccount: UserAccount;
+    settleeUserAccountPublicKey: PublicKey;
+}[]
+marketIndexes: number[]
+Optional opts: {
+    filterInvalidMarkets?: boolean;
+}
+Optional filterInvalidMarkets?: boolean
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6178
+settleRevenueToInsuranceFund
+settleRevenueToInsuranceFund(spotMarketIndex: number, txParams?: TxParams): Promise<string>
+Parameters
+spotMarketIndex: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7475
+signMessage
+signMessage(message: Uint8Array, keypair?: Keypair): Promise<Buffer>
+Parameters
+message: Uint8Array
+keypair: Keypair = ...
+Returns Promise<Buffer>
+Defined in sdk/src/driftClient.ts:5432
+signSwiftOrderParamsMessage
+signSwiftOrderParamsMessage(orderParamsMessage: SwiftOrderParamsMessage): Promise<Buffer>
+Parameters
+orderParamsMessage: SwiftOrderParamsMessage
+Returns Promise<Buffer>
+Defined in sdk/src/driftClient.ts:5405
+signSwiftServerMessage
+signSwiftServerMessage(message: SwiftServerMessage): Promise<Buffer>
+Parameters
+message: SwiftServerMessage
+Returns Promise<Buffer>
+Defined in sdk/src/driftClient.ts:5396
+stakeForMSOL
+stakeForMSOL(__namedParameters: {
+    amount: BN;
+}): Promise<TxSigAndSlot>
+Parameters
+__namedParameters: {
+    amount: BN;
+}
+amount: BN
+Returns Promise<TxSigAndSlot>
+Defined in sdk/src/driftClient.ts:4725
+subscribe
+subscribe(): Promise<boolean>
+Returns Promise<boolean>
+Defined in sdk/src/driftClient.ts:417
+subscribeUsers
+subscribeUsers(): Promise<boolean>[]
+Returns Promise<boolean>[]
+Defined in sdk/src/driftClient.ts:432
+swap
+swap(__namedParameters: {
+    amount: BN;
+    inAssociatedTokenAccount?: PublicKey;
+    inMarketIndex: number;
+    jupiterClient: JupiterClient;
+    onlyDirectRoutes?: boolean;
+    outAssociatedTokenAccount?: PublicKey;
+    outMarketIndex: number;
+    reduceOnly?: SwapReduceOnly;
+    route?: Route;
+    slippageBps?: number;
+    swapMode?: SwapMode;
+    txParams?: TxParams;
+    v6?: {
+        quote?: QuoteResponse;
+    };
+}): Promise<string>
+Swap tokens in drift account using jupiter
+
+Parameters
+__namedParameters: {
+    amount: BN;
+    inAssociatedTokenAccount?: PublicKey;
+    inMarketIndex: number;
+    jupiterClient: JupiterClient;
+    onlyDirectRoutes?: boolean;
+    outAssociatedTokenAccount?: PublicKey;
+    outMarketIndex: number;
+    reduceOnly?: SwapReduceOnly;
+    route?: Route;
+    slippageBps?: number;
+    swapMode?: SwapMode;
+    txParams?: TxParams;
+    v6?: {
+        quote?: QuoteResponse;
+    };
+}
+amount: BN
+Optional inAssociatedTokenAccount?: PublicKey
+inMarketIndex: number
+jupiterClient: JupiterClient
+Optional onlyDirectRoutes?: boolean
+Optional outAssociatedTokenAccount?: PublicKey
+outMarketIndex: number
+Optional reduceOnly?: SwapReduceOnly
+Optional route?: Route
+Optional slippageBps?: number
+Optional swapMode?: SwapMode
+Optional txParams?: TxParams
+Optional v6?: {
+    quote?: QuoteResponse;
+}
+Optional quote?: QuoteResponse
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:4241
+switchActiveUser
+switchActiveUser(subAccountId: number, authority?: PublicKey): Promise<void>
+Parameters
+subAccountId: number
+Optional authority: PublicKey
+Returns Promise<void>
+Defined in sdk/src/driftClient.ts:786
+transferDeposit
+transferDeposit(amount: BN, marketIndex: number, fromSubAccountId: number, toSubAccountId: number, txParams?: TxParams): Promise<string>
+Withdraws from the fromSubAccount and deposits into the toSubAccount
+
+Parameters
+amount: BN
+marketIndex: number
+fromSubAccountId: number
+toSubAccountId: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:2660
+triggerEvent
+triggerEvent(eventName: keyof DriftClientAccountEvents, data?: any): void
+Parameters
+eventName: keyof DriftClientAccountEvents
+Optional data: any
+Returns void
+Defined in sdk/src/driftClient.ts:7041
+triggerOrder
+triggerOrder(userAccountPublicKey: PublicKey, user: UserAccount, order: Order, txParams?: TxParams, fillerPublicKey?: PublicKey): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+user: UserAccount
+order: Order
+Optional txParams: TxParams
+Optional fillerPublicKey: PublicKey
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:4785
+unsubscribe
+unsubscribe(): Promise<void>
+Returns Promise<void>
+Defined in sdk/src/driftClient.ts:449
+unsubscribeUsers
+unsubscribeUsers(): Promise<void>[]
+Returns Promise<void>[]
+Defined in sdk/src/driftClient.ts:462
+updateAMMs
+updateAMMs(marketIndexes: number[], txParams?: TxParams): Promise<string>
+Parameters
+marketIndexes: number[]
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:3246
+updateFundingRate
+updateFundingRate(perpMarketIndex: number, oracle: PublicKey, txParams?: TxParams): Promise<string>
+Parameters
+perpMarketIndex: number
+oracle: PublicKey
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6884
+updatePerpBidAskTwap
+updatePerpBidAskTwap(perpMarketIndex: number, makers: [PublicKey, PublicKey][], txParams?: TxParams): Promise<string>
+Parameters
+perpMarketIndex: number
+makers: [PublicKey, PublicKey][]
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6950
+updatePrelaunchOracle
+updatePrelaunchOracle(perpMarketIndex: number, txParams?: TxParams): Promise<string>
+Parameters
+perpMarketIndex: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:6917
+updatePythPullOracle
+updatePythPullOracle(vaaString: string, feedId: string): Promise<string>
+Parameters
+vaaString: string
+feedId: string
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7856
+updateSpotMarketCumulativeInterest
+updateSpotMarketCumulativeInterest(marketIndex: number, txParams?: TxParams): Promise<string>
+Parameters
+marketIndex: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:2748
+updateSpotMarketCumulativeInterestIx
+updateSpotMarketCumulativeInterestIx(marketIndex: number): Promise<TransactionInstruction>
+Parameters
+marketIndex: number
+Returns Promise<TransactionInstruction>
+Defined in sdk/src/driftClient.ts:2763
+updateUserAdvancedLp
+updateUserAdvancedLp(updates: {
+    advancedLp: boolean;
+    subAccountId: number;
+}[]): Promise<string>
+Parameters
+updates: {
+    advancedLp: boolean;
+    subAccountId: number;
+}[]
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:1212
+updateUserCustomMarginRatio
+updateUserCustomMarginRatio(updates: {
+    marginRatio: number;
+    subAccountId: number;
+}[], txParams?: TxParams): Promise<string>
+Parameters
+updates: {
+    marginRatio: number;
+    subAccountId: number;
+}[]
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:1092
+updateUserDelegate
+updateUserDelegate(delegate: PublicKey, subAccountId?: number): Promise<string>
+Parameters
+delegate: PublicKey
+subAccountId: number = 0
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:1193
+updateUserGovTokenInsuranceStake
+updateUserGovTokenInsuranceStake(authority: PublicKey, txParams?: TxParams): Promise<string>
+Parameters
+authority: PublicKey
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7434
+updateUserIdle
+updateUserIdle(userAccountPublicKey: PublicKey, user: UserAccount, txParams?: TxParams, fillerPublicKey?: PublicKey): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+user: UserAccount
+Optional txParams: TxParams
+Optional fillerPublicKey: PublicKey
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:4889
+updateUserMarginTradingEnabled
+updateUserMarginTradingEnabled(updates: {
+    marginTradingEnabled: boolean;
+    subAccountId: number;
+}[]): Promise<string>
+Parameters
+updates: {
+    marginTradingEnabled: boolean;
+    subAccountId: number;
+}[]
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:1175
+updateUserName
+updateUserName(name: string, subAccountId?: number): Promise<string>
+Parameters
+name: string
+subAccountId: number = 0
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:1067
+updateUserOpenOrdersCount
+updateUserOpenOrdersCount(userAccountPublicKey: PublicKey, user: UserAccount, txParams?: TxParams, fillerPublicKey?: PublicKey): Promise<string>
+Parameters
+userAccountPublicKey: PublicKey
+user: UserAccount
+Optional txParams: TxParams
+Optional fillerPublicKey: PublicKey
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:4932
+updateUserQuoteAssetInsuranceStake
+updateUserQuoteAssetInsuranceStake(authority: PublicKey, txParams?: TxParams): Promise<string>
+Parameters
+authority: PublicKey
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:7393
+updateUserReduceOnly
+updateUserReduceOnly(updates: {
+    reduceOnly: boolean;
+    subAccountId: number;
+}[]): Promise<string>
+Parameters
+updates: {
+    reduceOnly: boolean;
+    subAccountId: number;
+}[]
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:1249
+updateWallet
+updateWallet(newWallet: IWallet, subAccountIds?: number[], activeSubAccountId?: number, includeDelegates?: boolean, authoritySubaccountMap?: Map<string, number[]>): Promise<boolean>
+Update the wallet to use for drift transactions and linked user account
+
+Parameters
+newWallet: IWallet
+Optional subAccountIds: number[]
+Optional activeSubAccountId: number
+Optional includeDelegates: boolean
+Optional authoritySubaccountMap: Map<string, number[]>
+Returns Promise<boolean>
+Defined in sdk/src/driftClient.ts:656
+withdraw
+withdraw(amount: BN, marketIndex: number, associatedTokenAddress: PublicKey, reduceOnly?: boolean, subAccountId?: number, txParams?: TxParams): Promise<string>
+Withdraws from a user account. If deposit doesn't already exist, creates a borrow
+
+Parameters
+amount: BN
+marketIndex: number
+associatedTokenAddress: PublicKey
+the token account to withdraw to. can be the wallet public key if using native sol
+
+reduceOnly: boolean = false
+Optional subAccountId: number
+Optional txParams: TxParams
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:2525
+withdrawAllDustPositions
+withdrawAllDustPositions(subAccountId?: number, txParams?: TxParams, opts?: {
+    dustPositionCountCallback?: ((count: number) => void);
+}): Promise<string>
+Parameters
+Optional subAccountId: number
+Optional txParams: TxParams
+Optional opts: {
+    dustPositionCountCallback?: ((count: number) => void);
+}
+Optional dustPositionCountCallback?: ((count: number) => void)
+(count: number): void
+Parameters
+count: number
+Returns void
+Returns Promise<string>
+Defined in sdk/src/driftClient.ts:2557

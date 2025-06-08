@@ -1,0 +1,447 @@
+React Hooks for Solana
+Web3Auth provides a set of React hooks for basic Solana wallet operations. These hooks are designed to simplify common Solana interactions in your React app.
+
+info
+For advanced Solana features, you should use @solana/web3.js on top of the hooks provided.
+
+Solana Hooks
+Hook Name	Description
+useSignAndSendTransaction	Sign and send a Solana transaction.
+useSignMessage	Sign a message with the Solana wallet.
+useSignTransaction	Sign a Solana transaction (without sending).
+useSolanaWallet	Access Solana wallet state and utilities.
+Further code and advanced usage should be implemented using Solana's web3.js library as needed.
+
+useSignAndSendTransaction
+Hook to sign and send a Solana transaction using the connected Solana wallet from Web3Auth.
+
+Import
+import { useSignAndSendTransaction } from "@web3auth/modal/react/solana";
+
+
+Usage
+import { useSignAndSendTransaction } from "@web3auth/modal/react/solana";
+import { TransactionOrVersionedTransaction } from "@web3auth/modal";
+
+function SignAndSendTransactionButton({
+  transaction,
+}: {
+  transaction: TransactionOrVersionedTransaction;
+}) {
+  const { signAndSendTransaction, loading, error, data } = useSignAndSendTransaction();
+
+  const handleSignAndSend = async () => {
+    try {
+      const signature = await signAndSendTransaction(transaction);
+      // Do something with signature
+    } catch (e) {
+      // Handle error
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleSignAndSend} disabled={loading}>
+        {loading ? "Signing & Sending..." : "Sign & Send Transaction"}
+      </button>
+      {error && <div>Error: {error.message}</div>}
+      {data && <div>Signature: {data}</div>}
+    </div>
+  );
+}
+
+
+Return Type
+export type IUseSignAndSendTransaction = {
+  loading: boolean;
+  error: Web3AuthError | null;
+  data: string | null;
+  signAndSendTransaction: (transaction: TransactionOrVersionedTransaction) => Promise<string>;
+};
+
+
+loading
+boolean
+
+Indicates if the transaction signing and sending is in progress.
+
+error
+Web3AuthError | null
+
+Error object if signing or sending fails, otherwise null.
+
+data
+string | null
+
+The transaction signature as a string, or null if not signed yet.
+
+signAndSendTransaction
+(transaction: TransactionOrVersionedTransaction) => Promise<string>
+
+Function to sign and send a transaction. Returns the transaction signature as a string.
+
+Example
+sendVersionedTransaction.tsx
+import { FormEvent } from "react";
+import { useSolanaWallet, useSignAndSendTransaction } from "@web3auth/modal/react/solana";
+import {
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
+
+export function SendVersionedTransaction() {
+  const {
+    data: hash,
+    error,
+    loading: isPending,
+    signAndSendTransaction,
+  } = useSignAndSendTransaction();
+  const { accounts, connection } = useSolanaWallet();
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const to = formData.get("address") as string;
+    const value = formData.get("value") as string;
+
+    const block = await connection!.getLatestBlockhash();
+    const TransactionInstruction = SystemProgram.transfer({
+      fromPubkey: new PublicKey(accounts![0]),
+      toPubkey: new PublicKey(to),
+      lamports: Number(value) * LAMPORTS_PER_SOL,
+    });
+
+    const transactionMessage = new TransactionMessage({
+      recentBlockhash: block.blockhash,
+      instructions: [TransactionInstruction],
+      payerKey: new PublicKey(accounts![0]),
+    });
+
+    const transaction = new VersionedTransaction(transactionMessage.compileToV0Message());
+    signAndSendTransaction(transaction);
+  }
+
+  return (
+    <div>
+      <h2>Send Versioned Transaction</h2>
+      <form onSubmit={submit}>
+        <input name="address" placeholder="Address" required />
+        <input name="value" placeholder="Amount (SOL)" type="number" step="0.01" required />
+        <button disabled={isPending} type="submit">
+          {isPending ? "Confirming..." : "Send"}
+        </button>
+      </form>
+      {hash && <div>Transaction Hash: {hash}</div>}
+      {error && <div>Error: {error.message}</div>}
+    </div>
+  );
+}
+
+
+
+useSignMessage
+Hook to sign a message using the connected Solana wallet from Web3Auth.
+
+Import
+import { useSignMessage } from "@web3auth/modal/react/solana";
+
+
+Usage
+import { useSignMessage } from "@web3auth/modal/react/solana";
+
+function SignMessageButton({ message }: { message: string }) {
+  const { signMessage, loading, error, data } = useSignMessage();
+
+  const handleSign = async () => {
+    try {
+      const signature = await signMessage(message);
+      // Do something with signature
+    } catch (e) {
+      // Handle error
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleSign} disabled={loading}>
+        {loading ? "Signing..." : "Sign Message"}
+      </button>
+      {error && <div>Error: {error.message}</div>}
+      {data && <div>Signature: {data}</div>}
+    </div>
+  );
+}
+
+
+Return Type
+export type IUseSignMessage = {
+  loading: boolean;
+  error: Web3AuthError | null;
+  data: string | null;
+  signMessage: (message: string) => Promise<string>;
+};
+
+
+loading
+boolean
+
+Indicates if the message signing is in progress.
+
+error
+Web3AuthError | null
+
+Error object if signing fails, otherwise null.
+
+data
+string | null
+
+The signature as a string, or null if not signed yet.
+
+signMessage
+(message: string) => Promise<string>
+
+Function to sign a message. Returns the signature as a string.
+
+Example
+signMessage.tsx
+import { FormEvent } from "react";
+import { useSignMessage } from "@web3auth/modal/react/solana";
+
+export function SignMessage() {
+  const { data: hash, error, loading: isPending, signMessage } = useSignMessage();
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const message = formData.get("message");
+    signMessage(message!.toString());
+  }
+
+  return (
+    <div>
+      <h2>Sign Message</h2>
+      <form onSubmit={submit}>
+        <input name="message" placeholder="Message" required />
+        <button disabled={isPending} type="submit">
+          {isPending ? "Signing..." : "Sign"}
+        </button>
+      </form>
+      {hash && <div className="hash">Message Hash: {hash}</div>}
+      {error && <div className="error">Error: {error.message}</div>}
+    </div>
+  );
+}
+
+
+
+
+useSignTransaction
+Hook to sign a Solana transaction using the connected wallet from Web3Auth.
+
+Import
+import { useSignTransaction } from "@web3auth/modal/react/solana";
+
+
+Usage
+import { useSignTransaction } from "@web3auth/modal/react/solana";
+import { Transaction } from "@solana/web3.js";
+
+function SignTransactionButton({ transaction }: { transaction: Transaction }) {
+  const { signTransaction, loading, error, data } = useSignTransaction();
+
+  const handleSign = async () => {
+    try {
+      const signedTx = await signTransaction(transaction);
+      // Do something with signedTx
+    } catch (e) {
+      // Handle error
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={handleSign} disabled={loading}>
+        {loading ? "Signing..." : "Sign Transaction"}
+      </button>
+      {error && <div>Error: {error.message}</div>}
+      {data && <div>Signed Transaction: {data}</div>}
+    </div>
+  );
+}
+
+
+Return Type
+export type IUseSignTransaction = {
+  loading: boolean;
+  error: Web3AuthError | null;
+  data: string | null;
+  signTransaction: (transaction: TransactionOrVersionedTransaction) => Promise<string>;
+};
+
+
+loading
+boolean
+
+Indicates if the transaction signing is in progress.
+
+error
+Web3AuthError | null
+
+Error object if signing fails, otherwise null.
+
+data
+string | null
+
+The signed transaction as a string, or null if not signed yet.
+
+signTransaction
+(transaction: TransactionOrVersionedTransaction) => Promise<string>
+
+Function to sign a Solana transaction. Returns the signed transaction as a string.
+
+Examples
+signTransaction.tsx
+import { FormEvent } from "react";
+import { useSolanaWallet, useSignTransaction } from "@web3auth/modal/react/solana";
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+
+export function SignTransaction() {
+  const {
+    data: signedTransaction,
+    error,
+    loading: isPending,
+    signTransaction,
+  } = useSignTransaction();
+  const { accounts, connection } = useSolanaWallet();
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const to = formData.get("address") as string;
+    const value = formData.get("value") as string;
+
+    const block = await connection!.getLatestBlockhash();
+    const TransactionInstruction = SystemProgram.transfer({
+      fromPubkey: new PublicKey(accounts![0]),
+      toPubkey: new PublicKey(to),
+      lamports: Number(value) * LAMPORTS_PER_SOL,
+    });
+
+    const transaction = new Transaction({
+      blockhash: block.blockhash,
+      lastValidBlockHeight: block.lastValidBlockHeight,
+      feePayer: new PublicKey(accounts![0]),
+    }).add(TransactionInstruction);
+
+    signTransaction(transaction);
+  }
+
+  return (
+    <div>
+      <h2>Sign Transaction</h2>
+      <form onSubmit={submit}>
+        <input name="address" placeholder="Address" required />
+        <input name="value" placeholder="Amount (SOL)" type="number" step="0.01" required />
+        <button disabled={isPending} type="submit">
+          {isPending ? "Signing..." : "Sign"}
+        </button>
+      </form>
+      {signedTransaction && <div>Signed Trasaction: {signedTransaction}</div>}
+      {error && <div>Error: {error.message}</div>}
+    </div>
+  );
+}
+
+
+
+useSolanaWallet
+Hook to retrieve and manage Solana wallet, accounts, and connection from Web3Auth.
+
+Import
+import { useSolanaWallet } from "@web3auth/modal/react";
+
+
+Usage
+import { useSolanaWallet } from "@web3auth/modal/react";
+
+function SolanaWalletInfo() {
+  const { solanaWallet, accounts, connection } = useSolanaWallet();
+
+  return (
+    <div>
+      <div>Accounts: {accounts ? accounts.join(", ") : "No accounts"}</div>
+      <div>SolanaWallet: {solanaWallet ? "Available" : "Not available"}</div>
+      <div>Connection: {connection ? "Connected" : "Not connected"}</div>
+    </div>
+  );
+}
+
+
+Return Type
+import { type IUseSolanaWallet } from "@web3auth/modal/react";
+
+
+accounts
+string[] | null
+
+The list of Solana account addresses, or null if not available.
+
+solanaWallet
+SolanaWallet | null
+
+The SolanaWallet instance for interacting with the Solana blockchain, or null if not available.
+
+connection
+Connection | null
+
+The Solana Connection instance for making RPC calls, or null if not available.
+
+Example: Fetching SOL Balance
+getBalance.tsx
+import { useSolanaWallet } from "@web3auth/modal/react/solana";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import { useEffect, useState } from "react";
+
+export function Balance() {
+  const { accounts, connection } = useSolanaWallet();
+  const [balance, setBalance] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchBalance = async () => {
+    if (connection && accounts && accounts.length > 0) {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const publicKey = new PublicKey(accounts[0]);
+        const balance = await connection.getBalance(publicKey);
+        setBalance(balance);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    fetchBalance();
+  }, [connection, accounts]);
+
+  return (
+    <div>
+      <h2>Balance</h2>
+      <div>{balance !== null && `${balance / LAMPORTS_PER_SOL} SOL`}</div>
+      {isLoading && <span className="loading">Loading...</span>}
+      {error && <span className="error">Error: {error}</span>}
+      <button onClick={fetchBalance} type="submit" className="card">
+        Fetch Balance
+      </button>
+    </div>
+  );
+}
+
+

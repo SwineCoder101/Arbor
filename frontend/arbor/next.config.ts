@@ -1,7 +1,13 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-}
+  webpack5: true,
+  webpack: (config) => {
+    config.externals.push("pino-pretty");
+    config.resolve.fallback = { fs: false };
 
-export default nextConfig
+    return config;
+  },
+};
+
+export default nextConfig;
