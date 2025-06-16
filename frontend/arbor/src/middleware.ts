@@ -1,11 +1,13 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { IPinfoWrapper } from 'node-ipinfo'
+// import { NextResponse } from 'next/server'
+// import type { NextRequest } from 'next/server'
+// import { IPinfoWrapper } from 'node-ipinfo'
 
 // Initialize IPinfo with your token
-const ipinfoWrapper = new IPinfoWrapper(process.env.IPINFO_KEY || '')
+// const ipinfoWrapper = new IPinfoWrapper(process.env.IPINFO_KEY || '')
 
-export async function middleware(request: NextRequest) {
+export async function middleware(
+  // request: NextRequest
+) {
 //   try {
 //     const countryCodeCookie = request.cookies.get('countryCode');
 //     const userIpCookie = request.cookies.get('userIP'); // Get the user IP cookie
