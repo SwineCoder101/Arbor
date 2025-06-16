@@ -8,6 +8,17 @@ const ipinfoWrapper = new IPinfoWrapper(process.env.IPINFO_KEY || '')
 export async function middleware(
   request: NextRequest
 ) {
+  console.log("request.nextUrl.pathname: ", request.nextUrl.pathname);
+  if (request.nextUrl.pathname.startsWith('/bypass-uk-block')) {
+    const response = NextResponse.redirect(new URL('/', request.url));
+    response.cookies.set('bypassBlock', 'true');
+    
+    return response;
+  }
+  const bypassBlockCookie = request.cookies.get('bypassBlock');
+  if (bypassBlockCookie?.value === 'true') {
+    return NextResponse.next();
+  }
   try {
     const countryCodeCookie = request.cookies.get('countryCode');
     const userIpCookie = request.cookies.get('userIP'); // Get the user IP cookie
